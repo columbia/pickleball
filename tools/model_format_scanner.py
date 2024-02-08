@@ -4,6 +4,7 @@ Warning: For a lot of the formats we try to actually load the model, which
 might be dangerous since some formats are vulnerable
 Requires:
     - colorlog
+    - paddlepaddle
     - safetensors
     - torch
     - tensorflow
@@ -16,6 +17,8 @@ Requires:
 import argparse
 import logging
 import os
+import pdb
+import sys
 from pickletools import dis as pickle_dis
 
 import colorlog
@@ -25,17 +28,34 @@ from flax.serialization import msgpack_restore as flax_msgpack_restore
 # from mleap.combust.bundle import BundleFile as mleap_load
 from numpy import load as numpy_load
 from onnx import load as onnx_load
-
-# from paddle import load as paddle_load
+from orbax.checkpoint import PyTreeCheckpointer
+from paddle import load as paddle_load
+from safetensors import safe_open as safetensors_open
 from tensorflow.keras.models import load_model as keras_load
 from tensorflow.saved_model import load as tf_saved_model_load
 from torch import load as torch_load
 from torch.jit import load as torchscript_load
 
-from safetensors import safe_open as safetensors_open
+
+class RedirectStdStreams(object):
+    def __init__(self, stdout=None, stderr=None):
+        self._stdout = stdout or sys.stdout
+        self._stderr = stderr or sys.stderr
+
+    def __enter__(self):
+        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+        self.old_stdout.flush()
+        self.old_stderr.flush()
+        sys.stdout, sys.stderr = self._stdout, self._stderr
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._stdout.flush()
+        self._stderr.flush()
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr
+
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 formatter = colorlog.ColoredFormatter(
     "%(log_color)s[%(levelname)s]: %(message)s",
@@ -46,10 +66,6 @@ formatter = colorlog.ColoredFormatter(
         "ERROR": "red",
     },
 )
-
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
 
 
 class ModelFormat:
@@ -167,6 +183,13 @@ class Jax(ModelFormat):
         return "Jax"
 
     def matches(self, filename):
+        # FIXME: Calling restore() messes up logging
+        # try:
+        #     PyTreeCheckpointer().restore(filename)
+        #     return True
+        # except Exception as e:
+        #     # print(filename, e)
+        #     return False
         return False
 
 
@@ -237,19 +260,26 @@ class Numpy(ModelFormat):
 
 
 class Paddle(ModelFormat):
-    # FIXME: importing paddle messes up logging
+    # FIXME: this sometimes prints out a bunch of error messages when it tries
+    # to load protobufs, but I can't find a good way to disable it
+    # [libprotobuf ERROR
+    # /Users/paddle/xly/workspace/6b5f2c56-ddc3-4da3-aa89-e4f3a21369ae/Paddle/third_party/protobuf/src/google/protobuf/message_lite.cc:133]
+    # Can't parse message of type "paddle.framework.proto.ProgramDesc" because
+    # it is missing required fields
+
     expected_suffixes = ["pdparams"]
 
     def __str__(self):
         return "Paddle"
 
     def matches(self, filename):
-        # try:
-        #     paddle_load(filename)
-        #     return True
-        # except Exception as e:
-        #     # print(e)
-        #     return False
+        try:
+            # pdb.set_trace()
+            paddle_load(filename)
+            return True
+        except Exception as e:
+            # print(e)
+            return False
         return False
 
 
@@ -291,6 +321,7 @@ def get_model_format(filename):
         logger.warning(f"{filename} matches more than one format: {', '.join(matches)}")
     # if len(matches) == 0:
     #     logger.error(f"{filename} does not match any model format!")
+    return matches
 
 
 def list_files(directory):
@@ -313,8 +344,23 @@ def main():
 
     args = arg_parser.parse_args()
 
+    # Remove loggers installed by imported modules and install ours
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    logger.setLevel(logging.DEBUG)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    # Maps files to their formats
+    formats = {}
+
     for filename in list_files(args.path):
-        get_model_format(filename)
+        matching_formats = get_model_format(filename)
+        formats[filename] = matching_formats
+
+    print(formats.items())
 
 
 if __name__ == "__main__":

@@ -36,25 +36,6 @@ from tensorflow.saved_model import load as tf_saved_model_load
 from torch import load as torch_load
 from torch.jit import load as torchscript_load
 
-
-class RedirectStdStreams(object):
-    def __init__(self, stdout=None, stderr=None):
-        self._stdout = stdout or sys.stdout
-        self._stderr = stderr or sys.stderr
-
-    def __enter__(self):
-        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
-        self.old_stdout.flush()
-        self.old_stderr.flush()
-        sys.stdout, sys.stderr = self._stdout, self._stderr
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._stdout.flush()
-        self._stderr.flush()
-        sys.stdout = self.old_stdout
-        sys.stderr = self.old_stderr
-
-
 logger = logging.getLogger(__name__)
 
 formatter = colorlog.ColoredFormatter(
@@ -183,14 +164,23 @@ class Jax(ModelFormat):
         return "Jax"
 
     def matches(self, filename):
-        # FIXME: Calling restore() messes up logging
-        # try:
-        #     PyTreeCheckpointer().restore(filename)
-        #     return True
-        # except Exception as e:
-        #     # print(filename, e)
-        #     return False
-        return False
+        # Calling restore() messes up logging, so we have to remove the installed
+        # loggers each time
+        # FIXME: maybe there's a better way to do this
+        try:
+            PyTreeCheckpointer().restore(filename)
+
+            for handler in logging.root.handlers[:]:
+                logging.root.removeHandler(handler)
+
+            return True
+        except Exception as e:
+            for handler in logging.root.handlers[:]:
+                logging.root.removeHandler(handler)
+
+            # print(filename, e)
+            return False
+        # return False
 
 
 class MessagePack(ModelFormat):
@@ -360,7 +350,9 @@ def main():
         matching_formats = get_model_format(filename)
         formats[filename] = matching_formats
 
-    print(formats.items())
+    for file, mformats in formats.items():
+        if len(mformats) > 0:
+            print(file, mformats)
 
 
 if __name__ == "__main__":

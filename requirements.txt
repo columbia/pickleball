@@ -1,0 +1,4 @@
+fickling
+numpy
+torch
+huggingface-hub

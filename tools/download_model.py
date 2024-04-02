@@ -10,6 +10,7 @@ import argparse
 import contextlib
 import glob
 import logging
+import shutil
 import sys
 from typing import List, Iterable, Tuple
 from pathlib import Path
@@ -85,7 +86,8 @@ def download(model_repo: str, outdir: Path, patterns: Tuple[str] = ALLOWED_PATTE
                 repo_id=model_repo,
                 filename="pytorch_model.bin",
                 local_dir=str(outdir),
-                local_dir_use_symlinks=False)
+                local_dir_use_symlinks=True,
+                cache_dir=str(outdir / Path(".cache")))
         except requests.exceptions.HTTPError as err:
             logging.error(err)
         except ConnectionResetError as err:
@@ -97,7 +99,8 @@ def download(model_repo: str, outdir: Path, patterns: Tuple[str] = ALLOWED_PATTE
                 repo_id=model_repo,
                 allow_patterns=patterns,
                 local_dir=str(outdir),
-                local_dir_use_symlinks=False)
+                local_dir_use_symlinks=True,
+                cache_dir=str(outdir / Path(".cache")))
         except requests.exceptions.HTTPError as err:
             logging.error(err)
         except ConnectionResetError as err:
@@ -267,6 +270,10 @@ def process_repository(
         model_paths = get_model_paths(repo_outdir)
         for model_path in model_paths:
             generate_trace(model_path, delete_after_processing)
+        if delete_after_processing:
+            # Remove cached model directory (automatically created by
+            # HuggingFace when downloading).
+            shutil.rmtree(repo_outdir / Path(".cache"), ignore_errors=True)
 
 
 def main():

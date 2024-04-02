@@ -311,8 +311,8 @@ def main():
         try:
             repositories = [get_model_info(args.repository)]
         except huggingface_hub.utils._errors.RepositoryNotFoundError as err:
-                logging.error(err)
-                return
+            logging.error(err)
+            return
     elif args.batch > 0:
         repositories = popular_pytorch_repos(args.batch)
     else:

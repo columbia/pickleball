@@ -43,6 +43,8 @@ ALLOWED_PATTERNS = ("*.bin", "*.pth")
 class DummyFile(object):
     def write(self, x): pass
 
+    def flush(self): pass
+
 # Used to prevent cluttering stdout when generating fickling trace. See comment
 # above DummyFile.
 @contextlib.contextmanager

@@ -6,14 +6,15 @@ Can be run on specifically identified repositories (--repository <name>), or
 as a batch process over the n most downloaded HuggingFace repositories with
 PyTorch models (--batch n).
 """
+
 import argparse
 import contextlib
 import glob
 import logging
 import shutil
 import sys
-from typing import List, Iterable, Tuple
 from pathlib import Path
+from typing import Iterable, List, Tuple
 
 import requests
 
@@ -25,9 +26,7 @@ else:
 import huggingface_hub
 import huggingface_hub.hf_api
 import huggingface_hub.utils._errors
-
-from fickling import tracing
-from fickling import fickle
+from fickling import fickle, tracing
 from fickling.pytorch import PyTorchModelWrapper
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -35,15 +34,19 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # Default set of file extensions that represent PyTorch models. Not every .bin
 # model will be a PyTorch model, and other PyTorch model file extensions may
 # exist.
-ALLOWED_PATTERNS = ("*.bin", "*.pth")
+ALLOWED_PATTERNS = ("*.bin", "*.pth", "*.pt")
+
 
 # The fickling module generates a lot of printed output statements when tracing
 # a pickle program. I use this dummy file and context manager to silence the
 # output statements to avoid cluttering stdout.
 class DummyFile(object):
-    def write(self, x): pass
+    def write(self, x):
+        pass
 
-    def flush(self): pass
+    def flush(self):
+        pass
+
 
 # Used to prevent cluttering stdout when generating fickling trace. See comment
 # above DummyFile.
@@ -61,10 +64,15 @@ def canonical_model_name(model_repo: str) -> str:
     in the name to a '-' in the output directory name to avoid creating
     subdirectories.
     """
-    return model_repo.replace('/', '-')
+    return model_repo.replace("/", "-")
 
 
-def download(model_repo: str, outdir: Path, patterns: Tuple[str] = ALLOWED_PATTERNS, specific_file: bool = False):
+def download(
+    model_repo: str,
+    outdir: Path,
+    patterns: Tuple[str] = ALLOWED_PATTERNS,
+    specific_file: bool = False,
+):
     """Downloads models from a Hugging Face repository.
 
     Specifically fetches models saved with file extensions specified in the
@@ -80,7 +88,7 @@ def download(model_repo: str, outdir: Path, patterns: Tuple[str] = ALLOWED_PATTE
           hardcoding.
     """
 
-    logging.info('- Downloading models from repo: %s', model_repo)
+    logging.info("- Downloading models from repo: %s", model_repo)
 
     if specific_file:
         try:
@@ -89,7 +97,8 @@ def download(model_repo: str, outdir: Path, patterns: Tuple[str] = ALLOWED_PATTE
                 filename="pytorch_model.bin",
                 local_dir=str(outdir),
                 local_dir_use_symlinks=True,
-                cache_dir=str(outdir / Path(".cache")))
+                cache_dir=str(outdir / Path(".cache")),
+            )
         except requests.exceptions.HTTPError as err:
             logging.error(err)
         except ConnectionResetError as err:
@@ -102,7 +111,8 @@ def download(model_repo: str, outdir: Path, patterns: Tuple[str] = ALLOWED_PATTE
                 allow_patterns=patterns,
                 local_dir=str(outdir),
                 local_dir_use_symlinks=True,
-                cache_dir=str(outdir / Path(".cache")))
+                cache_dir=str(outdir / Path(".cache")),
+            )
         except requests.exceptions.HTTPError as err:
             logging.error(err)
         except ConnectionResetError as err:
@@ -122,9 +132,8 @@ def _generate_stacked_trace(model_path: str) -> str:
     trace = ""
     for i, pickled in enumerate(stacked_pickle):
         interpreter = fickle.Interpreter(
-            pickled,
-            first_variable_id=var_id,
-            result_variable=f"result{i}")
+            pickled, first_variable_id=var_id, result_variable=f"result{i}"
+        )
         model_trace = tracing.Trace(interpreter)
         with nostdout():
             collected_trace = model_trace.run()
@@ -143,19 +152,18 @@ def _generate_pytorch_trace(model_path: str) -> str:
         logging.error("Unable to identify model format: %s", err)
         raise ValueError(err) from err
 
-    interpreter = fickle.Interpreter(
-        pytorch_model.pickled,
-        first_variable_id=0)
+    interpreter = fickle.Interpreter(pytorch_model.pickled, first_variable_id=0)
     model_trace = tracing.Trace(interpreter)
     with nostdout():
         collected_trace = model_trace.run()
 
     return unparse(collected_trace)
 
+
 def generate_trace(model_path: str, delete_after_tracing: bool = True) -> str:
     """Generate a trace of a PyTorch model using the fickling library."""
 
-    logging.info('Generating trace for model: %s', model_path)
+    logging.info("Generating trace for model: %s", model_path)
     trace = ""
     # TODO: Tidy this up. Currently, the code tries to first use the fickling
     # PyTorchWrapper API to interact with the model, but this may fail when the
@@ -165,7 +173,7 @@ def generate_trace(model_path: str, delete_after_tracing: bool = True) -> str:
     try:
         trace = _generate_pytorch_trace(model_path)
     except ValueError:
-        logging.warning('- Could not trace as PyTorch model. Trying stacked pickle')
+        logging.warning("- Could not trace as PyTorch model. Trying stacked pickle")
         try:
             trace = _generate_stacked_trace(model_path)
         except RuntimeError as err:
@@ -191,20 +199,20 @@ def popular_pytorch_repos(n: int = 100) -> Iterable[huggingface_hub.hf_api.Model
     api = huggingface_hub.HfApi()
     model_filter = huggingface_hub.ModelFilter(library="pytorch")
     models = api.list_models(
-        filter=model_filter,
-        sort="downloads",
-        direction=-1,
-        limit=n)
+        filter=model_filter, sort="downloads", direction=-1, limit=n
+    )
 
     return models
 
+
 def get_model_info(repository: str) -> huggingface_hub.hf_api.ModelInfo:
-    """Given a repository name, fetch the model info metadata from HuggingFace.
-    """
+    """Given a repository name, fetch the model info metadata from HuggingFace."""
     return huggingface_hub.HfApi().model_info(repository)
 
 
-def save_repository_metadata(model_info: huggingface_hub.hf_api.ModelInfo, outdir: Path) -> None:
+def save_repository_metadata(
+    model_info: huggingface_hub.hf_api.ModelInfo, outdir: Path
+) -> None:
     """Given a HuggingFace ModelInfo object, save metadata to files in the
     output directory.
 
@@ -213,17 +221,20 @@ def save_repository_metadata(model_info: huggingface_hub.hf_api.ModelInfo, outdi
     - tags
     """
 
-    logging.info('Saving repository metadata: %s', model_info.id)
+    logging.info("Saving repository metadata: %s", model_info.id)
 
-    tags_file = outdir / Path(canonical_model_name(model_info.id) + '.tags')
+    tags_file = outdir / Path(canonical_model_name(model_info.id) + ".tags")
     with open(tags_file, "w") as fd:
         fd.write(str(model_info.tags))
 
-    name_file = outdir / Path(canonical_model_name(model_info.id) + '.name')
+    name_file = outdir / Path(canonical_model_name(model_info.id) + ".name")
     with open(name_file, "w") as fd:
         fd.write(str(model_info.id))
 
-def get_model_paths(directory: Path, model_patterns: Tuple[str] = ALLOWED_PATTERNS) -> List[str]:
+
+def get_model_paths(
+    directory: Path, model_patterns: Tuple[str] = ALLOWED_PATTERNS
+) -> List[str]:
     """Given a directory that contains downloaded models and a list of file
     extensions of models, return a list of paths to all models found in the
     directory.
@@ -238,13 +249,15 @@ def get_model_paths(directory: Path, model_patterns: Tuple[str] = ALLOWED_PATTER
 
     return models
 
+
 def process_repository(
-        model_info: huggingface_hub.hf_api.ModelInfo,
-        repo_outdir: Path,
-        force_download: bool = False,
-        save_metadata: bool = True,
-        trace: bool = True,
-        delete_after_processing: bool = True) -> None:
+    model_info: huggingface_hub.hf_api.ModelInfo,
+    repo_outdir: Path,
+    force_download: bool = False,
+    save_metadata: bool = True,
+    trace: bool = True,
+    delete_after_processing: bool = True,
+) -> None:
     """Process a Hugging Face repository. Defaults behavior is to:
      1. save metadata about the repository
      2. download the select models from the repository
@@ -279,41 +292,56 @@ def process_repository(
 
 
 def main():
-    """Main function. Collect command line arguments and begin
-    """
+    """Main function. Collect command line arguments and begin"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--outdir",
-        help=("Output parent directory where the processed model will be saved. "
-            "If not set, the current directory will be used."))
+        help=(
+            "Output parent directory where the processed model will be saved. "
+            "If not set, the current directory will be used."
+        ),
+    )
     parser.add_argument(
         "--repository",
-        help=("Name of HuggingFace repository to process, in form of "
-            "'namespace/repository'"))
+        help=(
+            "Name of HuggingFace repository to process, in form of "
+            "'namespace/repository'"
+        ),
+    )
     parser.add_argument(
         "--batch",
         type=int,
         default=0,
-        help="Number of repositories to batch process (if --repository not set).")
+        help="Number of repositories to batch process (if --repository not set).",
+    )
     parser.add_argument(
         "--force_download",
         action="store_true",
         default=False,
-        help=("Force download the model while processing. If this is not set, "
+        help=(
+            "Force download the model while processing. If this is not set, "
             "the model will not be downloaded when the repository output "
-            "directory already exists."))
+            "directory already exists."
+        ),
+    )
     parser.add_argument(
         "--no-trace",
         action="store_true",
         default=False,
-        help=("Do not trace the downloaded model. If this is not set, the "
-            "model will be traced after downloading."))
+        help=(
+            "Do not trace the downloaded model. If this is not set, the "
+            "model will be traced after downloading."
+        ),
+    )
     parser.add_argument(
         "--no-delete",
         action="store_true",
         default=False,
-        help=("Do not delete the model after processing it. If this is not "
-            "set, the downloaded model will be deleted."))
+        help=(
+            "Do not delete the model after processing it. If this is not "
+            "set, the downloaded model will be deleted."
+        ),
+    )
     args = parser.parse_args()
 
     if args.repository:
@@ -328,7 +356,8 @@ def main():
         logging.error(
             "need to either specify a repository to process with the "
             "'--repository' argument, or the number of repositories to batch "
-            "process with the --batch argument")
+            "process with the --batch argument"
+        )
         return
 
     if args.outdir:
@@ -344,7 +373,8 @@ def main():
             force_download=args.force_download,
             save_metadata=True,
             trace=not args.no_trace,
-            delete_after_processing=not args.no_delete)
+            delete_after_processing=not args.no_delete,
+        )
 
 
 if __name__ == "__main__":

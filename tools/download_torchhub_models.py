@@ -3,6 +3,7 @@ import os
 import re
 
 import requests
+from download_model import generate_trace, get_model_paths
 from git import Repo
 from torch.hub import _get_cache_or_reload, get_dir
 
@@ -13,7 +14,7 @@ NOT_REPOS = ["README.md", "CODE_OF_CONDUCT.md", "CONTRIBUTING.md"]
 PATTERN = r"'https:\/\/[^']+\.(?:pt|pth)'|\"https:\/\/[^\"]+\.(?:pt|pth)\""
 
 
-def download_models():
+def download_hub_models():
     for repo_desc_filename in glob.glob(TMP_HUB_DIR + "/*.md"):
         if os.path.basename(repo_desc_filename) in NOT_REPOS:
             continue
@@ -27,17 +28,12 @@ def download_models():
             _get_cache_or_reload(github_id, False, True, "download", True)
 
 
-if __name__ == "__main__":
+def download_additional_models():
+    """Some projects download the actual model when they get loaded (e.g.,
+    https://github.com/facebookresearch/WSL-Images/blob/main/hubconf.py).
+    To avoid doing that, we do this hack where we look for urls each model's
+    hubconf and just download the model from url"""
 
-    if not os.path.exists(TMP_HUB_DIR):
-        Repo.clone_from(TORCHHUB_REPO_GIT_URL, TMP_HUB_DIR)
-
-    # download_models()
-
-    # Some projects download the actual model when they get loaded (e.g.,
-    # https://github.com/facebookresearch/WSL-Images/blob/main/hubconf.py).
-    # To avoid doing that, we do this hack where we look for urls each model's
-    # hubconf and just download the model from url
     hub_dir = get_dir()
     for hubconf_filename in glob.glob(hub_dir + "/**/hubconf.py"):
         with open(hubconf_filename) as f:
@@ -61,3 +57,22 @@ if __name__ == "__main__":
                             )
                     except Exception as e:
                         print(f"Error downloading {url}: {e}")
+
+
+def process_models():
+    """Generate the traces for the downloaded models"""
+
+    model_paths = get_model_paths(get_dir())
+    for model_path in model_paths:
+        generate_trace(model_path)
+
+
+if __name__ == "__main__":
+
+    if not os.path.exists(TMP_HUB_DIR):
+        Repo.clone_from(TORCHHUB_REPO_GIT_URL, TMP_HUB_DIR)
+
+    download_hub_models()
+    download_additional_models()
+
+    process_models()

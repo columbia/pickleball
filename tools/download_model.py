@@ -244,8 +244,8 @@ def get_model_paths(
 
     models = []
     for pattern in model_patterns:
-        glob_pattern = str(directory / Path(pattern))
-        models += glob.glob(glob_pattern)
+        glob_pattern = str(directory / Path('**') / Path(pattern))
+        models += glob.glob(glob_pattern, recursive=True)
 
     return models
 

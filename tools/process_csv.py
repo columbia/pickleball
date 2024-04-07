@@ -102,7 +102,9 @@ def total_models(repositories: Dict[str, Repository]) -> int:
 def total_pytorch_bin_models(repositories: Dict[str, Repository]) -> int:
     total = 0
     for repo_name in repositories:
-        total += int(sum(model.name.startswith('pytorch_model') for model in repositories[repo_name].models))
+        total += int(sum(model.name.startswith('pytorch_model')
+                for model
+                in repositories[repo_name].models))
     return total
 
 # List of the models that use imports other than those allowed by the weights_only_unpickler.
@@ -125,7 +127,15 @@ def violating_models_pytorch(violating_models: Tuple[str, str]) -> List[Tuple[st
     return list(filter(lambda violating_tuple: violating_tuple[1].startswith("pytorch_model"), violating_models))
 
 
-def process_repos(csv_filename=FILENAME) -> Dict[str, Repository]:
+def failed_downloads(repos: Dict[str, Repository]) -> List[str]:
+    failures = []
+    for repo_name in repos:
+        if len(repos[repo_name].models) == 0:
+            failures.append(repo_name)
+
+    return failures
+
+def read_repos(csv_filename=FILENAME) -> Dict[str, Repository]:
 
     repos: Dict[str, Repository] = {}
 
@@ -144,18 +154,23 @@ def main():
     parser.add_argument("csv_file")
     args = parser.parse_args()
 
-    repos: Dict[str, Repository] = process_repos(args.csv_file)
+    repos: Dict[str, Repository] = read_repos(args.csv_file)
 
     violations = violating_models(repos)
     pytorch_violations = violating_models_pytorch(violations)
 
+    failures = failed_downloads(repos)
+
     print(f'total repositories: {total_repositories(repos)}')
+    print(f'failed analyses: {len(failures)}')
+    print(failures)
+
     print(f'total models: {total_models(repos)}')
     print(f'violating models: {len(violations)}')
+    print(violations)
 
     print(f'pytorch_model.bin models: {total_pytorch_bin_models(repos)}')
     print(f'violating models (pytorch_model.bin): {len(pytorch_violations)}')
-
     print(f'violating pytorch_model.bin models: {[model[0] for model in pytorch_violations]}')
 
 if __name__ == '__main__':

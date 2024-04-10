@@ -162,15 +162,15 @@ def main():
     failures = failed_downloads(repos)
 
     print(f'total repositories: {total_repositories(repos)}')
-    print(f'failed analyses: {len(failures)}')
+    print(f'failed analyses: {len(failures)} ({(len(failures) / total_repositories(repos)) * 100:.2f}%)')
     print(failures)
 
     print(f'total models: {total_models(repos)}')
-    print(f'violating models: {len(violations)}')
+    print(f'violating models: {len(violations)} ({(len(violations) / total_models(repos)) * 100:.2f}%)')
     print(violations)
 
     print(f'pytorch_model.bin models: {total_pytorch_bin_models(repos)}')
-    print(f'violating models (pytorch_model.bin): {len(pytorch_violations)}')
+    print(f'violating models (pytorch_model.bin): {len(pytorch_violations)} ({(len(pytorch_violations) / total_pytorch_bin_models(repos)) * 100:.2f}%)')
     print(f'violating pytorch_model.bin models: {[model[0] for model in pytorch_violations]}')
 
 if __name__ == '__main__':

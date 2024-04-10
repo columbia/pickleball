@@ -82,15 +82,17 @@ def analyze_project(project_path: Path) -> None:
     assert len(name_files) == 1
     with open(name_files[0], "r") as fd:
         project.name = fd.read().strip()
+    #project.name = project_path.stem
 
     tags_glob_pattern = project_path / Path(TAGS_EXT)
     tags_files = glob.glob(str(tags_glob_pattern))
     assert len(tags_files) == 1
     with open(tags_files[0], "r") as fd:
         project.tags = fd.read().strip().split(',')
+    #project.tags = ['PyTorch hub']
 
-    traces_glob_pattern = project_path / Path(TRACE_EXT)
-    traces_files = glob.glob(str(traces_glob_pattern))
+    traces_glob_pattern = project_path / Path('**') / Path(TRACE_EXT)
+    traces_files = glob.glob(str(traces_glob_pattern), recursive=True)
     for trace_file in traces_files:
         model_name = Path(trace_file).stem
         imports, extensions = analyze_trace(trace_file)

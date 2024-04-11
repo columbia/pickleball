@@ -66,6 +66,9 @@ def create_generic_tensor(pa: PickleAssembler):
 
 
 def set_backward_hook():
+    """We can set the backward hooks for a new tensor (it's just an argument
+    to _rebuild_tensor_v2 which is expected to be an empty OrderedDict, but
+    we can just set its items and there's no check)"""
     pa = PickleAssembler(proto=2)
     pa.push_global("torch", "_utils._rebuild_tensor_v2")
 
@@ -124,6 +127,9 @@ def set_backward_hook():
 
 
 def swap_tensor_attrs():
+    """We can call __setstate__ on a Tensor object by calling the allowed
+    _rebuild_from_type_v2 function in torch/_tensor.py and giving it the
+    desired state as the last argument"""
 
     pa = PickleAssembler(proto=2)
 

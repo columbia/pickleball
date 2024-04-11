@@ -122,6 +122,9 @@ def violating_models(repositories) -> List[Tuple[str, str]]:
                     break
     return violating
 
+# List of repositories that contain at least one violating model
+def violating_repos(violating_models: List[Tuple[str, str]]) -> List[str]:
+    return list(set([x[0] for x in violating_models]))
 
 def violating_models_pytorch(violating_models: Tuple[str, str]) -> List[Tuple[str, str]]:
     return list(filter(lambda violating_tuple: violating_tuple[1].startswith("pytorch_model"), violating_models))
@@ -157,21 +160,25 @@ def main():
     repos: Dict[str, Repository] = read_repos(args.csv_file)
 
     violations = violating_models(repos)
+    violating_repositories = violating_repos(violations)
     pytorch_violations = violating_models_pytorch(violations)
 
     failures = failed_downloads(repos)
 
     print(f'total repositories: {total_repositories(repos)}')
     print(f'failed analyses: {len(failures)} ({(len(failures) / total_repositories(repos)) * 100:.2f}%)')
+    print(f'violating repositories: {len(violating_repositories)} ({(len(violating_repositories) / total_repositories(repos)) * 100:.2f}%)')
     print(failures)
+
 
     print(f'total models: {total_models(repos)}')
     print(f'violating models: {len(violations)} ({(len(violations) / total_models(repos)) * 100:.2f}%)')
     print(violations)
 
     print(f'pytorch_model.bin models: {total_pytorch_bin_models(repos)}')
-    print(f'violating models (pytorch_model.bin): {len(pytorch_violations)} ({(len(pytorch_violations) / total_pytorch_bin_models(repos)) * 100:.2f}%)')
-    print(f'violating pytorch_model.bin models: {[model[0] for model in pytorch_violations]}')
+    if total_pytorch_bin_models(repos) > 0:
+        print(f'violating models (pytorch_model.bin): {len(pytorch_violations)} ({(len(pytorch_violations) / total_pytorch_bin_models(repos)) * 100:.2f}%)')
+        print(f'violating pytorch_model.bin models: {[model[0] for model in pytorch_violations]}')
 
 if __name__ == '__main__':
     main()

@@ -59,9 +59,10 @@ def addCallablesForRetVal(ret: Return, pclass: TypeDecl, callables: ListBuffer[R
               // FIXME Here we actually need to see how the top-level identifier
               // was imported and deduce what the actual full name of the callable
               // would look like in Joern
+              // FIXME If this is a variable, we need to follow it (something similar
+              // to QUACK) and try to figure out its value
 
             }
-            println(fullName)
             callable_name = fullName
           } else {
             throw new Exception("Unknown call for reduce return value " + arg0)
@@ -87,7 +88,6 @@ def addCallablesForRetVal(ret: Return, pclass: TypeDecl, callables: ListBuffer[R
     // a global variable. It should be the object’s local name relative to its
     // module; the pickle module searches the module namespace to determine the
     // object’s module. This behaviour is typically useful for singletons.
-    println(callable_name)
     val matching_callables = cpg.method.filter(_.fullName == callable_name).l
     if (matching_callables.length == 0) {
       callables += ReduceCallable(None, None, retloc)

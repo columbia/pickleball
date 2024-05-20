@@ -20,9 +20,15 @@ def attributeTypes(classDecl: TypeDecl) : Iterator[MemberType] = {
   )
 }
 
+def printTypes(types: Iterator[MemberType]) = {
+  for (mtype <- types) {
+    println(mtype.name ++ ": " ++ mtype.types.mkString(","))
+  }
+}
+
 @main def main(inputPath: String, modelClass: String) = {
 
-  importCode(inputPath)
+  importCpg(inputPath)
 
   /*
       analysisQueue := { modelClass }
@@ -44,7 +50,7 @@ def attributeTypes(classDecl: TypeDecl) : Iterator[MemberType] = {
   */
 
 
-  var types = attributeTypes(cpg.typeDecl(modelClass).headOption.get)
+  var types = attributeTypes(cpg.typeDecl(modelClass).filter(_.isExternal==false).headOption.get)
   for (memberType <- types) {
     println(memberType.name ++ " -> " ++ memberType.types.mkString(","))
   }

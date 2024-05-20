@@ -2,3 +2,4 @@ fickling
 numpy
 torch
 huggingface-hub
+flair

@@ -2,11 +2,8 @@
  * Usage: ./joern --script ./analyze.scala --param inputPath=<path to python project cpg> --param modelClass=SequenceTagger
  */
 
-import scala.collection.mutable.{Queue, Set}
+import scala.collection.mutable
 import io.shiftleft.codepropertygraph.generated.nodes.{ TypeDecl, Method, FieldIdentifier, Call }
-
-// TODO: Need to turn module / name format into something I can use to properly
-// query the CPG
 
 def attributeTypes(className: String): Iterator[String] = {
   /* TODO: Handle types stored in collections */
@@ -27,7 +24,11 @@ def subClasses(parentClass: String): Iterator[String] = {
 }
 
 def superClasses(className: String): Iterator[String] = {
-  cpg.typeDecl(className).inheritsFromTypeFullName.filterNot(_ == "object")
+  cpg.typeDecl
+    .fullName(className)
+    .inheritsFromTypeFullName
+    .filterNot(_ == "object")
+    .filterNot(x => x.startsWith("<body>") || x.startsWith("<fakeNew>") || x.startsWith("<meta"))
 }
 
 // TODO: Neo has some code for this already
@@ -35,15 +36,17 @@ def reduces(className: String): Iterator[String] = Iterator.empty
 
 def isPrimitiveType(className: String) : Boolean = className.startsWith("__builtin.")
 
-class UniqueQueue[T] extends Queue[T] {
+class UniqueQueue[T] extends mutable.Queue[T] {
 
-  val seen: Set[T] = Set.empty[T]
+  val seen: mutable.Set[T] = mutable.Set.empty[T]
 
   override def enqueue(obj: T): UniqueQueue.this.type = {
     if (!seen(obj)) {
       seen.add(obj)
       super.enqueue(obj)
-    } else { this }
+    } else {
+      this
+    }
   }
 
 }
@@ -52,8 +55,8 @@ class UniqueQueue[T] extends Queue[T] {
 
   importCpg(inputPath)
 
-  val allowedGlobals: Set[String] = Set()
-  val allowedReduces: Set[String] = Set()
+  val allowedGlobals: mutable.Set[String] = mutable.Set()
+  val allowedReduces: mutable.Set[String] = mutable.Set()
 
   val queue: UniqueQueue[String] = UniqueQueue()
   queue.enqueue(modelClass)
@@ -63,16 +66,21 @@ class UniqueQueue[T] extends Queue[T] {
     val targetClass = queue.dequeue
     println(s"analyzing: ${targetClass}")
 
+    // Should not add super classes to allowed sets, but should ensure that all
+    // attributes are analyzed, since they can be attributes of the current
+    // class.
+    // FIXME
     superClasses(targetClass)
       .foreach { c =>
         queue.enqueue(c)
       }
 
+    // Must add all subclasses to the allowed sets.
     subClasses(targetClass)
       .foreach { c =>
         queue.enqueue(c)
-      }
 
+      }
     attributeTypes(targetClass)
       .filterNot(isPrimitiveType(_))
       .foreach { t =>
@@ -80,6 +88,7 @@ class UniqueQueue[T] extends Queue[T] {
       }
 
     allowedGlobals.add(targetClass)
+
     reduces(targetClass)
       .foreach { r =>
         allowedReduces.add(r)

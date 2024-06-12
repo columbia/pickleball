@@ -14,7 +14,7 @@ def attributeTypes(className: String): Iterator[String] = {
   cpg.typeDecl(className).member.flatMap {
     member =>
       (member.typeFullName +: member.dynamicTypeHintFullName)
-        .filterNot(_ == "ANY")
+        .filterNot(_.matches("object|ANY"))
         .filterNot(isPrimitiveType(_))
         .distinct
   }
@@ -24,15 +24,16 @@ def subClasses(parentClass: String): Iterator[String] = {
   cpg.typeDecl
     .filter(_.inheritsFromTypeFullName.contains(parentClass))
     .name
-    .filterNot(_ == "object")
+    .filterNot(_.matches("object|ANY"))
+    .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
 }
 
 def superClasses(className: String): Iterator[String] = {
   cpg.typeDecl
     .fullName(className)
     .inheritsFromTypeFullName
-    .filterNot(_ == "object")
-    .filterNot(x => x.startsWith("<body>") || x.startsWith("<fakeNew>") || x.startsWith("<meta"))
+    .filterNot(_.matches("object|ANY"))
+    .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
 }
 
 case class ReduceCallable(
@@ -191,6 +192,7 @@ class UniqueQueue[T] extends mutable.Queue[T] {
         allowedReduces ++= r.callable.fullName.toSet
       }
   }
+  println()
   println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
   println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")
 }

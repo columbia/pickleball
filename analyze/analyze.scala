@@ -3,7 +3,11 @@
  */
 
 import scala.collection.mutable
-import io.shiftleft.codepropertygraph.generated.nodes.{ TypeDecl, Method, FieldIdentifier, Call }
+import io.shiftleft.codepropertygraph.generated.nodes.{
+  Return, TypeDecl, Method, Identifier, FieldIdentifier, Literal, Call => CallNode }
+
+val PyModuleSuffix = ".py:<module>."
+val ModuleSuffix = ":<module>."
 
 def attributeTypes(className: String): Iterator[String] = {
   /* TODO: Handle types stored in collections */
@@ -31,8 +35,102 @@ def superClasses(className: String): Iterator[String] = {
     .filterNot(x => x.startsWith("<body>") || x.startsWith("<fakeNew>") || x.startsWith("<meta"))
 }
 
-// TODO: Neo has some code for this already
-def reduces(className: String): Iterator[String] = Iterator.empty
+case class ReduceCallable(
+  classDecl:  Option[TypeDecl],
+  callable:   Option[Method],
+  retloc:     String
+)
+
+// val reduceReturns = cpg.ret.filter(_.method.name.matches("_reduce_ex__|__reduce__"))
+
+def constructReduceCallables(callableName: String, classDecl: TypeDecl, retLoc: String): Set[ReduceCallable] = {
+  cpg.method.filter(_.fullName == callableName).l match {
+    case Nil => Set()
+    case callables => callables.map(callable =>
+      println(s"- constructing callable for ${classDecl.name}:${callable.name}")
+      ReduceCallable(Some(classDecl), Some(callable), retLoc)).toSet
+  }
+}
+
+/*
+ * Given a return statement in a __reduce__ or __reduce_ex__ method, determine
+ * the returned callable object. Also takes the typeDecl of the class that
+ * implements the __reduce__ method.
+ */
+def callablesFromReduceReturn(ret: Return, pclass: TypeDecl): Set[ReduceCallable] = {
+  val retLoc = s"${ret.method.filename}:${ret.lineNumber.getOrElse(-1)}"
+
+  /*
+   * The return value of a reduce call can either be: a string literal, a tuple,
+   * or an expression that we need to recursively descend into.
+   */
+  ret.argumentOut.l match {
+    case retVal :: _ =>
+      retVal match {
+        case literal: Literal if literal.typeFullName == "__builtin.str" =>
+          /* Handle string literal */
+          println(s"- string literal: ${literal.code.replace("\"", "")}")
+          constructReduceCallables(literal.code.replace("\"", ""), pclass, retLoc)
+        case call: CallNode if call.methodFullName == "<operator>.tupleLiteral" =>
+          /* Handle tuple return value */
+          println(s"- tuple: ${call.name}")
+          call.argument.l match {
+            case Nil => Set()
+            case (arg0: Identifier) :: _ =>
+              /* Argument is a method name defined in the same file. Add the correct module full name prefix */
+              val callableName = s"${call.method.filename}${ModuleSuffix}${arg0.name}"
+              println(s"- callable name: ${callableName}")
+              constructReduceCallables(callableName, pclass, retLoc)
+            case (arg0: CallNode) :: _ if arg0.name == "<operator>.fieldAccess" =>
+              /* Argument is a */
+              /* TODO: Refactor functionally */
+              var faccess = arg0
+              var faccess_arg0 = faccess.asInstanceOf[CallNode].argument.l(0)
+              var faccess_fident = faccess.asInstanceOf[CallNode].argument.l(1).asInstanceOf[FieldIdentifier]
+              var fullName = faccess_fident.canonicalName
+              while (faccess_arg0.isCall && faccess_arg0.asInstanceOf[CallNode].name == "<operator>.fieldAccess") {
+                faccess = faccess_arg0.asInstanceOf[CallNode]
+                faccess_arg0 = faccess.argument.l(0)
+                faccess_fident = faccess.asInstanceOf[CallNode].argument.l(1).asInstanceOf[FieldIdentifier]
+                fullName = faccess_fident.canonicalName + PyModuleSuffix + fullName
+              }
+              if (faccess_arg0.isIdentifier) {
+                /* FIXME */
+              }
+              constructReduceCallables(fullName, pclass, retLoc)
+            case (arg0: CallNode) :: _ => /* Error */
+              println(s"Unknown call for reduce return value ${arg0.name}")
+              Set()
+          }
+        case call: CallNode =>
+          /* Handle expression  by recursively descending to get return values */
+          println(s"- call: ${call.name}")
+          val returns = cpg.ret.filter(_.method.name == call.name)
+          returns.flatMap {newRet => callablesFromReduceReturn(newRet, pclass) }.toSet
+        case _ =>
+          println(s"Unknown reduce return value @ ${retLoc}")
+          Set(ReduceCallable(None, None, retLoc))
+      }
+    case Nil =>
+      println(s"Unknown reduce return value for ${ret} @ ${retLoc}")
+      Set(ReduceCallable(None, None, retLoc))
+  }
+}
+
+/* Given a class name, return all the callables that the class __reduce__|__reduce_ex__
+ * method returns, if it exists.
+ */
+def reduces(classFullName: String): Iterator[ReduceCallable] = {
+
+  val reduceReturns = cpg.ret.filter(_.method.name.matches("__reduce_ex__|__reduce__"))
+  val classReduceReturns: Iterator[Return] = reduceReturns.filter(_.method.typeDecl.head.name == classFullName)
+
+  classReduceReturns.flatMap { ret =>
+    println(s"Analyzing return statement ${ret} @ ${ret.method.filename}:${ret.lineNumber.getOrElse(-1)}")
+    val pclass = ret.method.typeDecl.head   // may nead headOption - occurs if the __reduce__ method is not in a class, which shouldn't be the case
+    callablesFromReduceReturn(ret, pclass)
+  }
+}
 
 def isPrimitiveType(className: String) : Boolean = className.startsWith("__builtin.")
 
@@ -65,7 +163,6 @@ class UniqueQueue[T] extends mutable.Queue[T] {
 
     val targetClass = queue.dequeue
     println(s"analyzing: ${targetClass}")
-
     // Should not add super classes to allowed sets, but should ensure that all
     // attributes are analyzed, since they can be attributes of the current
     // class.
@@ -88,13 +185,12 @@ class UniqueQueue[T] extends mutable.Queue[T] {
       }
 
     allowedGlobals.add(targetClass)
-
     reduces(targetClass)
       .foreach { r =>
-        allowedReduces.add(r)
+        println(s"- adding callables: ${r.callable.fullName.mkString(",")}")
+        allowedReduces ++= r.callable.fullName.toSet
       }
   }
-
-  println(s"Allowed Globals: ${allowedGlobals.mkString("\n- ")}")
-  println(s"Allowed Reduces: ${allowedReduces.mkString("\n- ")}")
+  println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
+  println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")
 }

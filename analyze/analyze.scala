@@ -11,7 +11,7 @@ val ModuleSuffix = ":<module>."
 
 def attributeTypes(className: String): Iterator[String] = {
   /* TODO: Handle types stored in collections */
-  cpg.typeDecl(className).member.flatMap {
+  cpg.typeDecl.fullName(className).member.flatMap {
     member =>
       (member.typeFullName +: member.dynamicTypeHintFullName)
         .filterNot(_.matches("object|ANY"))
@@ -22,7 +22,10 @@ def attributeTypes(className: String): Iterator[String] = {
 
 def subClasses(parentClass: String): Iterator[String] = {
   cpg.typeDecl
-    .filter(_.inheritsFromTypeFullName.contains(parentClass))
+    // Filter will identify any type full names that end in .parentClass. This
+    // will not match exactly on the full name, so there may be type collisions
+    // in the project. The query may also be expensive.
+    .filter(_.inheritsFromTypeFullName.exists(_.split('.').lastOption == Some(parentClass)))
     .name
     .filterNot(_.matches("object|ANY"))
     .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
@@ -31,7 +34,8 @@ def subClasses(parentClass: String): Iterator[String] = {
 def superClasses(className: String): Iterator[String] = {
   cpg.typeDecl
     .fullName(className)
-    .inheritsFromTypeFullName
+    //.inheritsFromTypeFullName
+    .baseType.typeDeclFullName
     .filterNot(_.matches("object|ANY"))
     .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
 }
@@ -57,6 +61,9 @@ def constructReduceCallables(callableName: String, classDecl: TypeDecl, retLoc: 
  * Given a return statement in a __reduce__ or __reduce_ex__ method, determine
  * the returned callable object. Also takes the typeDecl of the class that
  * implements the __reduce__ method.
+ *
+ * TODO: I think that the types also contained in the tuples need to be checked
+ * as well.
  */
 def callablesFromReduceReturn(ret: Return, pclass: TypeDecl): Set[ReduceCallable] = {
   val retLoc = s"${ret.method.filename}:${ret.lineNumber.getOrElse(-1)}"
@@ -164,21 +171,31 @@ class UniqueQueue[T] extends mutable.Queue[T] {
 
     val targetClass = queue.dequeue
     println(s"analyzing: ${targetClass}")
-    // Should not add super classes to allowed sets, but should ensure that all
-    // attributes are analyzed, since they can be attributes of the current
-    // class.
-    // FIXME
+    val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
+    if (targetTypeDecls.isEmpty) {
+      println(s"- !! unable to find typeDecl for class ${targetClass} !!")
+    }
+
+
+    // TODO: Not necessary to always add super classes to policy. We only need
+    // to add types of all fields that come from super classes.
+    // This addes the super class to the work queue, which automatically
+    // results in adding it to the policy as well.
+    println(s"- super classes: ${superClasses(targetClass).toList.mkString(",")}")
     superClasses(targetClass)
       .foreach { c =>
         queue.enqueue(c)
       }
 
     // Must add all subclasses to the allowed sets.
+    println(s"- sub classes: ${subClasses(targetClass).toList.mkString(",")}")
     subClasses(targetClass)
       .foreach { c =>
         queue.enqueue(c)
 
       }
+
+    println(s"- attribute types: ${attributeTypes(targetClass).toList.mkString(",")}")
     attributeTypes(targetClass)
       .filterNot(isPrimitiveType(_))
       .foreach { t =>
@@ -186,6 +203,7 @@ class UniqueQueue[T] extends mutable.Queue[T] {
       }
 
     allowedGlobals.add(targetClass)
+    // TODO: Remove target class from work queue if a reduce function is found.
     reduces(targetClass)
       .foreach { r =>
         println(s"- adding callables: ${r.callable.fullName.mkString(",")}")

@@ -21,11 +21,11 @@ docker run -it --rm -v $(pwd):/pickle-defense joern /bin/bash
 # /joern/joern-parse /pickle-defense/analyze/tests/no-inheritance -o /pickle-defense/analyze/tests/no-inheritance.cpg
 ```
 
-4. Execute `analyze.scala` script with a path to the CPG and the name of the
+4. Execute `analyze.sc` script with a path to the CPG and the name of the
    class to infer a policy for:
 
 ```
-# /joern/joern --script /pickle-defense/analyze/analyze.scala --param inputPath=/pickle-defense/analyze/tests/no-inheritance.cpg --param modelClass=Model
+# /joern/joern --script /pickle-defense/analyze/analyze.sc --param inputPath=/pickle-defense/analyze/tests/no-inheritance.cpg --param modelClass=Model
 ```
 
 The script should output an overapproximate policy:

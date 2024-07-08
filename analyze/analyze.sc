@@ -1,5 +1,5 @@
 /*
- * Usage: ./joern --script ./analyze.scala --param inputPath=<path to python project cpg> --param modelClass=SequenceTagger
+ * Usage: ./joern --script ./analyze.sc --param inputPath=<path to python project cpg> --param modelClass=SequenceTagger
  */
 
 import scala.collection.mutable

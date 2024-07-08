@@ -16,6 +16,7 @@ def attributeTypes(className: String): Iterator[String] = {
       (member.typeFullName +: member.dynamicTypeHintFullName)
         .filterNot(_.matches("object|ANY"))
         .filterNot(isPrimitiveType(_))
+        .filterNot(_.endsWith(".__init__"))
         .distinct
   }
 }

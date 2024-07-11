@@ -178,38 +178,42 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
       println(s"-- found typeDecls with names: ${fullNames.mkString(",")}")
     }
 
-    // TODO: Not necessary to always add super classes to policy. We only need
-    // to add types of all fields that come from super classes.
-    // This addes the super class to the work queue, which automatically
-    // results in adding it to the policy as well.
-    println(s"- super classes: ${superClasses(targetClass).toList.mkString(",")}")
-    superClasses(targetClass)
-      .foreach { c =>
-        queue.enqueue(c)
-      }
-
-    // Must add all subclasses to the allowed sets.
-    println(s"- sub classes: ${subClasses(targetClass).toList.mkString(",")}")
-    subClasses(targetClass)
-      .foreach { c =>
-        queue.enqueue(c)
-
-      }
-
-    println(s"- attribute types: ${attributeTypes(targetClass).toList.mkString(",")}")
-    attributeTypes(targetClass)
-      .filterNot(isPrimitiveType(_))
-      .foreach { t =>
-        queue.enqueue(t)
-      }
-
-    allowedGlobals.add(targetClass)
-    // TODO: Remove target class from work queue if a reduce function is found.
-    reduces(targetClass)
-      .foreach { r =>
+    val reduceMethods = reduces(targetClass)
+    if (reduceMethods.nonEmpty) {
+      println(s"- reduce method identified")
+      reduceMethods.foreach { r =>
         println(s"- adding callables: ${r.callable.fullName.mkString(",")}")
         allowedReduces ++= r.callable.fullName.toSet
       }
+
+      // TODO: Analyze all types of arguments to reduceMethods
+
+    } else {
+      println(s"- no reduce method identified")
+      allowedGlobals.add(targetClass)
+
+      // TODO: Distinguish class constructor and add it to allowed callables
+
+      // TODO: Analyze all types of arguments to constructor
+
+      /** Analyze all subclasses of targetClass */
+      println(s"- sub classes: ${subClasses(targetClass).toList.mkString(",")}")
+      subClasses(targetClass).foreach(queue.enqueue)
+
+      /** Approximate all types that can be written to attributes of the targetClass
+       * analyzing all class attribute types. */
+      println(s"- attribute types: ${attributeTypes(targetClass).toList.mkString(",")}")
+      attributeTypes(targetClass)
+        .filterNot(isPrimitiveType)
+        .foreach(queue.enqueue)
+
+      /* Ensure that attribute types of parent classes are also collected */
+      val parentAttributes = superClasses(targetClass).flatMap(attributeTypes).toList
+      println(s"- parent class attribute types: ${parentAttributes.mkString(",")}")
+      parentAttributes
+        .filterNot(isPrimitiveType)
+        .foreach(queue.enqueue)
+    }
   }
 
   (allowedGlobals, allowedReduces)

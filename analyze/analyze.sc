@@ -158,9 +158,7 @@ class UniqueQueue[T] extends mutable.Queue[T] {
 
 }
 
-@main def main(inputPath: String, modelClass: String) = {
-
-  importCpg(inputPath)
+def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[String]) = {
 
   val allowedGlobals: mutable.Set[String] = mutable.Set()
   val allowedReduces: mutable.Set[String] = mutable.Set()
@@ -173,10 +171,12 @@ class UniqueQueue[T] extends mutable.Queue[T] {
     val targetClass = queue.dequeue
     println(s"analyzing: ${targetClass}")
     val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
+
     if (targetTypeDecls.isEmpty) {
       println(s"- !! unable to find typeDecl for class ${targetClass} !!")
+      val fullNames = cpg.typeDecl(targetClass).fullName.l
+      println(s"-- found typeDecls with names: ${fullNames.mkString(",")}")
     }
-
 
     // TODO: Not necessary to always add super classes to policy. We only need
     // to add types of all fields that come from super classes.
@@ -211,6 +211,16 @@ class UniqueQueue[T] extends mutable.Queue[T] {
         allowedReduces ++= r.callable.fullName.toSet
       }
   }
+
+  (allowedGlobals, allowedReduces)
+}
+
+@main def main(inputPath: String, modelClass: String) = {
+
+  importCpg(inputPath)
+
+  val (allowedGlobals, allowedReduces) = inferTypeFootprint(modelClass)
+
   println()
   println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
   println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")

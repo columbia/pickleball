@@ -20,7 +20,11 @@ class SGD(Optimizer):
 class Trainer(object):
 
     def __init__(self, model: Model):
+        # self should be recognized as type Trainer
+        # cpg.method("train").ast.isIdentifier.filter(_.name=="self").l
+        # >> typeFullName = "ANY"
 
+        # self.model is recognized as type Model
         self.model = model
 
     def train(self, name: str, optimizer: Optimizer):
@@ -30,5 +34,7 @@ class Trainer(object):
         # Optimizer class included in the model through a dictionary field
         model_card['optimizer'] = optimizer
 
+        # self.model is not recognized as type model here, self.model.name is
+        # not recognized as a write to a Model.name attribute
         self.model.name = name
         self.model.model_card = model_card

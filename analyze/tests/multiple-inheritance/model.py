@@ -49,7 +49,15 @@ class Model(object):
         self.model_card = {}
         self.model_card['optimizer'] = baz
 
-class SpecializedModel(Model):
+class MixinAttribute(object):
+    pass
+
+class SpecialMixin(object):
+
+    def __init__(self):
+        self.mixin_attribute = MixinAttribute()
+
+class SpecializedModel(Model, SpecialMixin):
 
     def __init__(self, name: str, optimizer: Optimizer, tensor: Tensor, baz: Baz, special_name: str):
         self.special_name = special_name

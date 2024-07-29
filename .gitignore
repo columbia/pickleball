@@ -1,2 +1,3 @@
 *.cpg
 case-studies/
+.venv/

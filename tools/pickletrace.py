@@ -2,6 +2,7 @@ import argparse
 import contextlib
 import logging
 import sys
+from typing import Set
 
 if sys.version_info >= (3, 9):
     from ast import unparse
@@ -10,6 +11,8 @@ else:
 
 from fickling import fickle, tracing
 from fickling.pytorch import PyTorchModelWrapper
+
+import consts
 
 # The fickling module generates a lot of printed output statements when tracing
 # a pickle program. I use this dummy file and context manager to silence the
@@ -91,6 +94,18 @@ def trace_model(model_path: str) -> str:
 
     return trace
 
+def get_imports_from_trace(trace: str) -> Set[str]:
+    def is_import(line: str) -> bool:
+        toks = line.split(' ')
+        return len(toks) == 4 and toks[0] == 'from' and toks[2] == 'import'
+
+    return set(filter(is_import, trace.split('\n')))
+
+def get_nonstandard_imports(trace: str) -> Set[str]:
+    imports = get_imports_from_trace(trace)
+
+    return imports - set(consts.ALLOWED_CALLABLES)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -104,7 +119,10 @@ if __name__ == "__main__":
     model_trace: str = trace_model(args.modelpath)
 
     if args.out:
-        with open(args.out, 'wb') as f:
+        with open(args.out, 'w') as f:
             f.write(model_trace)
     else:
         print(model_trace)
+
+    print(get_imports_from_trace(model_trace))
+    print(get_nonstandard_imports(model_trace))

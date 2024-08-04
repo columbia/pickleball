@@ -110,7 +110,7 @@ def main():
                 have_nonstandard = 'True' if nonstandard_imports else 'False'
 
                 # Calculate relative file path
-                relative_file_path = os.path.relpath(pickle_file, start=PEATMOSS_PATH)
+                relative_file_path = os.path.relpath(pickle_file, start=model_repo)
 
                 # Append imports to CSV
                 with open(CSV_OUTPUT, 'a', newline='') as csvfile:

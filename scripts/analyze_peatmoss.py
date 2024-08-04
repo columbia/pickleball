@@ -3,7 +3,7 @@ import os
 import logging
 import csv
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
+import signal
 
 PEATMOSS_PATH = os.getenv("PEATMOSS_PATH")
 FILE_EXTENSIONS = ['.pkl', '.pt', '.pth', '.bin']
@@ -85,13 +85,21 @@ def analyze_peatmoss(model_path: str) -> str:
         raise RuntimeError("PEATMOSS_PATH environment variable not set")
     return trace_model(model_path)
 
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
 def analyze_with_timeout(model_path: str, timeout: int):
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(analyze_peatmoss, model_path)
-        try:
-            return future.result(timeout=timeout)
-        except TimeoutError:
-            return None
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(timeout)
+    try:
+        result = analyze_peatmoss(model_path)
+        signal.alarm(0)
+        return result
+    except TimeoutException:
+        return None
 
 def main():
     logging.basicConfig(level=logging.INFO)

@@ -85,7 +85,7 @@ def main():
     # Write headers to the CSV file
     with open(CSV_OUTPUT, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['Model Name', 'File Extension', 'File Path', 'Import', 'Type'])
+        csvwriter.writerow(['Model Name', 'File Extension', 'File Path', 'All Imports', 'Nonstandard Imports', 'Have Nonstandard Import'])
 
     # Loop through the directories and find pickle files with tqdm progress bar
     for author, model, model_repo in tqdm(find_model_repo(PEATMOSS_PATH), total=total_repos, desc="Processing Repositories"):
@@ -105,13 +105,14 @@ def main():
                 imports = get_imports_from_trace(model_trace)
                 nonstandard_imports = get_nonstandard_imports(model_trace)
                 
+                all_imports_str = ', '.join(imports)
+                nonstandard_imports_str = ', '.join(nonstandard_imports)
+                have_nonstandard = 'True' if nonstandard_imports else 'False'
+
                 # Append imports to CSV
                 with open(CSV_OUTPUT, 'a', newline='') as csvfile:
                     csvwriter = csv.writer(csvfile)
-                    for imp in imports:
-                        csvwriter.writerow([model, os.path.splitext(pickle_file)[1], pickle_file, imp, 'Standard'])
-                    for imp in nonstandard_imports:
-                        csvwriter.writerow([model, os.path.splitext(pickle_file)[1], pickle_file, imp, 'Nonstandard'])
+                    csvwriter.writerow([model, os.path.splitext(pickle_file)[1], pickle_file, all_imports_str, nonstandard_imports_str, have_nonstandard])
         else:
             logging.warning("No pickle file found in repository: %s", model_repo)
 

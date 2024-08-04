@@ -9,8 +9,7 @@ FILE_EXTENSIONS = ['.pkl', '.pt', '.pth', '.bin']
 
 # Output directories and files
 TRACE_DIR = "traces"
-CSV_NONSTANDARD_OUTPUT = "nonstandard_imports.csv"
-CSV_STANDARD_OUTPUT = "standard_imports.csv"
+CSV_OUTPUT = "imports.csv"
 
 # Ensure the trace directory exists
 os.makedirs(TRACE_DIR, exist_ok=True)
@@ -51,15 +50,16 @@ def count_model_repos(directory: str) -> int:
     return count
 
 
-def find_pickle_file(directory: str):
+def find_pickle_files(directory: str):
     """
-    Find and return the path of the first pickle file in the directory.
+    Find and return the paths of all pickle files in the directory.
     """
+    pickle_files = []
     for root, _, files in os.walk(directory):
         for file in files:
             if any(file.endswith(ext) for ext in FILE_EXTENSIONS):
-                return os.path.join(root, file)
-    return None
+                pickle_files.append(os.path.join(root, file))
+    return pickle_files
 
 
 def analyze_peatmoss(model_path: str) -> str:
@@ -82,45 +82,38 @@ def main():
     total_repos = count_model_repos(PEATMOSS_PATH)
     logging.info("Total model repositories to process: %d", total_repos)
 
-    all_imports = []
-    all_nonstandard_imports = []
+    # Write headers to the CSV file
+    with open(CSV_OUTPUT, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(['Model Name', 'File Extension', 'File Path', 'Import', 'Type'])
 
     # Loop through the directories and find pickle files with tqdm progress bar
     for author, model, model_repo in tqdm(find_model_repo(PEATMOSS_PATH), total=total_repos, desc="Processing Repositories"):
         logging.info("Processing repository: %s", model_repo)
-        pickle_file = find_pickle_file(model_repo)
-        if pickle_file:
-            logging.info("Found pickle file: %s", pickle_file)
-            model_trace = analyze_peatmoss(pickle_file)
+        pickle_files = find_pickle_files(model_repo)
+        if pickle_files:
+            for pickle_file in pickle_files:
+                logging.info("Found pickle file: %s", pickle_file)
+                model_trace = analyze_peatmoss(pickle_file)
 
-            # Save model trace to a file in the traces directory
-            trace_filename = f"trace_{author}_{model}.txt"
-            trace_filepath = os.path.join(TRACE_DIR, trace_filename)
-            with open(trace_filepath, 'w') as f:
-                f.write(model_trace)
-            
-            imports = get_imports_from_trace(model_trace)
-            nonstandard_imports = get_nonstandard_imports(model_trace)
-            all_imports.extend(imports)
-            all_nonstandard_imports.extend(nonstandard_imports)
+                # Save model trace to a file in the traces directory
+                trace_filename = f"trace_{author}_{model}.txt"
+                trace_filepath = os.path.join(TRACE_DIR, trace_filename)
+                with open(trace_filepath, 'w') as f:
+                    f.write(model_trace)
+                
+                imports = get_imports_from_trace(model_trace)
+                nonstandard_imports = get_nonstandard_imports(model_trace)
+                
+                # Append imports to CSV
+                with open(CSV_OUTPUT, 'a', newline='') as csvfile:
+                    csvwriter = csv.writer(csvfile)
+                    for imp in imports:
+                        csvwriter.writerow([model, os.path.splitext(pickle_file)[1], pickle_file, imp, 'Standard'])
+                    for imp in nonstandard_imports:
+                        csvwriter.writerow([model, os.path.splitext(pickle_file)[1], pickle_file, imp, 'Nonstandard'])
         else:
             logging.warning("No pickle file found in repository: %s", model_repo)
-
-    # Save nonstandard imports to CSV
-    with open(CSV_NONSTANDARD_OUTPUT, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['Nonstandard Import'])
-        
-        for imp in all_nonstandard_imports:
-            csvwriter.writerow([imp])
-
-    # Save standard imports to CSV
-    with open(CSV_STANDARD_OUTPUT, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['Standard Import'])
-        
-        for imp in all_imports:
-            csvwriter.writerow([imp])
 
 
 if __name__ == '__main__':

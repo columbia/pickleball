@@ -33,13 +33,40 @@ def subClasses(parentClass: String): Iterator[String] = {
 }
 
 def superClasses(className: String): Iterator[String] = {
-  cpg.typeDecl
+ /**
+ * Sometimes type information is in both the inheritsFromTypeFullName and the
+ * baseType fields (or one, and not the other). We try searching for both.
+ */
+ cpg.typeDecl
     .fullName(className)
     //.inheritsFromTypeFullName
     .baseType.typeDeclFullName
     .filterNot(_.matches("object|ANY"))
     .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
+    .map(stripTypeVar)
+  ++
+  cpg.typeDecl
+    .fullName(className)
+    .inheritsFromTypeFullName
+    .filterNot(_.matches("object|ANY"))
+    .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
+    .map(stripTypeVar)
 }
+
+/**
+ * Joern gets tripped up when generic classes are inherited from with a
+ * specialized type variable. We need to strip out the type variable from the
+ * class name.
+ *
+ * For example:
+ *
+ * class Foo(typing.Generic(T)):
+ *    pass
+ *
+ * class IntFoo(Foo[int]):
+ *    pass
+ */
+def stripTypeVar(className: String): String = className.takeWhile(_ != '[')
 
 case class ReduceCallable(
   classDecl:  Option[TypeDecl],
@@ -209,6 +236,7 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
 
       /* Ensure that attribute types of parent classes are also collected */
       val parentAttributes = superClasses(targetClass).flatMap(attributeTypes).toList
+      println(s"- parent classes: ${superClasses(targetClass).mkString(",")}")
       println(s"- parent class attribute types: ${parentAttributes.mkString(",")}")
       parentAttributes
         .filterNot(isPrimitiveType)

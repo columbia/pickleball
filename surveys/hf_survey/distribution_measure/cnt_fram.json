@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-{"Multimodal": {"pytorch": 101, "safetensors": 210}, "Computer Vision": {"pytorch": 284, "safetensors": 453}, "NLP": {"pytorch": 403, "safetensors": 912}, "Audio": {"pytorch": 93, "safetensors": 270}, "Other": {"pytorch": 35, "safetensors": 4}}
-=======
 {"Multimodal": {"pytorch": 256, "safetensors": 203}, "Computer Vision": {"pytorch": 555, "safetensors": 332}, "NLP": {"pytorch": 1131, "safetensors": 473}, "Audio": {"pytorch": 325, "safetensors": 195}, "Other": {"pytorch": 37, "safetensors": 9}}
->>>>>>> 2e5bf891f4dc895dee1932e0e2f31cb3fe4d1f7d

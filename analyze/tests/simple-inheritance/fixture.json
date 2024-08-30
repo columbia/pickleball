@@ -1,6 +1,6 @@
 {
     "class_name": "model.py:<module>.SpecializedModel",
-    "globals_expected": [
+    "globals": [
         "model.SpecializedModel",
         "model.Optimizer",
         "model.Bar",
@@ -8,7 +8,7 @@
         "model.Baz",
         "model.create_tensor"
     ],
-    "reduces_expected": [
+    "reduces": [
         "model.create_tensor"
     ]
 }

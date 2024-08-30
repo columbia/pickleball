@@ -1,0 +1,12 @@
+{
+    "globals_expected": [
+        "model.SpecializedModel",
+        "model.Optimizer",
+        "model.Bar",
+        "model.SGD",
+        "model.Baz"
+    ],
+    "reduces_expected": [
+        "create_tensor"
+    ]
+}

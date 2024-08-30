@@ -197,7 +197,8 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
 
     val targetClass = queue.dequeue
     println(s"analyzing: ${targetClass}")
-    val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
+    //val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
+    val targetTypeDecls = cpg.typeDecl(targetClass).toList
 
     if (targetTypeDecls.isEmpty) {
       println(s"- !! unable to find typeDecl for class ${targetClass} !!")
@@ -253,7 +254,11 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
 
   val (allowedGlobals, allowedReduces) = inferTypeFootprint(modelClass)
 
+  val outputMap = Map("globals" -> allowedGlobals, "reduces" -> allowedReduces)
+  val jsonString: String = upickle.default.write(outputMap)
+
   println()
-  println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
-  println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")
+  //println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
+  //println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")
+  println(jsonString)
 }

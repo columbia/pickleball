@@ -263,9 +263,12 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
   jsonString("class_name") = modelClass
 
   println()
-  //println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
-  //println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")
-  println(ujson.write(jsonString))
+  println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
+  println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")
+
   val outputPath = os.Path(inputPath, base = os.pwd) / os.up
-  os.write(outputPath / "output.json", ujson.write(jsonString))
+  val outputFile = outputPath / "output.json"
+  println()
+  println(s"Writing output to file: ${outputFile}")
+  os.write.over(outputFile, ujson.write(jsonString))
 }

@@ -245,7 +245,22 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
     }
   }
 
-  (allowedGlobals, allowedReduces)
+  (allowedGlobals.map(canonicalizeName),
+   allowedReduces.map(canonicalizeName))
+}
+
+def canonicalizeName(callableName: String): String = {
+
+  // Split modelClass by PyModuleSuffix and take the first element
+  //val modelClassModule = modelClass
+
+  // Split the callableName by PyModuleSuffix and stitch the components
+  // together with '.'s
+  val canonicalizedName = callableName
+    .replaceAllLiterally(PyModuleSuffix, ".")
+    .replaceAllLiterally("/", ".")
+
+  return canonicalizedName
 }
 
 @main def main(inputPath: String, modelClass: String) = {

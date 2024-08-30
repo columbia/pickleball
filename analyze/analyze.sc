@@ -254,11 +254,18 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
 
   val (allowedGlobals, allowedReduces) = inferTypeFootprint(modelClass)
 
-  val outputMap = Map("globals" -> allowedGlobals, "reduces" -> allowedReduces)
-  val jsonString: String = upickle.default.write(outputMap)
+  val outputMap: Map[String, mutable.Set[String]] = Map(
+      //"class_name" -> mutable.Set(modelClass),
+      "globals" -> allowedGlobals,
+      "reduces" -> allowedReduces)
+  val jsonOutput: String = upickle.default.write(outputMap)
+  val jsonString = ujson.read(jsonOutput)
+  jsonString("class_name") = modelClass
 
   println()
   //println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
   //println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")
-  println(jsonString)
+  println(ujson.write(jsonString))
+  val outputPath = os.Path(inputPath, base = os.pwd) / os.up
+  os.write(outputPath / "output.json", ujson.write(jsonString))
 }

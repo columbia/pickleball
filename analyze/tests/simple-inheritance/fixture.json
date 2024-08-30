@@ -1,12 +1,14 @@
 {
+    "class_name": "model.py:<module>.SpecializedModel",
     "globals_expected": [
         "model.SpecializedModel",
         "model.Optimizer",
         "model.Bar",
         "model.SGD",
-        "model.Baz"
+        "model.Baz",
+        "model.create_tensor"
     ],
     "reduces_expected": [
-        "create_tensor"
+        "model.create_tensor"
     ]
 }

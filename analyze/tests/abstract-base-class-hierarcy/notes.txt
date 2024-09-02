@@ -1,0 +1,2 @@
+This input source code seems to break Joern's parsing and produces an invalid
+CPG.

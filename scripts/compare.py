@@ -17,9 +17,10 @@ def compare_json_objects(json_obj1, json_obj2):
         return in_first_not_second, in_second_not_first, in_both
 
     def compute_f1(true_positives, false_positives, false_negatives):
-        precision = true_positives / (true_positives + false_positives)
-        recall = true_positives / (true_positives + false_negatives)
-        f1 = (2 * true_positives) / (2 * true_positives + false_positives + false_negatives)
+
+        precision = 1.0 if true_positives + false_positives == 0 else true_positives / (true_positives + false_positives)
+        recall = 1.0 if true_positives + false_negatives == 0 else true_positives / (true_positives + false_negatives)
+        f1 = 1.0 if true_positives + false_positives + false_negatives == 0 else (2 * true_positives) / (2 * true_positives + false_positives + false_negatives)
 
         return precision, recall, f1
 

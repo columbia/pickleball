@@ -45,6 +45,18 @@ def parse_reduce_lines(text_lines):
     return list(reduce_set)
 
 
+def get_callable_name(fullname: str) -> str:
+    return fullname.split('.')[-1]
+
+def get_reduce_fullname(reduce_callable: str, global_callables:str ) -> str:
+    try:
+        indexof = list(map(get_callable_name, global_callables)).index(reduce_callable)
+    except ValueError as err:
+        raise ValueError('Reduce callable found with no global callable') from err
+
+    return global_callables[indexof]
+
+
 def parse_trace_to_json(text_lines: str) -> str:
     """Take text input and parse all GLOBAL imports and REDUCE callables and
     return result as a JSON string.
@@ -52,10 +64,15 @@ def parse_trace_to_json(text_lines: str) -> str:
 
     globals_result = parse_global_lines(text_lines)
     reduce_result = parse_reduce_lines(text_lines)
+    reduce_result_fullnames = [
+        get_reduce_fullname(reduce_name, globals_result)
+        for reduce_name in reduce_result
+    ]
+
 
     output = {
         "globals": globals_result,
-        "reduces": reduce_result
+        "reduces": reduce_result_fullnames
     }
 
     return json.dumps(output, indent=2)

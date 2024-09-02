@@ -1,0 +1,2 @@
+Test fails because analysis does not follow the Optimizer class down to its
+subclasses (misses SGD).

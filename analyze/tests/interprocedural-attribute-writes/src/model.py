@@ -1,7 +1,7 @@
 '''
 Need to identify:
-    - writes to attributes in methods that are not part of the Model class
-    - writes to attributes through dictionary slices
+    - Globals: {model.Model, model.Optimizer, model.SGD}
+    - Reduces: {}
 '''
 
 class Model(object):

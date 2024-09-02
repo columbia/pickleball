@@ -3,7 +3,6 @@
     "globals": [
         "model.SpecializedModel",
         "model.Optimizer",
-        "model.Bar",
         "model.SGD",
         "model.Baz",
         "model.create_tensor"

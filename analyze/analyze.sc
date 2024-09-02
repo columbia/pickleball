@@ -8,6 +8,7 @@ import io.shiftleft.codepropertygraph.generated.nodes.{
 
 val PyModuleSuffix = ".py:<module>."
 val ModuleSuffix = ":<module>."
+val CollectionPrefix ="__collection."
 
 def attributeTypes(className: String): Iterator[String] = {
   /* TODO: Handle types stored in collections */
@@ -212,6 +213,7 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
       reduceMethods.foreach { r =>
         println(s"- adding callables: ${r.callable.fullName.mkString(",")}")
         allowedReduces ++= r.callable.fullName.toSet
+        allowedGlobals ++= r.callable.fullName.toSet
       }
 
       // TODO: Analyze all types of arguments to reduceMethods
@@ -245,20 +247,35 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
     }
   }
 
-  (allowedGlobals.map(canonicalizeName),
-   allowedReduces.map(canonicalizeName))
+  (allowedGlobals.map(canonicalizeName(getPrefix(modelClass), _)),
+   allowedReduces.map(canonicalizeName(getPrefix(modelClass), _)))
 }
 
-def canonicalizeName(callableName: String): String = {
+def getPrefix(input: String): String = {
+  val index = input.indexOf('.')
+  if (index == -1) input else input.substring(0, index)
+}
+
+def canonicalizeName(baseModule: String, callableName: String): String = {
 
   // Split modelClass by PyModuleSuffix and take the first element
-  //val modelClassModule = modelClass
+  val modelClassModule = baseModule
+
+  def prependBaseModule(modulePrefix: String, input: String): String = {
+    if (!input.contains(".")) s"$modulePrefix.$input" else input
+  }
+
+  def stripCollectionPrefix(input: String): String = {
+    if (input.startsWith(CollectionPrefix)) input.substring(CollectionPrefix.length) else input
+  }
 
   // Split the callableName by PyModuleSuffix and stitch the components
   // together with '.'s
-  val canonicalizedName = callableName
-    .replaceAllLiterally(PyModuleSuffix, ".")
+  val canonicalizedName = prependBaseModule(
+    baseModule,
+    stripCollectionPrefix(callableName)
     .replaceAllLiterally("/", ".")
+    .replaceAllLiterally(PyModuleSuffix, "."))
 
   return canonicalizedName
 }

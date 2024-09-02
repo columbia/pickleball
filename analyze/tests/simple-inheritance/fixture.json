@@ -9,6 +9,6 @@
         "model.create_tensor"
     ],
     "reduces": [
-        "create_tensor"
+        "model.create_tensor"
     ]
 }

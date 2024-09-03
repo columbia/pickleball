@@ -1,0 +1,12 @@
+[submodule "evaluation/libraries/flair/flair"]
+	path = evaluation/libraries/flair/flair
+	url = https://github.com/flairNLP/flair.git
+[submodule "evaluation/libraries/pytorch/pytorch"]
+	path = evaluation/libraries/pytorch/pytorch
+	url = https://github.com/pytorch/pytorch.git
+[submodule "evaluation/libraries/pyannote-audio/pyannote-audio"]
+	path = evaluation/libraries/pyannote-audio/pyannote-audio
+	url = https://github.com/pyannote/pyannote-audio.git
+[submodule "evaluation/libraries/fastai/fastai"]
+	path = evaluation/libraries/fastai/fastai
+	url = https://github.com/fastai/fastai.git

@@ -261,6 +261,13 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
   // Split modelClass by PyModuleSuffix and take the first element
   val modelClassModule = baseModule
 
+  // Some callables collected by Joern are suffixed with "<return_value>"
+  // Remove this suffix
+  def removeReturnValueSuffix(input: String): String = {
+    val suffixPattern = "\\.<returnValue>$".r
+    suffixPattern.replaceFirstIn(input, "")
+  }
+
   def prependBaseModule(modulePrefix: String, input: String): String = {
     if (!input.contains(".")) s"$modulePrefix.$input" else input
   }
@@ -271,11 +278,11 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
 
   // Split the callableName by PyModuleSuffix and stitch the components
   // together with '.'s
-  val canonicalizedName = prependBaseModule(
+  val canonicalizedName = removeReturnValueSuffix(prependBaseModule(
     baseModule,
     stripCollectionPrefix(callableName)
     .replaceAllLiterally("/", ".")
-    .replaceAllLiterally(PyModuleSuffix, "."))
+    .replaceAllLiterally(PyModuleSuffix, ".")))
 
   return canonicalizedName
 }

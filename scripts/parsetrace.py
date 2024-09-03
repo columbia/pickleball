@@ -52,7 +52,8 @@ def get_reduce_fullname(reduce_callable: str, global_callables:str ) -> str:
     try:
         indexof = list(map(get_callable_name, global_callables)).index(reduce_callable)
     except ValueError as err:
-        raise ValueError('Reduce callable found with no global callable') from err
+        return "builtins" + reduce_callable
+
 
     return global_callables[indexof]
 

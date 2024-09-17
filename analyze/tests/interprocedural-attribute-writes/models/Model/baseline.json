@@ -1,0 +1,7 @@
+{
+  "globals": [
+    "model.Model",
+    "model.SGD"
+  ],
+  "reduces": []
+}

@@ -1,5 +1,5 @@
 /*
- * Usage: ./joern --script ./analyze.sc --param inputPath=<path to python project cpg> --param modelClass=SequenceTagger
+ * Usage: ./joern --script ./analyze.sc --param inputPath=<path to python project cpg> --param modelClass=SequenceTagger --param outputPath=<path to output>
  */
 
 import scala.collection.mutable
@@ -287,7 +287,7 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
   return canonicalizedName
 }
 
-@main def main(inputPath: String, modelClass: String) = {
+@main def main(inputPath: String, modelClass: String, outputPath: String = "") = {
 
   importCpg(inputPath)
 
@@ -305,8 +305,11 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
   println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")
   println(s"Allowed Reduces: \n- ${allowedReduces.mkString("\n- ")}")
 
-  val outputPath = os.Path(inputPath, base = os.pwd) / os.up
-  val outputFile = outputPath / "output.json"
+  val outputFile = if (outputPath == "") {
+    val outPath = os.Path(inputPath, base = os.pwd) / os.up
+    outPath / "output.json"
+  } else os.Path(outputPath, base = os.pwd)
+
   println()
   println(s"Writing output to file: ${outputFile}")
   os.write.over(outputFile, ujson.write(jsonString))

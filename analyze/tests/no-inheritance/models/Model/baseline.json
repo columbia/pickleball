@@ -1,0 +1,11 @@
+{
+  "globals": [
+    "model.Optimizer",
+    "model.create_tensor",
+    "model.Baz",
+    "model.Model"
+  ],
+  "reduces": [
+    "model.create_tensor"
+  ]
+}

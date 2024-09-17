@@ -1,0 +1,8 @@
+{
+  "globals": [
+    "basic.create_person"
+  ],
+  "reduces": [
+    "basic.create_person"
+  ]
+}

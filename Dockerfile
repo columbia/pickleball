@@ -1,6 +1,6 @@
 FROM debian:12
 
-RUN apt update && apt install -y zlib1g-dev curl gcc expect make wget gettext zip unzip git
+RUN apt update && apt install -y zlib1g-dev curl gcc expect make wget gettext zip unzip git python3
 
 # install jdk19 sbt
 RUN mkdir -p /data/App \

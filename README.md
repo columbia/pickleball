@@ -44,3 +44,11 @@ Allowed Globals:
 Allowed Reduces:
 - model.py:<module>.create_tensor
 ```
+
+## Run tests
+
+In the docker container:
+
+```
+# python3 runtests.py
+```

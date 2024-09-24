@@ -199,12 +199,18 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
     val targetClass = queue.dequeue
     println(s"analyzing: ${targetClass}")
     //val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
-    val targetTypeDecls = cpg.typeDecl(targetClass).toList
+    val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
 
     if (targetTypeDecls.isEmpty) {
       println(s"- !! unable to find typeDecl for class ${targetClass} !!")
-      val fullNames = cpg.typeDecl(targetClass).fullName.l
-      println(s"-- found typeDecls with names: ${fullNames.mkString(",")}")
+      if (targetClass.startsWith("__collection.")) {
+        val strippedName = stripCollectionPrefix(targetClass)
+        queue.enqueue(strippedName)
+      } else {
+        val fullNames = cpg.typeDecl(targetClass).fullName.l
+        println(s"-- found typeDecls with names: ${fullNames.mkString(",")}")
+        fullNames.foreach(queue.enqueue)
+      }
     }
 
     val reduceMethods = reduces(targetClass)
@@ -256,6 +262,10 @@ def getPrefix(input: String): String = {
   if (index == -1) input else input.substring(0, index)
 }
 
+def stripCollectionPrefix(input: String): String = {
+  if (input.startsWith(CollectionPrefix)) input.substring(CollectionPrefix.length) else input
+}
+
 def canonicalizeName(baseModule: String, callableName: String): String = {
 
   // Split modelClass by PyModuleSuffix and take the first element
@@ -270,10 +280,6 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
 
   def prependBaseModule(modulePrefix: String, input: String): String = {
     if (!input.contains(".")) s"$modulePrefix.$input" else input
-  }
-
-  def stripCollectionPrefix(input: String): String = {
-    if (input.startsWith(CollectionPrefix)) input.substring(CollectionPrefix.length) else input
   }
 
   // Split the callableName by PyModuleSuffix and stitch the components

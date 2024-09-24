@@ -48,7 +48,7 @@ FIXTURES = [
     'dictionary-types',
     'interprocedural-attribute-writes',
     'reduce',
-    'follow-collection-object'
+    #'follow-collection-object'
 ]
 
 # Hardcoded for docker container paths

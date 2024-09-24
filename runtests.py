@@ -34,6 +34,7 @@ TODO: produce a test report
 #   - input: subdir/*/baseline.json
 #   - output: subdir/*/result.json
 
+import argparse
 import pathlib
 import subprocess
 from typing import Tuple
@@ -46,7 +47,8 @@ FIXTURES = [
     'multiple-inheritance',
     'dictionary-types',
     'interprocedural-attribute-writes',
-    'reduce'
+    'reduce',
+    'follow-collection-object'
 ]
 
 # Hardcoded for docker container paths
@@ -107,13 +109,41 @@ def infer_policy(cpg_path: pathlib.Path, model_class: str, output_path: pathlib.
 def compare_policies(policy: pathlib.Path, baseline: pathlib.Path) -> Tuple[float, float]:
 
     result = compare.compare_json_files(str(policy), str(baseline))
-    global_f1 = result["global_lines"]["f1"]
-    reduce_f1 = result["reduce_lines"]["f1"]
-    return (global_f1, reduce_f1)
+    global_scores = result["global_lines"]
+    reduce_scores = result["reduce_lines"]
+    return (global_scores, reduce_scores)
+
+
+def print_fixtures():
+    list(map(print, FIXTURES))
 
 def main():
 
-    for fixture in FIXTURES:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--list',
+        action='store_true',
+        help='List all available test fixtures'
+    )
+    parser.add_argument(
+        '--fixtures',
+        nargs='*',
+        help='A list of individual tests to execute. If none provided, defaults to running all fixtures',
+        default=[])
+    args = parser.parse_args()
+
+    if args.list:
+        print_fixtures()
+        return
+
+    if not args.fixtures:
+        fixtures = FIXTURES
+    else:
+        assert all(fixture in FIXTURES for fixture in args.fixtures), "Invalid fixture provided"
+        fixtures = args.fixtures
+
+    test_results = {}
+    for fixture in fixtures:
         print(f'{BLUE}[*] Test fixture: {fixture}{RESET}')
         fixture_path = PATH_TO_FIXTURES / pathlib.Path(fixture)
         cpg_path = fixture_path / pathlib.Path('out.cpg')
@@ -136,15 +166,22 @@ def main():
                 return -1
 
             baseline_path = model_dir / pathlib.Path('baseline.json')
-            globals_f1, reduces_f1 = compare_policies(inferred_path, baseline_path)
+            global_scores, reduce_scores = compare_policies(inferred_path, baseline_path)
 
-            if globals_f1 < 1.0 or reduces_f1 < 1.0:
+            if global_scores["precision"] < 1.0 or reduce_scores["precision"] < 1.0:
                 print(f"{RED}[-] FAIL{RESET}")
-                print(f"- globals F1: {globals_f1}")
-                print(f"- reduces F1: {reduces_f1}")
+                test_results[f'{fixture}-{model_class_name}'] = 'FAIL'
             else:
                 print(f"{GREEN}[+] PASS{RESET}")
+                test_results[f'{fixture}-{model_class_name}'] = 'PASS'
 
+            print(f"- globals F1: {global_scores['f1']}")
+            print(f"- globals precision: {global_scores['precision']}")
+            print(f"- globals recall: {global_scores['recall']}")
+            print(f"- reduces F1: {reduce_scores['f1']}")
+            print(f"- reduces F1: {reduce_scores['precision']}")
+            print(f"- reduces F1: {reduce_scores['recall']}")
 
+    print(f'Tests passed: {sum(value == "PASS" for value in test_results.values())} / {len(test_results)}')
 if __name__ == '__main__':
     main()

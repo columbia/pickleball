@@ -1,2 +1,6 @@
 Test fails because analysis does not follow the Optimizer class down to its
 subclasses (misses SGD).
+- This is really because "Optimizer" is a collection type and needs to be
+  unparsed from it.
+- The name on the queue is "__collection.Optimizer" but we need to replace it
+  with "Optimizer" and then ultimately, the full name for Optimizer

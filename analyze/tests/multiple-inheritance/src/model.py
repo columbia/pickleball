@@ -1,5 +1,5 @@
 # SpecializedModel:
-# - Allowed globals: {SpecializedModel, Optimizer, SGD, Baz}
+# - Allowed globals: {SpecializedModel, Optimizer, SGD, Baz} MixinAttribute (Overapproximate)
 # - Allowed callables: {create_tensor}
 
 

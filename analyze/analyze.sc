@@ -17,7 +17,18 @@ def attributeTypes(className: String): Iterator[String] = {
       (member.typeFullName +: member.dynamicTypeHintFullName)
         .filterNot(_.matches("object|ANY"))
         .filterNot(isPrimitiveType(_))
-        .filterNot(_.endsWith(".__init__"))
+        /*  Constructors assigned to attributes may result in types of
+         *  Class.__init__ or Class.__init__.<returnValue>. When these are
+         *  seen, we can strip the suffix and just add the class name to the
+         *  analysis Queue.
+         * */
+        .map { memberType =>
+          memberType match {
+            case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
+            case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
+            case _ => memberType
+          }
+        }
         .distinct
   }
 }
@@ -160,7 +171,7 @@ def callablesFromReduceReturn(ret: Return, pclass: TypeDecl): Set[ReduceCallable
 def reduces(classFullName: String): Iterator[ReduceCallable] = {
 
   val reduceReturns = cpg.ret.filter(_.method.name.matches("__reduce_ex__|__reduce__"))
-  val classReduceReturns: Iterator[Return] = reduceReturns.filter(_.method.typeDecl.head.name == classFullName)
+  val classReduceReturns: Iterator[Return] = reduceReturns.filter(_.method.typeDecl.head.fullName == classFullName)
 
   classReduceReturns.flatMap { ret =>
     println(s"Analyzing return statement ${ret} @ ${ret.method.filename}:${ret.lineNumber.getOrElse(-1)}")
@@ -197,59 +208,76 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
   while (!queue.isEmpty) {
 
     val targetClass = queue.dequeue
-    println(s"analyzing: ${targetClass}")
-    //val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
-    val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
 
+    println(s"analyzing: ${targetClass}")
+
+    /* We expect that the class name on the queue is the full name of the
+     * typeDecl. If no typeDecls are found with the given full name, then
+     * either:
+     * - The class name on the queue is not the full name. In this case,
+     *   we look for any typeDecls with a short name that matches the class
+     *   name, and add their full names to the queue. This may result in
+     *   unrelated cases getting analyzed and widening our policies.
+     * - The class name is a full name, but Joern does not recognize a node by
+     *   that name. It may have the same node by a different name, or an error
+     *   in its front end parsing.
+     * - The class name is one that we have mangled - for example, any type
+     *   found inside of a collection is currently named __collection.name, and
+     *   needs to be unmangled.
+     */
+    val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
     if (targetTypeDecls.isEmpty) {
       println(s"- !! unable to find typeDecl for class ${targetClass} !!")
+
       if (targetClass.startsWith("__collection.")) {
+        /* Unmangle collection name */
         val strippedName = stripCollectionPrefix(targetClass)
         queue.enqueue(strippedName)
       } else {
+        /* Lookup any typeDecls that match the short class name and add them to
+         * queue.
+         */
         val fullNames = cpg.typeDecl(targetClass).fullName.l
         println(s"-- found typeDecls with names: ${fullNames.mkString(",")}")
         fullNames.foreach(queue.enqueue)
       }
-    }
-
-    val reduceMethods = reduces(targetClass)
-    if (reduceMethods.nonEmpty) {
-      println(s"- reduce method identified")
-      reduceMethods.foreach { r =>
-        println(s"- adding callables: ${r.callable.fullName.mkString(",")}")
-        allowedReduces ++= r.callable.fullName.toSet
-        allowedGlobals ++= r.callable.fullName.toSet
-      }
-
-      // TODO: Analyze all types of arguments to reduceMethods
 
     } else {
-      println(s"- no reduce method identified")
-      allowedGlobals.add(targetClass)
 
-      // TODO: Distinguish class constructor and add it to allowed callables
+      val reduceMethods = reduces(targetClass)
+      if (reduceMethods.nonEmpty) {
+        println(s"- reduce method identified")
+        reduceMethods.foreach { r =>
+          println(s"- adding callables: ${r.callable.fullName.mkString(",")}")
+          allowedReduces ++= r.callable.fullName.toSet
+          allowedGlobals ++= r.callable.fullName.toSet
+        }
 
-      // TODO: Analyze all types of arguments to constructor
+        // TODO: Analyze all types of arguments to reduceMethods
 
-      /** Analyze all subclasses of targetClass */
-      println(s"- sub classes: ${subClasses(targetClass).toList.mkString(",")}")
-      subClasses(targetClass).foreach(queue.enqueue)
+      } else {
+        println(s"- no reduce method identified")
+        allowedGlobals.add(targetClass)
 
-      /** Approximate all types that can be written to attributes of the targetClass
-       * analyzing all class attribute types. */
-      println(s"- attribute types: ${attributeTypes(targetClass).toList.mkString(",")}")
-      attributeTypes(targetClass)
-        .filterNot(isPrimitiveType)
-        .foreach(queue.enqueue)
+        /** Analyze all subclasses of targetClass */
+        println(s"- sub classes: ${subClasses(targetClass).toList.mkString(",")}")
+        subClasses(targetClass).foreach(queue.enqueue)
 
-      /* Ensure that attribute types of parent classes are also collected */
-      val parentAttributes = superClasses(targetClass).flatMap(attributeTypes).toList
-      println(s"- parent classes: ${superClasses(targetClass).mkString(",")}")
-      println(s"- parent class attribute types: ${parentAttributes.mkString(",")}")
-      parentAttributes
-        .filterNot(isPrimitiveType)
-        .foreach(queue.enqueue)
+        /** Approximate all types that can be written to attributes of the targetClass
+         * analyzing all class attribute types. */
+        println(s"- attribute types: ${attributeTypes(targetClass).toList.mkString(",")}")
+        attributeTypes(targetClass)
+          .filterNot(isPrimitiveType)
+          .foreach(queue.enqueue)
+
+        /* Ensure that attribute types of parent classes are also collected */
+        val parentAttributes = superClasses(targetClass).flatMap(attributeTypes).toList
+        println(s"- parent classes: ${superClasses(targetClass).mkString(",")}")
+        println(s"- parent class attribute types: ${parentAttributes.mkString(",")}")
+        parentAttributes
+          .filterNot(isPrimitiveType)
+          .foreach(queue.enqueue)
+      }
     }
   }
 

@@ -25,7 +25,7 @@ docker run -it --rm -v $(pwd):/pickle-defense joern /bin/bash
    class to infer a policy for:
 
 ```
-# /joern/joern --script /pickle-defense/analyze/analyze.sc --param inputPath=/pickle-defense/analyze/tests/no-inheritance.cpg --param modelClass=Model
+# /joern/joern --script /pickle-defense/analyze/analyze.sc --param inputPath=/pickle-defense/analyze/tests/no-inheritance.cpg --param modelClass=Model --param outputPath=/pickle-defense/analyze/tests/simple-inheritance/models/SpecializedModel/inferred.json
 ```
 
 The script should output an overapproximate policy:
@@ -52,3 +52,8 @@ In the docker container:
 ```
 # python3 runtests.py
 ```
+
+Non-determinism in Joern may result in a crash - if one occurs, first try
+re-running the test suite. You can also run individual tests by providing them
+as arguments by name with the `--fixtures` option. List all available tests
+with the `--list` option.

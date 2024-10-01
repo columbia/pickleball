@@ -66,6 +66,14 @@ except ImportError:
 
 class FakeCallable:
 
+    def __new__(cls, *args, **kwargs):
+        # If we already instantiated a FakeCallable for this, just return it,
+        # else create a new one
+        if not isinstance(cls, type):
+            return cls
+        else:
+            return super().__new__(cls)
+
     def __init__(self, orig_name):
         print(f"Creating fake callable for {orig_name}")
         self.orig_name = orig_name

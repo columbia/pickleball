@@ -44,6 +44,7 @@ from scripts import compare
 FIXTURES = [
     'no-inheritance',
     'simple-inheritance',
+    'simplest-inheritance',
     'multiple-inheritance',
     'dictionary-types',
     'interprocedural-attribute-writes',
@@ -179,8 +180,8 @@ def main():
             print(f"- globals precision: {global_scores['precision']}")
             print(f"- globals recall: {global_scores['recall']}")
             print(f"- reduces F1: {reduce_scores['f1']}")
-            print(f"- reduces F1: {reduce_scores['precision']}")
-            print(f"- reduces F1: {reduce_scores['recall']}")
+            print(f"- reduces precision: {reduce_scores['precision']}")
+            print(f"- reduces recall: {reduce_scores['recall']}")
 
     print(f'Tests passed: {sum(value == "PASS" for value in test_results.values())} / {len(test_results)}')
 if __name__ == '__main__':

@@ -34,12 +34,10 @@ def attributeTypes(className: String): Iterator[String] = {
 }
 
 def subClasses(parentClass: String): Iterator[String] = {
+  /* Identify all type declarations that inherit from the parentClass */
   cpg.typeDecl
-    // Filter will identify any type full names that end in .parentClass. This
-    // will not match exactly on the full name, so there may be type collisions
-    // in the project. The query may also be expensive.
-    .filter(_.inheritsFromTypeFullName.exists(_.split('.').lastOption == Some(parentClass)))
-    .name
+    .filter(_.inheritsFromTypeFullName.contains(parentClass))
+    .fullName
     .filterNot(_.matches("object|ANY"))
     .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
 }

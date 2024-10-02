@@ -24,8 +24,9 @@ def attributeTypes(className: String): Iterator[String] = {
          * */
         .map { memberType =>
           memberType match {
-            case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
-            case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
+        //    case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
+        //    case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
+            case s if s.endsWith(".<returnValue>") => s.stripSuffix(".<returnValue>")
             case _ => memberType
           }
         }
@@ -42,14 +43,13 @@ def subClasses(parentClass: String): Iterator[String] = {
     .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
 }
 
-def superClasses(className: String): Iterator[String] = {
+def superClasses(className: String): Seq[String] = {
  /**
  * Sometimes type information is in both the inheritsFromTypeFullName and the
  * baseType fields (or one, and not the other). We try searching for both.
  */
- cpg.typeDecl
+  val parents = (cpg.typeDecl
     .fullName(className)
-    //.inheritsFromTypeFullName
     .baseType.typeDeclFullName
     .filterNot(_.matches("object|ANY"))
     .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
@@ -60,7 +60,11 @@ def superClasses(className: String): Iterator[String] = {
     .inheritsFromTypeFullName
     .filterNot(_.matches("object|ANY"))
     .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
-    .map(stripTypeVar)
+    .map(stripTypeVar)).distinct.toSeq
+  parents match {
+    case Seq() => parents
+    case ps => parents ++ parents.flatMap(superClasses)
+  }
 }
 
 /**
@@ -195,6 +199,7 @@ class UniqueQueue[T] extends mutable.Queue[T] {
 
 }
 
+// TODO: Print output to log
 def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[String]) = {
 
   val allowedGlobals: mutable.Set[String] = mutable.Set()
@@ -263,17 +268,16 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
 
         /** Approximate all types that can be written to attributes of the targetClass
          * analyzing all class attribute types. */
-        println(s"- attribute types: ${attributeTypes(targetClass).toList.mkString(",")}")
-        attributeTypes(targetClass)
-          .filterNot(isPrimitiveType)
-          .foreach(queue.enqueue)
+        val classAttributeTypes: List[String] = attributeTypes(targetClass).toList
+        println(s"- attribute types: ${classAttributeTypes.toList.mkString(",")}")
+        classAttributeTypes.foreach(queue.enqueue)
 
         /* Ensure that attribute types of parent classes are also collected */
-        val parentAttributes = superClasses(targetClass).flatMap(attributeTypes).toList
-        println(s"- parent classes: ${superClasses(targetClass).mkString(",")}")
-        println(s"- parent class attribute types: ${parentAttributes.mkString(",")}")
-        parentAttributes
-          .filterNot(isPrimitiveType)
+        val ancestors: Seq[String] = superClasses(targetClass)
+        println(s"- parent classes: ${ancestors.mkString(",")}")
+        val ancestorAttributes: List[String] = ancestors.flatMap(attributeTypes).toList
+        println(s"- parent class attribute types: ${ancestorAttributes.mkString(",")}")
+        ancestorAttributes
           .foreach(queue.enqueue)
       }
     }

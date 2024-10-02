@@ -46,6 +46,7 @@ FIXTURES = [
     'simple-inheritance',
     'simplest-inheritance',
     'multiple-inheritance',
+    'nested-inheritance',
     'dictionary-types',
     'interprocedural-attribute-writes',
     'reduce',

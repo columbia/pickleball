@@ -1,0 +1,9 @@
+{
+  "globals": [
+    "model.ParentValue",
+    "model.GrandparentValue",
+    "model.Child",
+    "model.Value"
+  ],
+  "reduces": []
+}

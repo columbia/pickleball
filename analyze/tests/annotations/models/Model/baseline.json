@@ -1,0 +1,8 @@
+{
+  "globals": [
+    "model.Bar",
+    "model.Model",
+    "model.Foo"
+  ],
+  "reduces": []
+}

@@ -92,8 +92,8 @@ class FakeCallable:
         raise Exception(f"Tried to call {self.orig_name}")
 
     # TODO: Probably remove this
-    def __repr__(self):
-        return f"FakeCallable for {self.orig_name}"
+    # def __repr__(self):
+    #     return f"FakeCallable for {self.orig_name}"
 
 
 # Shortcut for use in isinstance testing
@@ -1662,28 +1662,38 @@ class _Unpickler:
     #     klass = self.find_class(module, name)
     #     self._instantiate(klass, self.pop_mark())
 
+    # def load_inst(self):
+    #     # breakpoint()
+    #     module = self.readline()[:-1].decode("ascii")
+    #     name = self.readline()[:-1].decode("ascii")
+    #     full_path = f"{module}.{name}"
+
+    #     if full_path in self.allowed_globals:
+    #         klass = self.find_class_non_recursive(module, name)
+    #     else:
+    #         klass = FakeCallable(full_path)
+    #     self._instantiate(klass, self.pop_mark())
+
     def load_inst(self):
-        # breakpoint()
         module = self.readline()[:-1].decode("ascii")
         name = self.readline()[:-1].decode("ascii")
-        full_path = f"{module}.{name}"
-
-        if full_path in self.allowed_globals:
-            klass = self.find_class_non_recursive(module, name)
-        else:
-            klass = FakeCallable(full_path)
-        self._instantiate(klass, self.pop_mark())
+        raise Exception(
+            f"INST opcode not supported! Tried to call with {module}.{name}"
+        )
 
     dispatch[INST[0]] = load_inst
 
     def load_obj(self):
-        # Stack is ... markobject classobject arg1 arg2 ...
+        # # Stack is ... markobject classobject arg1 arg2 ...
         args = self.pop_mark()
         cls = args.pop(0)
-        self._instantiate(cls, args)
+        raise Exception(f"OBJ opcode not supported! Tried to call with {cls}")
+        # self._instantiate(cls, args)
 
     dispatch[OBJ[0]] = load_obj
 
+    # XXX: No need to do anything for NEWOBJ/NEWOBJ_EX since the globals will
+    # be checked when they are put on the stack
     def load_newobj(self):
         args = self.stack.pop()
         cls = self.stack.pop()
@@ -2000,8 +2010,8 @@ def _dumps(obj, protocol=None, *, fix_imports=True, buffer_callback=None):
 
 def _load(
     file,
-    globals,
-    reduces,
+    # globals,
+    # reduces,
     *,
     fix_imports=True,
     encoding="ASCII",
@@ -2009,8 +2019,13 @@ def _load(
     buffers=None,
 ):
     return _Unpickler(
-        file, fix_imports=fix_imports, buffers=buffers, encoding=encoding, errors=errors
-    ).load(globals, reduces)
+        file,
+        fix_imports=fix_imports,
+        buffers=buffers,
+        encoding=encoding,
+        errors=errors,
+    ).load()
+    # ).load(globals, reduces)
 
 
 def _loads(s, /, *, fix_imports=True, encoding="ASCII", errors="strict", buffers=None):

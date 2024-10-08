@@ -51,6 +51,7 @@ FIXTURES = [
     'dictionary-types',
     'interprocedural-attribute-writes',
     'reduce',
+    'inherit-from-library',
     #'follow-collection-object'
 ]
 

@@ -1,0 +1,10 @@
+{
+  "globals": [
+    "parentmodel.rebuild_tensor",
+    "parentmodel.Foo",
+    "model.Model"
+  ],
+  "reduces": [
+    "parentmodel.rebuild_tensor"
+  ]
+}

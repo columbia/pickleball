@@ -1,7 +1,9 @@
 {
-  "globals": [
-    "model.Model",
-    "model.SGD"
-  ],
-  "reduces": []
+  "model.py:<module>.Model": {
+    "globals": [
+      "model.Model",
+      "model.SGD"
+    ],
+    "reduces": []
+  }
 }

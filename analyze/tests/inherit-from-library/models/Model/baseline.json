@@ -1,10 +1,12 @@
 {
-  "globals": [
-    "parentmodel.rebuild_tensor",
-    "parentmodel.Foo",
-    "model.Model"
-  ],
-  "reduces": [
-    "parentmodel.rebuild_tensor"
-  ]
+  "model.py:<module>.Model": {
+    "globals": [
+      "model.Model",
+      "parentmodel.Foo",
+      "parentmodel.rebuild_tensor"
+    ],
+    "reduces": [
+      "parentmodel.rebuild_tensor"
+    ]
+  }
 }

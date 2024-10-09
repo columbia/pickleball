@@ -149,9 +149,11 @@ def main():
     test_results = {}
     for fixture in fixtures:
         print(f'{BLUE}[*] Test fixture: {fixture}{RESET}')
+
         fixture_path = PATH_TO_FIXTURES / pathlib.Path(fixture)
         cpg_path = fixture_path / pathlib.Path('out.cpg')
 
+        # Create the CPG for the source code of the test
         if not create_cpg(fixture_path, cpg_path):
             print(f'error creating CPG for fixture {fixture}')
             return -1
@@ -165,11 +167,15 @@ def main():
             with open(str(model_class_file), 'r', encoding='utf-8') as metadata_fd:
                 model_class_name = metadata_fd.read().strip()
             inferred_path = model_dir / pathlib.Path('inferred.json')
+
+            # Infer policy using pickleball
             if not infer_policy(cpg_path, model_class_name, inferred_path):
                 print(f'error inferring policy for model {model_dir.name}')
                 return -1
 
             baseline_path = model_dir / pathlib.Path('baseline.json')
+
+            # Compare the policy to a test baseline
             global_scores, reduce_scores = compare_policies(inferred_path, baseline_path)
 
             if global_scores["precision"] < 1.0 or reduce_scores["precision"] < 1.0:

@@ -1,7 +1,9 @@
 {
-  "globals": [
-    "model.Model",
-    "model.Optimizer"
-  ],
-  "reduces": []
+  "model.py:<module>.Model": {
+    "globals": [
+      "model.Optimizer",
+      "model.Model"
+    ],
+    "reduces": []
+  }
 }

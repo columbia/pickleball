@@ -25,6 +25,7 @@ def compare_json_objects(json_obj1: Dict[str, Any], json_obj2: Dict[str, Any]) -
 
         return precision, recall, f1
 
+
     global_diff_1, global_diff_2, global_in_both = compare_lists(
         json_obj1.get('globals', []),
         json_obj2.get('globals', []))
@@ -66,6 +67,18 @@ def compare_json_objects(json_obj1: Dict[str, Any], json_obj2: Dict[str, Any]) -
     return result
 
 def compare_json_files(json_file1: str, json_file2: str) -> Dict[str, str]:
+    """
+    Expect the structure of the json files being compared to be:
+    {
+        "class name": {
+            "globals": [ ... ],
+            "reduces": [ ... ],
+        }
+    }
+
+    Also assumes that the baseline file contains the correct class name, and
+    that the inferred file also contains a policy for that class name.
+    """
     try:
         with open(json_file1, 'r', encoding='utf-8') as file1, open(json_file2, 'r', encoding='utf-8') as file2:
             json_obj1 = json.load(file1)
@@ -77,7 +90,8 @@ def compare_json_files(json_file1: str, json_file2: str) -> Dict[str, str]:
         print(f"Error: Failed to decode JSON in file. {e}")
         return {}
 
-    return compare_json_objects(json_obj1, json_obj2)
+    policy_name = list(json_obj1.keys())[0]
+    return compare_json_objects(json_obj1[policy_name], json_obj2[policy_name])
 
 
 def main():

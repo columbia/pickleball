@@ -1,5 +1,5 @@
 /*
- * Usage: ./joern --script ./analyze.sc --param inputPath=<path to python project cpg> --param modelClass=SequenceTagger --param outputPath=<path to output>
+ * Usage: ./joern --script ./analyze.sc --param inputPath=<path to python project cpg> --param modelClass=SequenceTagger --param outputPath=<path to output> --param cache=<path to cache directory>
  */
 
 import scala.collection.mutable
@@ -9,6 +9,10 @@ import io.shiftleft.codepropertygraph.generated.nodes.{
 val PyModuleSuffix = ".py:<module>."
 val ModuleSuffix = ":<module>."
 val CollectionPrefix ="__collection."
+
+type ClassPolicy = Map[String, Set[String]]
+type ClassPolicyMutable = Map[String, mutable.Set[String]]
+type PolicyMap = Map[String, ClassPolicy]
 
 def attributeTypes(className: String): Iterator[String] = {
   /* TODO: Handle types stored in collections */
@@ -323,19 +327,18 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
   return canonicalizedName
 }
 
-@main def main(inputPath: String, modelClass: String, outputPath: String = "") = {
+@main def main(inputPath: String, modelClass: String, outputPath: String = "", cache: String = "") = {
 
   importCpg(inputPath)
 
   val (allowedGlobals, allowedReduces) = inferTypeFootprint(modelClass)
 
-  val outputMap: Map[String, mutable.Set[String]] = Map(
-      //"class_name" -> mutable.Set(modelClass),
-      "globals" -> allowedGlobals,
-      "reduces" -> allowedReduces)
-  val jsonOutput: String = upickle.default.write(outputMap)
-  val jsonString = ujson.read(jsonOutput)
-  jsonString("class_name") = modelClass
+  val classPolicy: ClassPolicy = Map(
+      "globals" -> allowedGlobals.toSet,
+      "reduces" -> allowedReduces.toSet)
+  val policy: PolicyMap = Map(modelClass -> classPolicy)
+  val jsonPolicy: String = upickle.default.write(policy)
+  val jsonString = ujson.read(jsonPolicy)
 
   println()
   println(s"Allowed Globals: \n- ${allowedGlobals.mkString("\n- ")}")

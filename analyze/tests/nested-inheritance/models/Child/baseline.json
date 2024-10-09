@@ -1,9 +1,11 @@
 {
-  "globals": [
-    "model.ParentValue",
-    "model.GrandparentValue",
-    "model.Child",
-    "model.Value"
-  ],
-  "reduces": []
+  "model.py:<module>.Child": {
+    "globals": [
+      "model.ParentValue",
+      "model.GrandparentValue",
+      "model.Value",
+      "model.Child"
+    ],
+    "reduces": []
+  }
 }

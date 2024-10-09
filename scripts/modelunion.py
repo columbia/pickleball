@@ -6,7 +6,7 @@ of the traces as a JSON file.
 import json
 import argparse
 
-def model_union(models):
+def model_union(models, model_name):
     all_globals = set()
     all_reduces = set()
 
@@ -15,8 +15,10 @@ def model_union(models):
         all_reduces.update(obj.get("reduces", []))
 
     result = {
-        "globals": list(all_globals),
-        "reduces": list(all_reduces)
+        model_name: {
+            "globals": list(all_globals),
+            "reduces": list(all_reduces)
+        }
     }
 
     return result
@@ -27,6 +29,11 @@ def main():
         description=(
             "Process a list of JSON files and compute union of "
             "GLOBALS and REDUCES fields."))
+
+    parser.add_argument(
+        'modelname',
+        type=str,
+        help='Name of the model (use Joern fullName format)')
 
     # Add argument to accept a list of file names
     parser.add_argument(
@@ -47,7 +54,7 @@ def main():
             json_data = json.load(fd)
             json_objects.append(json_data)
 
-    result = model_union(json_objects)
+    result = model_union(json_objects, args.modelname)
 
     print(json.dumps(result, indent=2))
 

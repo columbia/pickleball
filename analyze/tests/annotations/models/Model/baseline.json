@@ -1,8 +1,10 @@
 {
-  "globals": [
-    "model.Bar",
-    "model.Model",
-    "model.Foo"
-  ],
-  "reduces": []
+  "model.py:<module>.Model": {
+    "globals": [
+      "model.Bar",
+      "model.Foo",
+      "model.Model"
+    ],
+    "reduces": []
+  }
 }

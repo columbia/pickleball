@@ -1,13 +1,15 @@
 {
-  "globals": [
-    "model.create_tensor",
-    "model.Optimizer",
-    "model.SpecializedModel",
-    "model.Foo",
-    "model.Baz",
-    "model.SGD"
-  ],
-  "reduces": [
-    "model.create_tensor"
-  ]
+  "model.py:<module>.SpecializedModel": {
+    "globals": [
+      "model.Baz",
+      "model.Foo",
+      "model.create_tensor",
+      "model.SpecializedModel",
+      "model.Optimizer",
+      "model.SGD"
+    ],
+    "reduces": [
+      "model.create_tensor"
+    ]
+  }
 }

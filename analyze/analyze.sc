@@ -3,15 +3,18 @@
  */
 
 import scala.collection.mutable
+// import scala.collection.immutable
 import io.shiftleft.codepropertygraph.generated.nodes.{
   Return, TypeDecl, Method, Identifier, FieldIdentifier, Literal, Call => CallNode }
+
+import scala.io.Source
+import java.io.File
 
 val PyModuleSuffix = ".py:<module>."
 val ModuleSuffix = ":<module>."
 val CollectionPrefix ="__collection."
 
 type ClassPolicy = Map[String, Set[String]]
-type ClassPolicyMutable = Map[String, mutable.Set[String]]
 type PolicyMap = Map[String, ClassPolicy]
 
 def attributeTypes(className: String): Iterator[String] = {
@@ -204,7 +207,7 @@ class UniqueQueue[T] extends mutable.Queue[T] {
 }
 
 // TODO: Print output to log
-def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[String]) = {
+def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.Set[String], mutable.Set[String]) = {
 
   val allowedGlobals: mutable.Set[String] = mutable.Set()
   val allowedReduces: mutable.Set[String] = mutable.Set()
@@ -233,7 +236,19 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
      *   needs to be unmangled.
      */
     val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
-    if (targetTypeDecls.isEmpty) {
+    if (cachedPolicies.contains(targetClass)) {
+      println(s"- found target class \"${targetClass}\" in type cache")
+      val classPolicy: Option[ClassPolicy] = cachedPolicies.get(targetClass)
+
+      classPolicy match {
+        case Some(policy) =>
+          val globals: Set[String] = policy.getOrElse("globals", Set.empty)
+          val reduces: Set[String] = policy.getOrElse("reduces", Set.empty)
+          allowedGlobals ++= (globals + targetClass)
+          allowedReduces ++= reduces
+        case _ =>
+      }
+    } else if (targetTypeDecls.isEmpty) {
       println(s"- !! unable to find typeDecl for class ${targetClass} !!")
 
       if (targetClass.startsWith("__collection.")) {
@@ -272,6 +287,9 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
 
         /** Approximate all types that can be written to attributes of the targetClass
          * analyzing all class attribute types. */
+
+        // TODO: What if a cached ancestor class implements a __reduce__ method?
+
         val classAttributeTypes: List[String] = attributeTypes(targetClass).toList
         println(s"- attribute types: ${classAttributeTypes.toList.mkString(",")}")
         classAttributeTypes.foreach(queue.enqueue)
@@ -279,8 +297,30 @@ def inferTypeFootprint(modelClass: String): (mutable.Set[String], mutable.Set[St
         /* Ensure that attribute types of parent classes are also collected */
         val ancestors: Seq[String] = superClasses(targetClass)
         println(s"- parent classes: ${ancestors.mkString(",")}")
-        val ancestorAttributes: List[String] = ancestors.flatMap(attributeTypes).toList
-        println(s"- parent class attribute types: ${ancestorAttributes.mkString(",")}")
+
+        /* Partition the ancestors according to whether they are contained in
+         * the cache, and handle cached ancestors separately
+         */
+        val (cachedAncestors, newAncestors) = ancestors.partition(ancestor => cachedPolicies.contains(ancestor))
+        cachedAncestors.map { ancestor =>
+          println(s"- found parent class \"${ancestor}\" in type cache")
+          val classPolicy: Option[ClassPolicy] = cachedPolicies.get(ancestor)
+
+          classPolicy match {
+            case Some(policy) =>
+              val globals: Set[String] = policy.getOrElse("globals", Set.empty) - canonicalizeName(getPrefix(ancestor), ancestor) // We do not add the ancestor class
+              val reduces: Set[String] = policy.getOrElse("reduces", Set.empty)
+
+              println(s"-- adding cached globals: ${globals.mkString(",")}")
+              println(s"-- adding cached reduces: ${reduces.mkString(",")}")
+              allowedGlobals ++= globals
+              allowedReduces ++= reduces
+            case _ =>
+          }
+        }
+
+        val ancestorAttributes: List[String] = newAncestors.flatMap(attributeTypes).toList
+        println(s"- inferred parent class attribute types: ${ancestorAttributes.mkString(",")}")
         ancestorAttributes
           .foreach(queue.enqueue)
       }
@@ -327,11 +367,48 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
   return canonicalizedName
 }
 
+def readCache(cachePath: String): PolicyMap = {
+  if (cachePath.isEmpty) return Map.empty
+
+  val cacheDir = new File(cachePath)
+  if (!cacheDir.exists || !cacheDir.isDirectory) return Map.empty
+
+  // Read and parse a single JSON file
+  def parseJsonFile(file: File): Option[PolicyMap] = {
+    val source = Source.fromFile(file)
+    val jsonStr = try source.mkString finally source.close()
+
+    try {
+      val jsonValue: ujson.Value = ujson.read(jsonStr)
+      Some(
+        jsonValue.obj.toMap.map { case (className, policies) =>
+          val globals = policies("globals").arr.map(_.str).toSet
+          val reduces = policies("reduces").arr.map(_.str).toSet
+          className -> Map("globals" -> globals, "reduces" -> reduces)
+        }
+      )
+    } catch {
+      case _: Throwable =>
+        println(s"Invalid cached policy found: ${file.getName()}")
+        None // Return None for malformed JSON
+    }
+  }
+
+  // Read all JSON files and merge their contents into a PolicyMap
+  val allJsonMaps: Array[PolicyMap] = cacheDir.listFiles.filter(_.isFile).flatMap(parseJsonFile)
+  allJsonMaps.foldLeft(Map[String, ClassPolicy]()) { (acc, policyMap) =>
+    acc ++ policyMap
+  }
+}
+
 @main def main(inputPath: String, modelClass: String, outputPath: String = "", cache: String = "") = {
 
   importCpg(inputPath)
 
-  val (allowedGlobals, allowedReduces) = inferTypeFootprint(modelClass)
+  val cachedPolicies: PolicyMap = readCache(cache)
+  println(s"${cachedPolicies.mkString(",")}")
+
+  val (allowedGlobals, allowedReduces) = inferTypeFootprint(modelClass, cachedPolicies)
 
   val classPolicy: ClassPolicy = Map(
       "globals" -> allowedGlobals.toSet,

@@ -83,7 +83,12 @@ def create_cpg(fixture_path: pathlib.Path, output_path: pathlib.Path) -> bool:
 
 
 # Create inferred policy by running analysis script
-def infer_policy(cpg_path: pathlib.Path, model_class: str, output_path: pathlib.Path) -> str:
+def infer_policy(
+        cpg_path: pathlib.Path,
+        model_class: str,
+        output_path: pathlib.Path,
+        cache_path: pathlib.Path
+    ) -> str:
     """Run inference analysis for a given CPG and model class by invoking joern.
 
     Writes the analysis output as JSON to the output_path.
@@ -102,6 +107,11 @@ def infer_policy(cpg_path: pathlib.Path, model_class: str, output_path: pathlib.
         '--param',
         f'outputPath={str(output_path)}'
     ]
+
+    if cache_path.is_dir():
+        command.append('--param')
+        command.append(f'cache={str(cache_path)}')
+
     print(f'- Command: {" ".join(command)}')
     result = subprocess.run(command, capture_output=True, check=False)
 
@@ -152,6 +162,8 @@ def main():
 
         fixture_path = PATH_TO_FIXTURES / pathlib.Path(fixture)
         cpg_path = fixture_path / pathlib.Path('out.cpg')
+        # Look for 'typecache' directory that contains all cached policies
+        typecache_path = fixture_path / 'typecache'
 
         # Create the CPG for the source code of the test
         if not create_cpg(fixture_path, cpg_path):
@@ -169,7 +181,11 @@ def main():
             inferred_path = model_dir / pathlib.Path('inferred.json')
 
             # Infer policy using pickleball
-            if not infer_policy(cpg_path, model_class_name, inferred_path):
+            if not infer_policy(
+                    cpg_path,
+                    model_class_name,
+                    inferred_path,
+                    typecache_path):
                 print(f'error inferring policy for model {model_dir.name}')
                 return -1
 

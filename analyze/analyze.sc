@@ -16,18 +16,6 @@ val CollectionPrefix ="__collection."
 type ClassPolicy = Map[String, Set[String]]
 type PolicyMap = Map[String, ClassPolicy]
 
-def setstateHandler(methodFullName: String): Iterator[String] = {
-    (
-      /* local variables, identifiers, and calls */
-      cpg.method.fullName(methodFullName).ast.isLocal.typeFullName ++
-      cpg.method.fullName(methodFullName).ast.isIdentifier.typeFullName ++
-      cpg.method.fullName(methodFullName).ast.isCall.typeFullName
-    )
-    .filterNot(_.matches("object|ANY"))
-    .filterNot(isPrimitiveType(_))
-    .distinct
-}
-
 def attributeTypes(className: String): Iterator[String] = {
   /* TODO: Handle types stored in collections */
   cpg.typeDecl.fullName(className).member.flatMap {
@@ -40,16 +28,12 @@ def attributeTypes(className: String): Iterator[String] = {
          *  seen, we can strip the suffix and just add the class name to the
          *  analysis Queue.
          * */
-        .flatMap { memberType =>
+        .map { memberType =>
           memberType match {
         //    case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
         //    case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
-
-            case s if s.endsWith(".__setstate__") =>
-              /* include setstate itself and the classes it uses */
-              s +: setstateHandler(s).toSeq
-            case s if s.endsWith(".<returnValue>") => Seq(s.stripSuffix(".<returnValue>"))
-            case _ => Seq(memberType)
+            case s if s.endsWith(".<returnValue>") => s.stripSuffix(".<returnValue>")
+            case _ => memberType
           }
         }
         .distinct

@@ -42,7 +42,6 @@ from typing import Tuple
 from scripts import compare
 
 FIXTURES = [
-    'setstate',
     'annotations',
     'no-inheritance',
     'simple-inheritance',

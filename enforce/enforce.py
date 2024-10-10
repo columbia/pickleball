@@ -26,6 +26,7 @@ Misc variables:
 import codecs
 import functools as _functools
 import io
+import os
 import re
 import sys
 from copyreg import (
@@ -35,6 +36,8 @@ from copyreg import (
     dispatch_table,
 )
 from functools import partial
+
+# from hashlib import sha256
 from itertools import islice
 from struct import pack, unpack
 from sys import maxsize
@@ -62,6 +65,9 @@ try:
     _HAVE_PICKLE_BUFFER = True
 except ImportError:
     _HAVE_PICKLE_BUFFER = False
+
+# Path containing the PickleBall policies (configurable)
+POLICY_PATH = "/root/policies"
 
 
 class FakeCallable:
@@ -1278,6 +1284,39 @@ class _Unpickler:
         default to 'ASCII' and 'strict', respectively. *encoding* can be
         'bytes' to read these 8-bit string instances as bytes objects.
         """
+
+        if isinstance(file, io.BufferedReader):
+            contents = file.peek()
+        elif isinstance(file, io.BytesIO):
+            contents = file.getbuffer()
+        else:
+            raise Exception("Uknown file type: ", file)
+
+        # filehash = sha256(contents).hexdigest()
+
+        globals_path = os.path.join(POLICY_PATH, "globals.txt")
+        reduces_path = os.path.join(POLICY_PATH, "reduces.txt")
+
+        if os.path.isfile(globals_path):
+            with open(globals_path, "r") as f:
+                self.allowed_globals = f.read().strip().split("\n")
+        else:
+            # raise Exception(
+            #     f"Globals policy not found for pickle file with hash {filehash}"
+            # )
+            raise Exception("Globals policy not found")
+        if os.path.isfile(reduces_path):
+            with open(reduces_path, "r") as f:
+                self.allowed_reduces = f.read().strip().split("\n")
+        else:
+            # raise Exception(
+            #     f"Reduces policy not found for pickle file with hash {filehash}"
+            # )
+            raise Exception("Reduces policy not found")
+
+        print(self.allowed_globals)
+        print(self.allowed_reduces)
+
         self._buffers = iter(buffers) if buffers is not None else None
         self._file_readline = file.readline
         self._file_read = file.read
@@ -1301,14 +1340,6 @@ class _Unpickler:
                 "Unpickler.__init__() was not called by "
                 "%s.__init__()" % (self.__class__.__name__,)
             )
-        # FIXME: read allowed globals from proper path
-        # with open(globals, "r") as f:
-        with open("pickles/globals.txt", "r") as f:
-            self.allowed_globals = f.read().strip().split("\n")
-
-        # with open(reduces, "r") as f:
-        with open("pickles/reduces.txt", "r") as f:
-            self.allowed_reduces = f.read().strip().split("\n")
 
         self._unframer = _Unframer(self._file_read, self._file_readline)
         self.read = self._unframer.read
@@ -1771,6 +1802,7 @@ class _Unpickler:
 
     dispatch[EXT4[0]] = load_ext4
 
+    # FIXME look into this too
     def get_extension(self, code):
         nil = []
         obj = _extension_cache.get(code, nil)

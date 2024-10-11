@@ -33,6 +33,7 @@ def attributeTypes(className: String): Iterator[String] = {
         //    case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
         //    case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
             case s if s.endsWith(".<returnValue>") => s.stripSuffix(".<returnValue>")
+            case s if s.endsWith("<metaClassAdapter>") => s.stripSuffix("<metaClassAdapter>")
             case _ => memberType
           }
         }

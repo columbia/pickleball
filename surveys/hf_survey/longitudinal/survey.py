@@ -15,103 +15,153 @@ import sqlite3
 import pandas as pd
 from collections import Counter
 from loguru import logger
+import matplotlib.pyplot as plt
+from datetime import datetime
 
 def load_ptmtorrent_data(data_path: str) -> pd.DataFrame:
     with open(data_path, 'r') as file:
         data = json.load(file)
 
-    # Create a list of dictionaries with model_id, tags, and downloads
     filtered_data = [
         {
             "model_id": item["id"],
-            "tags": item["tags"],
+            "tag_names": item["tag_names"],
             "downloads": item.get('downloads', 0)
         }
         for item in data
     ]
 
-    # Convert the filtered data into a pandas DataFrame
     df = pd.DataFrame(filtered_data)
-    
-    # Sort by downloads in descending order and take the top 100,000
     df = df.sort_values('downloads', ascending=False).head(100000)
+    
+    # Set the date to January 2023 for PTMTorrent data
+    df['date'] = datetime(2023, 1, 1)
     
     return df
 
 
 def load_hfcommunity_data(data_path: str) -> pd.DataFrame:
-    conn = sqlite3.connect(data_path)
-    cursor = conn.cursor()
-
-    # Get list of tables
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = cursor.fetchall()
+    df = pd.read_csv(data_path)
+    df = df.sort_values('downloads', ascending=False).head(100000)
     
-    logger.debug("Tables in the database:")
-    for table in tables:
-        logger.debug(f"- {table[0]}")
+    # Extract date from filename
+    filename = os.path.basename(data_path)
+    date_str = filename.split('_')[1].split('.')[0]
     
-    # Get schema for the 'model' table
-    cursor.execute("PRAGMA table_info(model)")
-    schema = cursor.fetchall()
+    # Hardcoded date conversions
+    date_mapping = {
+        '241122': datetime(2022, 11, 24),
+        '051523': datetime(2023, 5, 15),
+        '090323': datetime(2023, 3, 9),
+        '180423': datetime(2023, 4, 18),
+        '20230630': datetime(2023, 6, 30),
+        '20230812': datetime(2023, 8, 12),
+        '20230907': datetime(2023, 9, 7),
+        '20231009': datetime(2023, 10, 9)
+    }
     
-    logger.debug("Schema of the 'model' table:")
-    for column in schema:
-        logger.debug(f"- {column[1]} ({column[2]})")
-    exit(-1)
-    # Updated query to get more relevant information
-    query = """
-        SELECT m.id AS model_id, m.downloads, m.likes, m.task_id, t.name AS task_name,
-               GROUP_CONCAT(DISTINCT l.name) AS libraries
-        FROM model m
-        LEFT JOIN model_library ml ON m.id = ml.model_id
-        LEFT JOIN library l ON ml.library_id = l.id
-        LEFT JOIN task t ON m.task_id = t.id
-        GROUP BY m.id
-        ORDER BY m.downloads DESC
-        LIMIT 1000
-    """ 
-    df = pd.read_sql_query(query, conn)
-    conn.close()
+    date = date_mapping.get(date_str)
     
-    logger.debug(f"Loaded {len(df)} rows from HFCommunity database")
-    logger.debug(df.head(20))
-    logger.debug(df.columns)
+    if date is None:
+        logger.error(f"Unable to parse date from filename: {filename}")
+    
+    df['date'] = date
+    
     return df
 
 
-def load_data() -> pd.DataFrame:
-    # data_Aug24 = pd.read_csv("./data/PeaTMOSS_Aug2024.csv")
-    # data_peatmoss = load_peatmoss_data("./data/PeaTMOSS.db")
-    # data_ptmtorrent = load_ptmtorrent_data("./data/PTMTorrent.json")
-    data_hfcommunity = load_hfcommunity_data("./data/hfcommunity_241122.sql")
-    exit(-1)
-    # Combine the datasets
-    return data_Aug24, data_peatmoss, data_ptmtorrent, data_hfcommunity
+def load_data() -> tuple:
+    data_Aug24 = pd.read_csv("./data/PeaTMOSS_Aug2024.csv")
+    data_Aug24['date'] = datetime(2024, 8, 1)
+    
+    data_ptmtorrent = load_ptmtorrent_data("./data/PTMTorrent.json")
+    
+    data_files = [f for f in os.listdir('./data') if f.startswith('dump_') and f.endswith('.csv')]
+    data_hfcommunity = []
+    
+    for file in data_files:
+        data = load_hfcommunity_data(f"./data/{file}")
+        data_hfcommunity.append(data)
+    
+    return data_Aug24, data_ptmtorrent, data_hfcommunity
 
 
-def analysis(data: pd.DataFrame) -> None:
-    """
-    Analyze the library usage of the models in each dataset
-    """
-    library_counter = Counter()
-    total_rows = len(data)
+def extract_framework(tags):
+    known_frameworks = ['pytorch', 'tf', 'jax', 'safetensors']
+    
+    if pd.isna(tags):
+        return ['unknown']
+    
+    if isinstance(tags, str):
+        tag_list = tags.split(', ')
+    else:
+        logger.warning(f"Unexpected tag type: {type(tags)}. Value: {tags}")
+        return ['unknown']
+    
+    frameworks = [tag for tag in tag_list if tag in known_frameworks]
+    
+    # Add 'others' if there are tags not in known_frameworks
+    if set(tag_list) - set(known_frameworks):
+        frameworks.append('others')
+    
+    return frameworks if frameworks else ['unknown']
 
+
+def analysis(data: pd.DataFrame) -> dict:
+    framework_usage = {}
+    
     for _, row in data.iterrows():
-        libraries = row["libraries"]
-        if isinstance(libraries, str):
-            libraries = eval(libraries)  # Convert string representation to list
-        library_counter.update(libraries)
+        date = row['date']
+        tags = row.get('tag_names', row.get('tag_name'))
+        frameworks = extract_framework(tags)
+        
+        if date not in framework_usage:
+            framework_usage[date] = Counter()
+        
+        framework_usage[date].update(frameworks)
+    
+    return framework_usage
 
-    print("Top 10 Library usage percentages:")
-    for library, count in library_counter.most_common(10):
-        percentage = (count / total_rows) * 100
-        print(f"{library}: {percentage:.2f}%")
+
+def plot_safetensor_usage(framework_usage: dict):
+    dates = sorted(framework_usage.keys())
+    safetensor_proportions = []
+    
+    for date in dates:
+        date_usage = framework_usage[date]
+        total = sum(sum(fw.values()) for fw in date_usage.values())
+        safetensor_count = sum(fw.get('safetensors', 0) for fw in date_usage.values())
+        proportion = safetensor_count / total if total > 0 else 0
+        safetensor_proportions.append(proportion)
+    
+    plt.figure(figsize=(12, 6))
+    plt.plot(dates, safetensor_proportions, marker='o')
+    plt.title('Proportion of SafeTensor Usage Over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Proportion of SafeTensor Usage')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig('safetensor_usage.png')
+    plt.close()
 
 
 def main() -> None:
-    data = load_data()
-    analysis(data)
+    data_files = [f for f in os.listdir('./data') if f.startswith('dump_') and f.endswith('.csv')]
+    all_data = []
+    
+    for file in data_files:
+        data = load_hfcommunity_data(f"./data/{file}")
+        all_data.append(data)
+        print(f"Columns in {file}: {data.columns.tolist()}")
+    
+    framework_usage = {}
+    for df in all_data:
+        date = df['date'].iloc[0]  # Assuming all rows in a DataFrame have the same date
+        framework_usage[date] = analysis(df)
+    
+    print("Dates in the analysis:", list(framework_usage.keys()))
+    plot_safetensor_usage(framework_usage)
+
 
 if __name__ == "__main__":
     main()

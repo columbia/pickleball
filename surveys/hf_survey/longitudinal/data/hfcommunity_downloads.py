@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shlex
 import mysql.connector
+import csv
 
 # List of Zenodo file URLs (you can extract these URLs manually or through Zenodo API)
 zenodo_urls = [
@@ -16,7 +17,7 @@ zenodo_urls = [
     "https://zenodo.org/records/8112883/files/dump_072823.zip?download=1",
     "https://zenodo.org/records/8240989/files/dump_20230812.zip?download=1",
     "https://zenodo.org/records/8324809/files/dump_20230907.zip?download=1",
-    "https://zenodo.org/records/10020642/files/dump_20231009.zip?download=1",
+    "https://zenodo.org/records/10020642/files/dump_20231009.zip?download=1", 
 ]
 
 # Local directory where files will be saved
@@ -81,42 +82,54 @@ def load_sql_to_mariadb(sql_file):
         print(f"An error occurred while loading {sql_file}: {e}")
 
 # Function to export the models table to a CSV file
-def export_table_to_csv(output_file):
+def export_model_with_tags_to_csv(output_file):
     try:
-        # Use an absolute path
-        abs_output_file = os.path.abspath(output_file)
-        print(f"Attempting to export 'model' table to {abs_output_file}...")
+        print(f"Exporting 'model' table with tags to {output_file}...")
         
-        # Check if the directory exists and is writable
-        output_dir = os.path.dirname(abs_output_file)
-        if not os.path.exists(output_dir):
-            print(f"Output directory {output_dir} does not exist. Attempting to create it.")
-            os.makedirs(output_dir, exist_ok=True)
+        conn = mysql.connector.connect(
+            host="localhost",
+            user=db_user,
+            password=db_password,
+            database=db_name
+        )
+        cursor = conn.cursor()
         
-        if not os.access(output_dir, os.W_OK):
-            print(f"Warning: The script does not have write permissions for {output_dir}")
+        # Updated SQL query to group tag_names and library_names
+        query = """
+        SELECT 
+            model.model_id, 
+            model.downloads, 
+            GROUP_CONCAT(DISTINCT model.library_name SEPARATOR ', ') AS library_names,
+            GROUP_CONCAT(DISTINCT tag.name SEPARATOR ', ') AS tag_names
+        FROM model
+        LEFT JOIN repository ON model.model_id = repository.id
+        LEFT JOIN tags_in_repo ON repository.id = tags_in_repo.repo_id
+        LEFT JOIN tag ON tags_in_repo.tag_name = tag.name
+        GROUP BY model.model_id, model.downloads
+        """
+        cursor.execute(query)
         
-        # Use the absolute path in the query
-        query = f"SELECT * FROM model INTO OUTFILE '{abs_output_file}' FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\\n';"
-        command = f"mysql -u {db_user} -p{db_password} -e {shlex.quote(query)} {db_name}"
+        # Fetch all rows
+        rows = cursor.fetchall()
         
-        print(f"Executing command: {command}")
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        # Get column names
+        column_names = [i[0] for i in cursor.description]
         
-        if result.returncode != 0:
-            print(f"Failed to export 'model' table. Error: {result.stderr}")
-            print(f"Command output: {result.stdout}")
-        else:
-            print(f"'model' table successfully exported to {abs_output_file}")
-            
-        # Check if the file was actually created
-        if os.path.exists(abs_output_file):
-            print(f"Confirmed: File {abs_output_file} exists.")
-        else:
-            print(f"Warning: File {abs_output_file} was not created.")
-    
+        # Write to CSV file
+        with open(output_file, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(column_names)  # Write header
+            csvwriter.writerows(rows)  # Write data
+        
+        print(f"'model' table with tags successfully exported to {output_file}")
+        cursor.close()
+        conn.close()
+    except mysql.connector.Error as err:
+        print(f"MySQL Error: {err}")
+    except IOError as e:
+        print(f"I/O error({e.errno}): {e.strerror}")
     except Exception as e:
-        print(f"An error occurred while exporting 'model' table: {str(e)}")
+        print(f"An error occurred while exporting 'model' table with tags: {e}")
 
 # New function to list all tables in the database
 def list_tables():
@@ -143,19 +156,16 @@ def list_tables():
 path_data.mkdir(parents=True, exist_ok=True)
 extracted_path.mkdir(parents=True, exist_ok=True)
 
-# Create a 'data' folder for CSV files
-data_folder = Path("./data")
-data_folder.mkdir(parents=True, exist_ok=True)
-
 # Loop through all URLs, download, and extract files
 extracted_folders = []
 for url in zenodo_urls:
-    zip_file_name = url.split('/')[-1]
-    folder_name = zip_file_name.split('.')[0]  # Remove the .zip extension
+    # Extract the folder name from the URL
+    folder_name = url.split('/')[-1].split('?')[0].replace('.zip', '')
     unique_extract_path = extracted_path / folder_name
 
+    # Check if the extracted folder already exists
     if unique_extract_path.exists() and any(unique_extract_path.iterdir()):
-        print(f"Extracted folder {unique_extract_path} already exists. Skipping download and extraction.")
+        print(f"Folder {unique_extract_path} already exists and is not empty. Skipping download and extraction.")
         extracted_folders.append(unique_extract_path)
     else:
         zip_file = download_file(url, path_data)
@@ -174,5 +184,5 @@ for folder in extracted_folders:
     
     # Export the 'models' table to a CSV file for each dump
     dump_name = folder.name
-    output_csv = data_folder / f"models_table_{dump_name}.csv"
-    export_table_to_csv(output_csv)
+    output_csv = path_data / f"{dump_name}.csv"
+    export_model_with_tags_to_csv(output_csv)

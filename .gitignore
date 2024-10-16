@@ -1,3 +1,9 @@
 *.cpg
 case-studies/
 .venv/
+
+__pycache__/
+.bsp/
+.scala-build/
+.vscode/
+.metals/

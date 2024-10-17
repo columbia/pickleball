@@ -1297,6 +1297,9 @@ class _Unpickler:
 
         policy_path = os.path.join(POLICY_PATH, "policy.json")
 
+        self.allowed_globals = []
+        self.allowed_reduces = []
+
         globals_list = []
         reduces_list = []
         if os.path.isfile(policy_path):

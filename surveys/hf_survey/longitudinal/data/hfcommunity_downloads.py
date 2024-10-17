@@ -72,14 +72,48 @@ def extract_zip(file_path, extract_to):
 def load_sql_to_mariadb(sql_file):
     try:
         print(f"Loading {sql_file} into the database...")
-        command = f"mysql -u {db_user} -p{db_password} {db_name} < {sql_file}"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"Failed to load {sql_file}: {result.stderr}")
+        
+        # Connect to the database
+        conn = mysql.connector.connect(
+            host="localhost",
+            user=db_user,
+            password=db_password,
+            database=db_name
+        )
+        cursor = conn.cursor()
+        
+        # Disable foreign key checks
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+        
+        # Get all table names
+        cursor.execute("SHOW TABLES;")
+        tables = cursor.fetchall()
+        
+        # Drop all tables
+        for table in tables:
+            cursor.execute(f"DROP TABLE IF EXISTS `{table[0]}`;")
+            print(f"Dropped table {table[0]}")
+        
+        # Re-enable foreign key checks
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("All tables dropped successfully.")
+        
+        # Load the SQL file into the empty database
+        command_load = f"mysql -u {db_user} -p{db_password} {db_name} < {sql_file}"
+        result_load = subprocess.run(command_load, shell=True, capture_output=True, text=True)
+        if result_load.returncode != 0:
+            print(f"Failed to load {sql_file}: {result_load.stderr}")
         else:
             print(f"{sql_file} successfully loaded into the database.")
+    except mysql.connector.Error as err:
+        print(f"MySQL Error: {err}")
     except Exception as e:
         print(f"An error occurred while loading {sql_file}: {e}")
+
 
 # Function to export the models table to a CSV file
 def export_model_with_tags_to_csv(output_file):
@@ -94,19 +128,24 @@ def export_model_with_tags_to_csv(output_file):
         )
         cursor = conn.cursor()
         
-        # Updated SQL query to group tag_names and library_names
+        # List all tables before executing the query
+        list_tables()
+        
         query = """
         SELECT 
             model.model_id, 
             model.downloads, 
             GROUP_CONCAT(DISTINCT model.library_name SEPARATOR ', ') AS library_names,
-            GROUP_CONCAT(DISTINCT tag.name SEPARATOR ', ') AS tag_names
+            GROUP_CONCAT(DISTINCT tag.name SEPARATOR ', ') AS tag_names,
+            GROUP_CONCAT(DISTINCT file.filename SEPARATOR ', ') AS filenames
         FROM model
         LEFT JOIN repository ON model.model_id = repository.id
         LEFT JOIN tags_in_repo ON repository.id = tags_in_repo.repo_id
         LEFT JOIN tag ON tags_in_repo.tag_name = tag.name
-        GROUP BY model.model_id, model.downloads
+        JOIN file ON model.model_id = file.repo_id
+        GROUP BY model.model_id
         """
+
         cursor.execute(query)
         
         # Fetch all rows

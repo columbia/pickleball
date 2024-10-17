@@ -17,4 +17,5 @@
     --param inputPath=/pickle-defense/evaluation/libraries/flair/flair.cpg \
     --param modelClass="flair/models/sequence_tagger_model.py:<module>.SequenceTagger" \
     --param cache=/pickle-defense/evaluation/cache/ \
-    --param outputPath=/pickle-defense/evaluation/libraries/flair/models/SequenceTagger/policy.json
+    --param outputPath=/pickle-defense/evaluation/libraries/flair/models/SequenceTagger/policy.json \
+    > /pickle-defense/evaluation/libraries/flair/models/SequenceTagger/policy.log

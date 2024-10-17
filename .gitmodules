@@ -10,3 +10,9 @@
 [submodule "evaluation/libraries/fastai/fastai"]
 	path = evaluation/libraries/fastai/fastai
 	url = https://github.com/fastai/fastai.git
+[submodule "evaluation/libraries/sentence-transformers"]
+	path = evaluation/libraries/sentence-transformers/sentence-transformers
+	url = https://github.com/UKPLab/sentence-transformers.git
+[submodule "evaluation/libraries/super-image/super-image"]
+	path = evaluation/libraries/super-image/super-image
+	url = https://github.com/eugenesiow/super-image.git

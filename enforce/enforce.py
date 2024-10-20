@@ -26,6 +26,7 @@ Misc variables:
 import codecs
 import functools as _functools
 import io
+import json
 import os
 import re
 import sys
@@ -1294,25 +1295,30 @@ class _Unpickler:
 
         # filehash = sha256(contents).hexdigest()
 
-        globals_path = os.path.join(POLICY_PATH, "globals.txt")
-        reduces_path = os.path.join(POLICY_PATH, "reduces.txt")
+        policy_path = os.path.join(POLICY_PATH, "policy.json")
 
-        if os.path.isfile(globals_path):
-            with open(globals_path, "r") as f:
-                self.allowed_globals = f.read().strip().split("\n")
-        else:
-            # raise Exception(
-            #     f"Globals policy not found for pickle file with hash {filehash}"
-            # )
-            raise Exception("Globals policy not found")
-        if os.path.isfile(reduces_path):
-            with open(reduces_path, "r") as f:
-                self.allowed_reduces = f.read().strip().split("\n")
-        else:
-            # raise Exception(
-            #     f"Reduces policy not found for pickle file with hash {filehash}"
-            # )
-            raise Exception("Reduces policy not found")
+        self.allowed_globals = []
+        self.allowed_reduces = []
+
+        globals_list = []
+        reduces_list = []
+        if os.path.isfile(policy_path):
+            try:
+                print(f'Loading policy file: {policy_path}')
+                with open(policy_path, "r", encoding='utf-8') as f:
+                    data = json.load(f)
+                    model_keys = list(data.keys())
+                    assert len(model_keys) == 1
+                    model_name = model_keys[0]
+                    globals_list = data.get(model_name, {}).get('globals', [])
+                    reduces_list = data.get(model_name, {}).get('reduces', [])
+            except FileNotFoundError:
+                print(f'Policy file {policy_path} not found')
+            except json.JSONDecodeError:
+                print(f'Error decoding JSON in file {policy_path}')
+            finally:
+                self.allowed_globals = globals_list
+                self.allowed_reduces = reduces_list
 
         print(self.allowed_globals)
         print(self.allowed_reduces)

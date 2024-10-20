@@ -260,8 +260,14 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
          * queue.
          */
         val fullNames = cpg.typeDecl(targetClass).fullName.l
-        println(s"-- found typeDecls with names: ${fullNames.mkString(",")}")
-        fullNames.foreach(queue.enqueue)
+
+        if (fullNames.isEmpty) {
+          println(s"-- found no alternatives, allowing ${targetClass}")
+          allowedGlobals += targetClass
+        } else {
+          println(s"-- found typeDecls with names: ${fullNames.mkString(",")}")
+          fullNames.foreach(queue.enqueue)
+        }
       }
 
     } else {

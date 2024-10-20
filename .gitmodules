@@ -37,3 +37,6 @@
 [submodule "evaluation/libraries/gliner/GLiNER"]
 	path = evaluation/libraries/gliner/GLiNER
 	url = https://github.com/urchade/GLiNER.git
+[submodule "evaluation/libraries/conch/CONCH"]
+	path = evaluation/libraries/conch/CONCH
+	url = https://github.com/mahmoodlab/CONCH.git

@@ -25,7 +25,6 @@ path_data = Path("./")
 extracted_path = path_data / "hfcommunity"
 
 # Database credentials
-db_name = "hfcommunity"
 db_user = "root"
 db_password = "19980818"
 
@@ -49,76 +48,56 @@ def download_file(url, save_path):
 
 # Function to extract a zip file
 def extract_zip(file_path, extract_to):
-    # Create a unique folder name based on the zip file name
-    folder_name = file_path.stem
-    unique_extract_path = extract_to / folder_name
-    
-    if unique_extract_path.exists() and any(unique_extract_path.iterdir()):
-        print(f"Folder {unique_extract_path} already exists and is not empty. Skipping extraction.")
-        return unique_extract_path
-    
     try:
+        # Create a subfolder based on the zip file's name
+        subfolder_name = file_path.stem
+        subfolder_path = extract_to / subfolder_name
+        
+        if subfolder_path.exists() and any(subfolder_path.iterdir()):
+            print(f"Folder {subfolder_path} already exists and is not empty. Skipping extraction.")
+            return subfolder_path
+        
+        subfolder_path.mkdir(parents=True, exist_ok=True)
+
         with zipfile.ZipFile(file_path, 'r') as zf:
-            zf.extractall(path=unique_extract_path)
-            print(f"Extracted {file_path} to {unique_extract_path}")
-        return unique_extract_path
-    except zipfile.BadZipFile:
-        print(f"Error: {file_path} is not a valid zip file.")
+            zf.extractall(path=subfolder_path)
+        print(f"Extracted {file_path} to {subfolder_path}")
+        return subfolder_path
     except Exception as e:
         print(f"An error occurred while extracting {file_path}: {e}")
-    return None
+        return None
 
 # Function to load a .sql file into the MariaDB database
-def load_sql_to_mariadb(sql_file):
+def load_sql_to_mariadb(sql_file, db_name):
     try:
-        print(f"Loading {sql_file} into the database...")
-        
-        # Connect to the database
-        conn = mysql.connector.connect(
-            host="localhost",
-            user=db_user,
-            password=db_password,
-            database=db_name
-        )
-        cursor = conn.cursor()
-        
-        # Disable foreign key checks
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
-        
-        # Get all table names
-        cursor.execute("SHOW TABLES;")
-        tables = cursor.fetchall()
-        
-        # Drop all tables
-        for table in tables:
-            cursor.execute(f"DROP TABLE IF EXISTS `{table[0]}`;")
-            print(f"Dropped table {table[0]}")
-        
-        # Re-enable foreign key checks
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print("All tables dropped successfully.")
-        
-        # Load the SQL file into the empty database
-        command_load = f"mysql -u {db_user} -p{db_password} {db_name} < {sql_file}"
-        result_load = subprocess.run(command_load, shell=True, capture_output=True, text=True)
-        if result_load.returncode != 0:
-            print(f"Failed to load {sql_file}: {result_load.stderr}")
+        print(f"Loading {sql_file} into the database {db_name}...")
+        # Drop the database, ignore errors if it doesn't exist
+        drop_command = f"mysql -u {db_user} -p{db_password} -e 'DROP DATABASE IF EXISTS {db_name}'"
+        result = subprocess.run(drop_command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Warning: Could not drop database {db_name}: {result.stderr.strip()}")
         else:
-            print(f"{sql_file} successfully loaded into the database.")
-    except mysql.connector.Error as err:
-        print(f"MySQL Error: {err}")
+            print(f"Database {db_name} dropped successfully.")
+        
+        # Create the database
+        create_command = f"mysql -u {db_user} -p{db_password} -e 'CREATE DATABASE {db_name}'"
+        subprocess.run(create_command, shell=True, check=True)
+        print(f"Database {db_name} created successfully.")
+        
+        # Now load the SQL file
+        command = f"mysql -u {db_user} -p{db_password} {db_name} < {sql_file}"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Failed to load {sql_file}: {result.stderr}")
+        else:
+            print(f"{sql_file} successfully loaded into the database {db_name}.")
     except Exception as e:
         print(f"An error occurred while loading {sql_file}: {e}")
 
-
 # Function to export the models table to a CSV file
-def export_model_with_tags_to_csv(output_file):
+def export_model_with_tags_to_csv(db_name, output_file):
     try:
-        print(f"Exporting 'model' table with tags to {output_file}...")
+        print(f"Exporting 'model' table with tags and filenames from {db_name} to {output_file}...")
         
         conn = mysql.connector.connect(
             host="localhost",
@@ -129,7 +108,7 @@ def export_model_with_tags_to_csv(output_file):
         cursor = conn.cursor()
         
         # List all tables before executing the query
-        list_tables()
+        list_tables(db_name)
         
         query = """
         SELECT 
@@ -171,9 +150,9 @@ def export_model_with_tags_to_csv(output_file):
         print(f"An error occurred while exporting 'model' table with tags: {e}")
 
 # New function to list all tables in the database
-def list_tables():
+def list_tables(db_name):
     try:
-        print("Listing all tables in the database...")
+        print(f"Listing all tables in the database {db_name}...")
         conn = mysql.connector.connect(
             host="localhost",
             user=db_user,
@@ -182,14 +161,16 @@ def list_tables():
         )
         cursor = conn.cursor()
         cursor.execute("SHOW TABLES")
-        tables = cursor.fetchall()
-        print("Tables in the database:")
+        tables = [table[0] for table in cursor.fetchall()]
+        print(f"Tables in the database {db_name}:")
         for table in tables:
-            print(table[0])
+            print(table)
         cursor.close()
         conn.close()
+        return tables
     except Exception as e:
         print(f"An error occurred while listing tables: {e}")
+        return []
 
 # Ensure the data directory exists
 path_data.mkdir(parents=True, exist_ok=True)
@@ -205,23 +186,19 @@ for url in zenodo_urls:
     # Check if the extracted folder already exists
     if unique_extract_path.exists() and any(unique_extract_path.iterdir()):
         print(f"Folder {unique_extract_path} already exists and is not empty. Skipping download and extraction.")
-        extracted_folders.append(unique_extract_path)
+        extracted_folders.append((unique_extract_path, folder_name))
     else:
         zip_file = download_file(url, path_data)
         if zip_file:
             extracted_folder = extract_zip(zip_file, extracted_path)
             if extracted_folder:
-                extracted_folders.append(extracted_folder)
+                extracted_folders.append((extracted_folder, folder_name))
 
 # Find and load all .sql files into the MariaDB database
-for folder in extracted_folders:
+for folder, dump_name in extracted_folders:
     for sql_file in folder.glob("*.sql"):
-        load_sql_to_mariadb(sql_file)
-    
-    # List all tables after loading each SQL file
-    # list_tables()
+        load_sql_to_mariadb(sql_file, dump_name)
     
     # Export the 'models' table to a CSV file for each dump
-    dump_name = folder.name
     output_csv = path_data / f"{dump_name}.csv"
-    export_model_with_tags_to_csv(output_csv)
+    export_model_with_tags_to_csv(dump_name, output_csv)

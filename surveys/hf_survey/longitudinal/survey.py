@@ -2,10 +2,10 @@
     This script is used to create a survey for the Hugging Face longitudinal study.
     The survey includes the following datasets:
     - PTMTorrent
-    - HFCommunity (dump_ files)
+    - HFCommunity
     - PeaTMOSS
     - ESEM
-    - Aug 2024 (data_Socket_Aug)
+    - Aug 2024
     - Oct 2024
 """
 
@@ -44,12 +44,7 @@ def load_ptmtorrent_data(data_path: str) -> pd.DataFrame:
     return df
 
 def load_hfcommunity_data(data_path: str) -> pd.DataFrame:
-    df = pd.read_csv(data_path, dtype={
-        'tag_names': str,
-        'filenames': str,
-        'libraries': str,
-        'model_id': str
-    })
+    df = pd.read_csv(data_path, dtype={'tag_names': str, 'filenames': str, 'libraries': str, 'model_id': str})
     df = df.sort_values('downloads', ascending=False).head(100000)
 
     # Parse the libraries column
@@ -166,54 +161,6 @@ def extract_filenames_from_siblings(siblings_str):
     ])
     return filenames
 
-def extract_framework(input_data):
-    known_frameworks = [
-        'pytorch', 'tf', 'jax', 'safetensors',
-        'onnx', 'tflite', 'keras', 'flax'
-    ]
-
-    # Ensure input_data is a Series
-    if not isinstance(input_data, pd.Series):
-        input_data = pd.Series(input_data)
-
-    return [extract_framework_single(item, known_frameworks) for item in input_data]
-
-def extract_framework_single(item, known_frameworks):
-    item_list = []
-
-    if isinstance(item, str):
-        item = item.strip()
-        if item.startswith('[') and item.endswith(']'):
-            try:
-                item_parsed = ast.literal_eval(item)
-                if isinstance(item_parsed, list):
-                    item_list.extend([str(t).lower() for t in item_parsed if not pd.isna(t)])
-                else:
-                    item_list.extend(item.lower().split(', '))
-            except (SyntaxError, ValueError):
-                item_list.extend(item.lower().split(', '))
-        else:
-            item_list.extend(item.lower().split(', '))
-    elif isinstance(item, (list, np.ndarray)):
-        item_list.extend([str(t).lower() for t in item if not pd.isna(t)])
-    elif pd.isna(item):
-        pass  # Do nothing for NaN
-    else:
-        logger.warning(
-            f"Unexpected item type: {type(item)}. Value: {item}"
-        )
-
-    if not item_list:
-        return set(['unknown'])
-
-    frameworks = set(fw for fw in known_frameworks if fw in item_list)
-
-    # Add 'others' if there are items not in known_frameworks
-    if set(item_list) - set(known_frameworks):
-        frameworks.add('others')
-
-    return frameworks if frameworks else set(['unknown'])
-
 def extract_extensions(filenames_series, known_extensions):
     extensions_list = []
     for filenames in filenames_series:
@@ -232,12 +179,118 @@ def extract_extensions(filenames_series, known_extensions):
         extensions_list.append(extensions)
     return extensions_list
 
+def analysis_extensions(data: pd.DataFrame) -> pd.Series:
+    filenames = data.get('filenames', data.get('filename'))
+    if filenames is None:
+        return pd.Series([set()]*len(data))
+    known_extensions = [
+        'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle', 'dill',
+        'pth', 'pt', 'model', 'pb', 'joblib', 'npy', 'npz',
+        'safetensors', 'onnx'
+    ]
+    extensions_list = extract_extensions(filenames, known_extensions)
+    return pd.Series(extensions_list)
+
+def analysis_tags(data: pd.DataFrame) -> Counter:
+    tag_names = data.get('tag_names', data.get('tag_name', data.get('tags')))
+    if tag_names is None:
+        return Counter()
+    tags_list = []
+    for tags in tag_names:
+        if isinstance(tags, float) and pd.isna(tags):
+            continue
+        if isinstance(tags, str):
+            tags_split = tags.split(', ')
+            tags_list.extend(tags_split)
+        elif isinstance(tags, (list, np.ndarray)):
+            tags_list.extend(tags)
+        else:
+            logger.warning(
+                f"Unexpected tag type in tags: {type(tags)}. Value: {tags}"
+            )
+    # Count
+    tags_flat = [tag.lower() for tag in tags_list if tag and not pd.isna(tag)]
+    tags_counter = Counter(tags_flat)
+    return tags_counter
+
+
+def plot_extensions_usage(extensions_usage: dict):
+    dates = sorted(extensions_usage.keys())
+    known_extensions = [
+        'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle',
+        'dill', 'pth', 'pt', 'model', 'pb', 'joblib',
+        'npy', 'npz', 'safetensors', 'onnx'
+    ]
+    extension_counts = {ext: [] for ext in known_extensions}
+
+    for date in dates:
+        date_usage = extensions_usage[date]
+        for ext in known_extensions:
+            count = date_usage.get(ext, 0)
+            extension_counts[ext].append(count)
+
+    plt.figure(figsize=(12, 6))
+    for ext in known_extensions:
+        plt.plot(
+            dates, extension_counts[ext],
+            marker='o', label=ext
+        )
+
+    plt.title('File Extensions Usage Over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Number of Models')
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('extensions_usage.png')
+    plt.close()
+
+
+def plot_safetensors_usage(safetensors_usage: dict):
+    dates = sorted(safetensors_usage.keys())
+    counts = []
+
+    for date in dates:
+        count = safetensors_usage[date]
+        counts.append(count)
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(
+        dates, counts,
+        marker='o', label='Models with .safetensors Files'
+    )
+
+    plt.title('Usage of .safetensors Files Over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Number of Models')
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('safetensors_usage.png')
+    plt.close()
+
+def plot_models_added_safetensors(dates, cumulative_counts):
+    plt.figure(figsize=(12, 6))
+    plt.plot(dates, cumulative_counts, marker='o', label='Models that added .safetensors')
+    plt.title('Models Adding .safetensors Over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Cumulative Number of Models')
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('models_added_safetensors.png')
+    plt.close()
+
 def main() -> None:
     # Configure logging to show debug messages
     logger.remove()
     logger.add(sys.stderr, level="DEBUG")
 
     all_data = load_data()
+    extensions_usage = {}
+    tags_usage = {}
+    safetensors_usage = {}
+
     data_frames = []
 
     for df in all_data:
@@ -250,8 +303,7 @@ def main() -> None:
         libraries = df.get('libraries', pd.Series(['']*len(df)))
         input_data = tags if tags is not None else libraries
 
-        # Extract frameworks and extensions
-        frameworks_series = pd.Series(extract_framework(input_data))
+        # Extract extensions
         extensions_series = pd.Series(extract_extensions(df.get('filenames', pd.Series(['']*len(df))), known_extensions=[
             'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle', 'dill',
             'pth', 'pt', 'model', 'pb', 'joblib', 'npy', 'npz',
@@ -272,12 +324,26 @@ def main() -> None:
         # Create a DataFrame for the current date
         df_date = pd.DataFrame({
             'model_id': model_ids,
-            'frameworks': frameworks_series,
             'extensions': extensions_series,
             'date': date
         })
 
         data_frames.append(df_date)
+
+        # Collect extension usage data
+        extension_counter = Counter()
+        for exts in extensions_series:
+            for ext in exts:
+                extension_counter[ext] += 1
+        extensions_usage[date] = extension_counter
+
+        # Analyze models with '.safetensors' files
+        count_safetensors_files = sum('safetensors' in exts for exts in extensions_series)
+        safetensors_usage[date] = count_safetensors_files
+
+        # Analyze tags
+        tags_counter = analysis_tags(df)
+        tags_usage[date] = tags_counter
 
     # Concatenate all data_frames
     full_data = pd.concat(data_frames, ignore_index=True)
@@ -285,14 +351,10 @@ def main() -> None:
     # Remove duplicates to ensure one entry per model per date
     full_data = full_data.drop_duplicates(subset=['model_id', 'date'])
 
-    # Initialize variables for the plots
+    # Initialize variables for the new figure
     dates = sorted(full_data['date'].unique())
 
-    # For Figure 1
-    others_no_safetensors_counts = []
-    safetensors_counts = []
-
-    # For Figure 2
+    # For the new figure: Models that added .safetensors over time
     model_records = []
 
     # Group by model_id to track changes over time
@@ -301,19 +363,18 @@ def main() -> None:
     for model_id, group in grouped:
         group = group.sort_values('date')
         dates_model = group['date'].tolist()
-        frameworks_list = group['frameworks'].tolist()
         extensions_list = group['extensions'].tolist()
 
-        # Handle potential NaN values in extensions_list
+        # Determine if the model added .safetensors files after initial date
         has_safetensors = [
-            ('safetensors' in exts) if isinstance(exts, (set, list)) else False 
+            ('safetensors' in exts) if isinstance(exts, (set, list)) else False
             for exts in extensions_list
         ]
         date_first_seen = dates_model[0]
         date_safetensors_first_seen = None
-        for date, has_st in zip(dates_model, has_safetensors):
+        for date_i, has_st in zip(dates_model, has_safetensors):
             if has_st:
-                date_safetensors_first_seen = date
+                date_safetensors_first_seen = date_i
                 break  # First occurrence of .safetensors
 
         model_records.append({
@@ -331,55 +392,20 @@ def main() -> None:
         (model_records_df['date_safetensors_first_seen'] > model_records_df['date_first_seen'])
     ]
 
-    # For Figure 2: Cumulative count of models that added .safetensors over time
+    # For the new figure: Cumulative count of models that added .safetensors over time
     cumulative_models_added_safetensors = []
     for date in dates:
         count = (models_added_safetensors_df['date_safetensors_first_seen'] <= date).sum()
         cumulative_models_added_safetensors.append(count)
 
-    # For Figure 1: Calculate counts per date
-    for date in dates:
-        df_date = full_data[full_data['date'] == date]
+    # Plot Extensions Usage
+    plot_extensions_usage(extensions_usage)
 
-        # Models that use 'others' frameworks and don't have '.safetensors' files
-        models_others_no_safetensors = df_date[
-            (df_date['frameworks'].apply(lambda x: 'others' in x if isinstance(x, (set, list)) else False)) &
-            (df_date['extensions'].apply(lambda x: 'safetensors' not in x if isinstance(x, (set, list)) else True))
-        ]
-        count_others_no_safetensors = len(models_others_no_safetensors['model_id'].unique())
-        others_no_safetensors_counts.append(count_others_no_safetensors)
+    # Plot .safetensors Usage
+    plot_safetensors_usage(safetensors_usage)
 
-        # Models that have '.safetensors' files
-        models_with_safetensors = df_date[
-            df_date['extensions'].apply(lambda x: 'safetensors' in x if isinstance(x, (set, list)) else False)
-        ]
-        count_models_with_safetensors = len(models_with_safetensors['model_id'].unique())
-        safetensors_counts.append(count_models_with_safetensors)
-
-    # Plot Figure 1
-    plt.figure(figsize=(12, 6))
-    plt.plot(dates, others_no_safetensors_counts, marker='o', label='Without .safetensors')
-    plt.plot(dates, safetensors_counts, marker='o', label='With .safetensors')
-    plt.title('Models Over Time')
-    plt.xlabel('Date')
-    plt.ylabel('Number of Models')
-    plt.xticks(rotation=45)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('models_over_time.png')
-    plt.close()
-
-    # Plot Figure 2
-    plt.figure(figsize=(12, 6))
-    plt.plot(dates, cumulative_models_added_safetensors, marker='o', label='Models that added .safetensors')
-    plt.title('Models Adding .safetensors Over Time')
-    plt.xlabel('Date')
-    plt.ylabel('Cumulative Number of Models')
-    plt.xticks(rotation=45)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('models_added_safetensors.png')
-    plt.close()
+    # Plot Models Adding .safetensors Over Time
+    plot_models_added_safetensors(dates, cumulative_models_added_safetensors)
 
 if __name__ == "__main__":
     main()

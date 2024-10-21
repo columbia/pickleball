@@ -34,3 +34,9 @@
 [submodule "evaluation/libraries/flagembedding/FlagEmbedding"]
 	path = evaluation/libraries/flagembedding/FlagEmbedding
 	url = https://github.com/FlagOpen/FlagEmbedding.git
+[submodule "evaluation/libraries/gliner/GLiNER"]
+	path = evaluation/libraries/gliner/GLiNER
+	url = https://github.com/urchade/GLiNER.git
+[submodule "evaluation/libraries/conch/CONCH"]
+	path = evaluation/libraries/conch/CONCH
+	url = https://github.com/mahmoodlab/CONCH.git

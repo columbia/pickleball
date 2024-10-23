@@ -40,3 +40,9 @@
 [submodule "evaluation/libraries/conch/CONCH"]
 	path = evaluation/libraries/conch/CONCH
 	url = https://github.com/mahmoodlab/CONCH.git
+[submodule "evaluation/libraries/languagebind/LanguageBind"]
+	path = evaluation/libraries/languagebind/LanguageBind
+	url = https://github.com/PKU-YuanGroup/LanguageBind.git
+[submodule "evaluation/libraries/huggingsound/huggingsound"]
+	path = evaluation/libraries/huggingsound/huggingsound
+	url = https://github.com/jonatasgrosman/huggingsound.git

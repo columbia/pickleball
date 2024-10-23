@@ -236,9 +236,12 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
      *   needs to be unmangled.
      */
     val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
-    if (cachedPolicies.contains(targetClass)) {
+    val tempClass: String = cachedPolicies.keys.find(key => targetClass.startsWith(key)).getOrElse("")
+    if (tempClass.nonEmpty) {
+    // if (cachedPolicies.contains(targetClass)) {
+
       println(s"- found target class \"${targetClass}\" in type cache")
-      val classPolicy: Option[ClassPolicy] = cachedPolicies.get(targetClass)
+      val classPolicy: Option[ClassPolicy] = cachedPolicies.get(tempClass)
 
       classPolicy match {
         case Some(policy) =>

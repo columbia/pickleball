@@ -5,7 +5,7 @@
 # be modified.
 
 # Create CPG
-/joern/joern-cli/target/universal/stage/pysrc2cpg \
+/joern/joern-parse \
     -J-Xmx`grep MemTotal /proc/meminfo | awk '{print $2}'`k \
     /pickle-defense/evaluation/libraries/parrot/Parrot_Paraphraser/parrot/ \
     -o /pickle-defense/evaluation/libraries/parrot/parrot.cpg

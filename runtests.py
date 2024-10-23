@@ -122,7 +122,7 @@ def infer_policy(
 
 def compare_policies(policy: pathlib.Path, baseline: pathlib.Path) -> Tuple[float, float]:
 
-    result = compare.compare_json_files(str(policy), str(baseline))
+    result = compare.compare_json_files(str(baseline), str(policy))
     global_scores = result["global_lines"]
     reduce_scores = result["reduce_lines"]
     return (global_scores, reduce_scores)
@@ -194,7 +194,7 @@ def main():
             # Compare the policy to a test baseline
             global_scores, reduce_scores = compare_policies(inferred_path, baseline_path)
 
-            if global_scores["precision"] < 1.0 or reduce_scores["precision"] < 1.0:
+            if global_scores["recall"] < 1.0 or reduce_scores["recall"] < 1.0:
                 print(f"{RED}[-] FAIL{RESET}")
                 test_results[f'{fixture}-{model_class_name}'] = 'FAIL'
             else:

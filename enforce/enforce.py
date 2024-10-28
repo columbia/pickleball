@@ -1293,15 +1293,6 @@ class _Unpickler:
         'bytes' to read these 8-bit string instances as bytes objects.
         """
 
-        if isinstance(file, io.BufferedReader):
-            contents = file.peek()
-        elif isinstance(file, io.BytesIO):
-            contents = file.getbuffer()
-        else:
-            raise Exception("Uknown file type: ", file)
-
-        # filehash = sha256(contents).hexdigest()
-
         policy_path = os.path.join(POLICY_PATH, "policy.json")
 
         self.allowed_globals = []
@@ -2089,16 +2080,13 @@ try:
         PickleError,
         Pickler,
         PicklingError,
-        Unpickler,
         UnpicklingError,
         dump,
         dumps,
     )
 
-    # load,
-    # loads,
     # Use PickleBall's loading functions
-    load, loads = _load, _loads
+    load, loads, Unpickler = _load, _loads, _Unpickler
 except ImportError:
     Pickler, Unpickler = _Pickler, _Unpickler
     dump, dumps, load, loads = _dump, _dumps, _load, _loads

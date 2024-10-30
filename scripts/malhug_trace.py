@@ -30,7 +30,6 @@ def process_maxhug(
     # this function could recursively traverse all model files
     model_paths = get_model_paths(indir)
 
-    '''
     for model_path in model_paths:
         generate_trace(model_path, delete_after_tracing=False)
 
@@ -55,7 +54,6 @@ def process_maxhug(
 
     for model_path in model_paths:
         modelscan(model_path)
-    '''
 
     def result_analysis(indir):
         modelscan_ext = ".modelscan.json"

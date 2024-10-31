@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y git
 RUN git clone https://github.com/FlagOpen/FlagEmbedding.git
 WORKDIR FlagEmbedding
 RUN pip install .
+RUN pip install transformers==4.46.1
 
 COPY modeling_utils.patch /root/modeling_utils.patch
-#RUN cd /root && patch -p1 < /root/modeling_utils.patch
+RUN cd /root && patch -p1 < /root/modeling_utils.patch

@@ -1728,8 +1728,8 @@ class _Unpickler:
 
     dispatch[OBJ[0]] = load_obj
 
-    # XXX: No need to do anything for NEWOBJ/NEWOBJ_EX since the globals will
-    # be checked when they are put on the stack
+    # XXX: No need to do anything for NEWOBJ/NEWOBJ_EX since the globals (classes)
+    # will be checked when they are put on the stack
     def load_newobj(self):
         args = self.stack.pop()
         cls = self.stack.pop()
@@ -1782,7 +1782,6 @@ class _Unpickler:
 
         full_path = f"{module}.{name}"
         if full_path in self.allowed_globals:
-            # self.append(allowed_globals[full_path])
             self.append(self.find_class_non_recursive(module, name))
         else:
             self.append(FakeCallable(full_path))
@@ -1807,22 +1806,26 @@ class _Unpickler:
 
     dispatch[EXT4[0]] = load_ext4
 
-    # FIXME look into this too
+    # def get_extension(self, code):
+    #     nil = []
+    #     obj = _extension_cache.get(code, nil)
+    #     if obj is not nil:
+    #         self.append(obj)
+    #         return
+    #     key = _inverted_registry.get(code)
+    #     if not key:
+    #         if code <= 0:  # note that 0 is forbidden
+    #             # Corrupt or hostile pickle.
+    #             raise UnpicklingError("EXT specifies code <= 0")
+    #         raise ValueError("unregistered extension code %d" % code)
+    #     obj = self.find_class(*key)
+    #     _extension_cache[code] = obj
+    #     self.append(obj)
+
     def get_extension(self, code):
-        nil = []
-        obj = _extension_cache.get(code, nil)
-        if obj is not nil:
-            self.append(obj)
-            return
-        key = _inverted_registry.get(code)
-        if not key:
-            if code <= 0:  # note that 0 is forbidden
-                # Corrupt or hostile pickle.
-                raise UnpicklingError("EXT specifies code <= 0")
-            raise ValueError("unregistered extension code %d" % code)
-        obj = self.find_class(*key)
-        _extension_cache[code] = obj
-        self.append(obj)
+        raise Exception(
+            f"Extensions not supported! Tried to call with code {code}"
+        )
 
     def find_class_non_recursive(self, module, name):
         # print(f"Getting attribute {name} from module {sys.modules[module]}")

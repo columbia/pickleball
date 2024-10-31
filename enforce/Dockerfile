@@ -9,7 +9,8 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY enforce.py /usr/lib/python3.11/pickle.py
-RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+RUN pip3 install torch==2.5.0+cpu torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+RUN pip3 install transformers==4.46.1
 
 RUN mkdir -p /root/policies
 WORKDIR /load-model

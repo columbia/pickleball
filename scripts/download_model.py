@@ -191,13 +191,13 @@ def generate_trace(model_path: str, delete_after_tracing: bool = True) -> str:
             fd.write(trace)
 
 
-def popular_pytorch_repos(n: int = 100) -> Iterable[huggingface_hub.hf_api.ModelInfo]:
+def popular_repos(n: int = 100, lib: str = "pytorch") -> Iterable[huggingface_hub.hf_api.ModelInfo]:
     """Returns iterable of the top n most downloaded Hugging Face repositories,
     sorted from most downloaded to least downloaded.
     """
 
     api = huggingface_hub.HfApi()
-    model_filter = huggingface_hub.ModelFilter(library="pytorch")
+    model_filter = huggingface_hub.ModelFilter(library=lib)
     models = api.list_models(
         filter=model_filter, sort="downloads", direction=-1, limit=n
     )
@@ -315,6 +315,11 @@ def main():
         help="Number of repositories to batch process (if --repository not set).",
     )
     parser.add_argument(
+        "--library",
+        type=str,
+        help="The library to download (if --batch is set).",
+    )
+    parser.add_argument(
         "--force_download",
         action="store_true",
         default=False,
@@ -351,7 +356,7 @@ def main():
             logging.error(err)
             return
     elif args.batch > 0:
-        repositories = popular_pytorch_repos(args.batch)
+        repositories = popular_repos(args.batch, args.library)
     else:
         logging.error(
             "need to either specify a repository to process with the "

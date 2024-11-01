@@ -2,7 +2,7 @@
 Script for downloading PyTorch models from HuggingFace, and generating a
 fickling trace of each model.
 
-Can be run on specifically identified repositories (--repository <name>), or
+Can be run on specifically identified repositories (--repository <namespace/repo>), or
 as a batch process over the n most downloaded HuggingFace repositories with
 PyTorch models (--batch n).
 """
@@ -14,7 +14,7 @@ import logging
 import shutil
 import sys
 from pathlib import Path
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Optional
 
 import requests
 
@@ -41,26 +41,42 @@ ALLOWED_PATTERNS = ("*.bin", "*.pth", "*.pt")
 # a pickle program. I use this dummy file and context manager to silence the
 # output statements to avoid cluttering stdout.
 class DummyFile(object):
+    def __init__(self, filename=None):
+        self.filename = filename
+        if filename:
+            self.file = open(filename, 'a') 
+        else:
+            self.file = None
+
     def write(self, x):
-        pass
+        if self.file:
+            self.file.write(x)
 
     def flush(self):
-        pass
+        if self.file:
+            self.file.flush()
+
+    def close(self):
+        if self.file:
+            self.file.close() 
 
 
 # Used to prevent cluttering stdout when generating fickling trace. See comment
 # above DummyFile.
 @contextlib.contextmanager
-def nostdout():
+def nostdout(opcode_filename=None):
     save_stdout = sys.stdout
-    sys.stdout = DummyFile()
+    dummy_file = DummyFile(opcode_filename)
+    sys.stdout = dummy_file
     yield
     sys.stdout = save_stdout
+    dummy_file.close()
 
 
 def canonical_model_name(model_repo: str) -> str:
     """HuggingFace repositories are identified in the form of
-    'namespace/repository'. For saving the repository contents, convert the '/'
+    'namespace/repository'. 
+    For saving the repository contents, convert the '/'
     in the name to a '-' in the output directory name to avoid creating
     subdirectories.
     """
@@ -119,7 +135,7 @@ def download(
             logging.error(err)
 
 
-def _generate_stacked_trace(model_path: str) -> str:
+def _generate_stacked_trace(model_path: str, write_opcode: bool) -> str:
 
     with open(model_path, "rb") as fd:
         try:
@@ -130,12 +146,13 @@ def _generate_stacked_trace(model_path: str) -> str:
 
     var_id = 0
     trace = ""
+    opcode_filename = model_path + ".opcode" if write_opcode else None
     for i, pickled in enumerate(stacked_pickle):
         interpreter = fickle.Interpreter(
             pickled, first_variable_id=var_id, result_variable=f"result{i}"
         )
         model_trace = tracing.Trace(interpreter)
-        with nostdout():
+        with nostdout(opcode_filename):
             collected_trace = model_trace.run()
         trace += unparse(collected_trace)
         var_id = interpreter.next_variable_id
@@ -143,7 +160,7 @@ def _generate_stacked_trace(model_path: str) -> str:
     return trace
 
 
-def _generate_pytorch_trace(model_path: str) -> str:
+def _generate_pytorch_trace(model_path: str, write_opcode: bool) -> str:
 
     pytorch_model = PyTorchModelWrapper(model_path)
     try:
@@ -154,13 +171,14 @@ def _generate_pytorch_trace(model_path: str) -> str:
 
     interpreter = fickle.Interpreter(pytorch_model.pickled, first_variable_id=0)
     model_trace = tracing.Trace(interpreter)
-    with nostdout():
+    opcode_filename = model_path + ".opcode" if write_opcode else None
+    with nostdout(opcode_filename):
         collected_trace = model_trace.run()
 
     return unparse(collected_trace)
 
 
-def generate_trace(model_path: str, delete_after_tracing: bool = True) -> str:
+def generate_trace(model_path: str, delete_after_tracing: bool = True, write_opcode: bool = False) -> str:
     """Generate a trace of a PyTorch model using the fickling library."""
 
     logging.info("Generating trace for model: %s", model_path)
@@ -171,11 +189,11 @@ def generate_trace(model_path: str, delete_after_tracing: bool = True) -> str:
     # API. I should be able to test ahead of time for the model type and then
     # select the right approach.
     try:
-        trace = _generate_pytorch_trace(model_path)
+        trace = _generate_pytorch_trace(model_path, write_opcode)
     except ValueError:
         logging.warning("- Could not trace as PyTorch model. Trying stacked pickle")
         try:
-            trace = _generate_stacked_trace(model_path)
+            trace = _generate_stacked_trace(model_path, write_opcode)
         except RuntimeError as err:
             logging.warning("- Unable to generate trace for model: %s", model_path)
             logging.warning("%s", err)
@@ -257,6 +275,7 @@ def process_repository(
     save_metadata: bool = True,
     trace: bool = True,
     delete_after_processing: bool = True,
+    write_opcode: bool = False,
 ) -> None:
     """Process a Hugging Face repository. Defaults behavior is to:
      1. save metadata about the repository
@@ -284,7 +303,7 @@ def process_repository(
     if trace:
         model_paths = get_model_paths(repo_outdir)
         for model_path in model_paths:
-            generate_trace(model_path, delete_after_processing)
+            generate_trace(model_path, delete_after_processing, write_opcode)
         if delete_after_processing:
             # Remove cached model directory (automatically created by
             # HuggingFace when downloading).
@@ -320,13 +339,21 @@ def main():
         help="The library to download (if --batch is set).",
     )
     parser.add_argument(
-        "--force_download",
+        "--force-download",
         action="store_true",
         default=False,
         help=(
             "Force download the model while processing. If this is not set, "
             "the model will not be downloaded when the repository output "
             "directory already exists."
+        ),
+    )
+    parser.add_argument(
+        "--write-opcode",
+        action="store_true",
+        default=False,
+        help=(
+            "Write down the printed opcode into file, if set"
         ),
     )
     parser.add_argument(
@@ -350,8 +377,10 @@ def main():
     args = parser.parse_args()
 
     if args.repository:
+        repositories = []
         try:
-            repositories = [get_model_info(args.repository)]
+            for repo in args.repository.split(','):
+                repositories.append(get_model_info(repo))
         except huggingface_hub.utils._errors.RepositoryNotFoundError as err:
             logging.error(err)
             return
@@ -379,8 +408,10 @@ def main():
             save_metadata=True,
             trace=not args.no_trace,
             delete_after_processing=not args.no_delete,
+            write_opcode= args.write_opcode
         )
 
 
 if __name__ == "__main__":
     main()
+

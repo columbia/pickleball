@@ -237,8 +237,9 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
      */
     val targetTypeDecls = cpg.typeDecl.fullName(targetClass).toList
     val tempClass: String = cachedPolicies.keys.find(key => targetClass.startsWith(key)).getOrElse("")
+
     if (tempClass.nonEmpty) {
-    // if (cachedPolicies.contains(targetClass)) {
+      /* Candidate class is in the policy cache */
 
       println(s"- found target class \"${targetClass}\" in type cache")
       val classPolicy: Option[ClassPolicy] = cachedPolicies.get(tempClass)
@@ -252,6 +253,16 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
         case _ =>
       }
     } else if (targetTypeDecls.isEmpty) {
+      /* Candidate class is neither in the CPG nor in the policy cache because:
+       * 1. Candidate class might be a mangled name
+       *      => unmangle name and add new name to queue
+       * 2. Candidate class might be a short name
+       *      => look up full name of objects and add to queue
+       *         (might result in imprecision)
+       * 3. Candidate class is in an external library
+       *      => TODO: fetch library for analysis
+       */
+
       println(s"- !! unable to find typeDecl for class ${targetClass} !!")
 
       if (targetClass.startsWith("__collection.")) {
@@ -274,9 +285,11 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
       }
 
     } else {
+      /* Candidate class is in CPG and must be analyzed */
 
       val reduceMethods = reduces(targetClass)
       if (reduceMethods.nonEmpty) {
+        /* Candidate class implements a __reduce__ method */
         println(s"- reduce method identified")
         reduceMethods.foreach { r =>
           println(s"- adding callables: ${r.callable.fullName.mkString(",")}")
@@ -287,6 +300,7 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
         // TODO: Analyze all types of arguments to reduceMethods
 
       } else {
+        /* Candidate class does not implement a __reduce__ method */
         println(s"- no reduce method identified")
         allowedGlobals.add(targetClass)
 

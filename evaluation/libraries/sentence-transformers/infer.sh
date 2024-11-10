@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Create CPG
-/joern/joern-cli/target/universal/stage/pysrc2cpg \
+/joern/joern-parse \
     -J-Xmx`grep MemTotal /proc/meminfo | awk '{print $2}'`k \
     /pickle-defense/evaluation/libraries/sentence-transformers/sentence-transformers/sentence_transformers/ \
     -o /pickle-defense/evaluation/libraries/sentence-transformers/sentence-transformers.cpg

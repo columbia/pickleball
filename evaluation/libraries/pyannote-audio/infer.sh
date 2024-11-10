@@ -7,11 +7,17 @@
     -o /pickle-defense/evaluation/libraries/pyannote-audio/pyannote.cpg \
     --ignore-paths="/pickle-defense/evaluation/libraries/pyannote-audio/pyannote-audio/tests/,/pickle-defense/evaluation/libraries/pyannote-audio/pyannode-audio/tutorials/"
 
-# Run analyze.sc script
+# Run analyze.sc script for the Model class policy
 /joern/joern --script /pickle-defense/analyze/analyze.sc \
     -J-Xmx`grep MemTotal /proc/meminfo | awk '{print $2}'`k \
     --param inputPath=/pickle-defense/evaluation/libraries/pyannote-audio/pyannote.cpg \
-    --param modelClass="pyannote/audio/models/embedding/wespeaker/__init__.py:<module>.WeSpeakerResNet34" \
+    --param modelClass="pyannote/audio/core/model.py:<module>.Model" \
     --param cache=/pickle-defense/evaluation/cache/ \
-    --param outputPath=/pickle-defense/evaluation/libraries/pyannote-audio/models/WeSpeakerResNet34/policy.json \
-    > /pickle-defense/evaluation/libraries/pyannote-audio/models/WeSpeakerResNet34/policy.log
+    --param outputPath=/pickle-defense/evaluation/libraries/pyannote-audio/models/Model/policy-model.json \
+    > /pickle-defense/evaluation/libraries/pyannote-audio/models/Model/policy.log
+
+    #--param modelClass="pyannote/audio/models/embedding/wespeaker/__init__.py:<module>.WeSpeakerResNet34" \
+    #--param outputPath=/pickle-defense/evaluation/libraries/pyannote-audio/models/WeSpeakerResNet34/policy.json \
+
+# Run analyze.sc script for the Pipeline class policy
+# TODO

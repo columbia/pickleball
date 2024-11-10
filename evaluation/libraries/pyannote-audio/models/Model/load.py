@@ -1,27 +1,35 @@
+import argparse
 from pyannote.audio import Model, Inference
 from scipy.spatial.distance import cdist
 from pyannote.core import Segment
 
-model = Model.from_pretrained("pyannote/wespeaker-voxceleb-resnet34-LM")
+def load_model(model_path):
 
-inference = Inference(model, window="whole")
-embedding1 = inference("speaker1.wav")
-embedding2 = inference("speaker2.wav")
-# `embeddingX` is (1 x D) numpy array extracted from the file as a whole.
+    try:
+        model = Model.from_pretrained(model_path)
 
-distance = cdist(embedding1, embedding2, metric="cosine")[0,0]
-# `distance` is a `float` describing how dissimilar speakers 1 and 2 are.
+        inference = Inference(model, step=2.5)
+        output = inference("sample.wav")
+        print(output.data.shape)
 
-# Extract embedding from an excerpt
-inference = Inference(model, window="whole")
-excerpt = Segment(13.37, 19.81)
-embedding = inference.crop("audio.wav", excerpt)
-# `embedding` is (1 x D) numpy array extracted from the file excerpt.
+    except Exception as e:
+        print(f"\033[91mFAILED in {model_path}\033[0m")
+    else:
+        print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
 
-# Extract embeddings using a sliding window
-inference = Inference(model, window="sliding",
-                      duration=3.0, step=1.0)
-embeddings = inference("audio.wav")
-# `embeddings` is a (N x D) pyannote.core.SlidingWindowFeature
-# `embeddings[i]` is the embedding of the ith position of the
-# sliding window, i.e. from [i * step, i * step + duration].
+
+if __name__ == "__main__":
+    """Main function. Collect command line arguments and begin"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model-path",
+        help=(
+            "Path to the model (pytorch_model.bin)."
+        ),
+    )
+    args = parser.parse_args()
+    if not args.model_path:
+        print("ERROR: need to specify model path (pytorch_model.bin file). No test is needed.")
+        exit(1)
+
+    load_model(args.model_path)

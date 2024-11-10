@@ -3,6 +3,6 @@ load.py:
 try_all:
 	run load.py on all flair models (currently hardcoded for where to look for flair models)
 	if we later mount local flair models to the container, we can use a hard coded version
-sample.wav: 
+test.wav: 
 	testing data
 

@@ -1,18 +1,38 @@
 from parrot import Parrot
-import warnings
-warnings.filterwarnings("ignore")
+import argparse
 
-#Init models (make sure you init ONLY once if you integrate this to your code)
-parrot = Parrot(model_tag="prithivida/parrot_paraphraser_on_T5", use_gpu=False)
+def load_model(model_path, test=""):
+    try:
+        parrot = Parrot(model_tag=model_path, use_gpu=False)
+        para_phrases = parrot.augment(input_phrase=test)
+        print(para_phrases)
 
-phrases = ["Can you recommed some upscale restaurants in Newyork?",
-           "What are the famous places we should not miss in Russia?"
-]
+    except Exception as e:
+        print(f"\033[91mFAILED in {model_path}\033[0m")
+    else:
+        print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
 
-for phrase in phrases:
-  print("-"*100)
-  print("Input_phrase: ", phrase)
-  print("-"*100)
-  para_phrases = parrot.augment(input_phrase=phrase)
-  for para_phrase in para_phrases:
-   print(para_phrase)
+
+
+if __name__ == "__main__":
+    """Main function. Collect command line arguments and begin"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model-path",
+        help=(
+            "Path to the model (parent of pytorch_model.bin)."
+        ),
+    )
+    parser.add_argument(
+        "--test",
+        default="Can you recommed some upscale restaurants in Newyork?",
+        help=(
+            "test input for the model (current string type)"
+        ),
+    )
+    args = parser.parse_args()
+    if not args.model_path:
+        print("ERROR: need to specify model path (parent of pytorch_model.bin file) and test input")
+        exit(1)
+
+    load_model(args.model_path, args.test)

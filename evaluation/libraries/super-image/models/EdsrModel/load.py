@@ -29,7 +29,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model-path",
         help=(
-            "Path to the model (pytorch_model.bin)."
+            "Path to the model (parent directory of pytorch_model.bin)."
         ),
     )
     parser.add_argument(

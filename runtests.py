@@ -52,6 +52,7 @@ FIXTURES = [
     'interprocedural-attribute-writes',
     'reduce',
     'reduce-ancestor',
+    'reduce-ancestor-library',
     'inherit-from-library',
     #'follow-collection-object'
 ]

@@ -37,13 +37,13 @@ $ cd enforce
 $ docker build -t pickleball-enforce .
 ```
 
-# Policy Inference
+# Policy Generation
 
-PickleBall uses the Joern program analysis platform to infer policies for model
-class objects. The policy need only be inferred once for a given class, and then
-used anytime a model of that class is loaded.
+PickleBall uses the Joern program analysis platform to generate policies for
+model class objects. The policy need only be generated once for a given class,
+and then used anytime a model of that class is loaded.
 
-PickleBall provides a containerized environment to infer the model policies with
+PickleBall provides a containerized environment to generate model policies with
 the following steps:
 
 1. Run the container and mount this directory in the container. If analyzing a
@@ -63,8 +63,8 @@ $ docker run -it --rm -v $(pwd):/pickle-defense joern /bin/bash
 # /joern/joern-cli/target/universal/stage/pysrc2cpg -J-Xmx16g /pickle-defense/evaluation/libraries/flair/flair/ -o /pickle-defense/evaluation/libraries/flair/flair.cpg --ignore-paths="/pickle-defense/evaluation/libraries/flair/flair/tests/,/pickle-defense/evaluation/libraries/flair/flair/examples/,/pickle-defense/evaluation/libraries/flair/flair/flair/datasets"
 ```
 
-3. Use Joern to execute the `analyze.sc` script. Provide a a path to the CPG,
-   the name of the class to infer a policy for, (optionally) an output file path
+3. Use Joern to execute the `analyze.sc` script. Provide a path to the CPG,
+   the name of the class to generate a policy for, (optionally) an output file path
    to write the inferred policy to, and (optionally) a path to the cache
    directory:
 
@@ -90,7 +90,7 @@ strictly necessary. Future implementations will not overwrite the Pickle module.
 # Evaluating PickleBall on a library and model
 
 We evaluate PickleBall on a dataset of models. We identify the libraries used to
-produce the model and the class implemented by the model. PickleBall infers a
+produce the model and the class implemented by the model. PickleBall generates a
 policy for the class, and then we enforce the policy while loading the model and
 performing an intended task (e.g., inference).
 
@@ -144,6 +144,28 @@ In the inference docker container:
 
 ```
 # python3 runtests.py
+```
+
+# Tracing a model
+
+Given a pickle-based model, to generate a trace of the imported and invoked
+callables in the model:
+
+1. Extract the pickle program from the model. For PyTorch v1.3 models, this
+   means unzipping the `pytorch_model.bin` file to access `data.pkl`.
+
+2. Use the fickling module and our scripts to generate a JSON trace of all
+   model imports and invocations:
+
+```
+$ fickling --trace data.pkl > data.trace
+$ python3 scripts/parsetrace.py data.trace > data.json
+```
+
+3. (Optional) Given a set of model traces, generate a trace that contains all
+   imports and invocations seen in the model traces.
+```
+$ python3 scripts/modelunion.py `echo <name of model class>` data.json data2.json ... > baseline.json
 ```
 
 # Troubleshooting

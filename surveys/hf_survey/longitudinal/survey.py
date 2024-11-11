@@ -100,24 +100,28 @@ def load_data_socket_aug(data_path: str) -> pd.DataFrame:
 
     # Add category column based on file extensions
     def categorize_model(extensions):
-        if not extensions:
+        if not extensions:  # Empty set means no files
             return 'no_model_files'
         
         pickle_variants = {'pkl', 'pickle', 'joblib', 'dill'}
         pytorch_variants = {'pt', 'pth', 'bin'}
+        model_extensions = pickle_variants | pytorch_variants | {'safetensors', 'onnx', 'h5', 'hdf5', 'ckpt', 'pb', 'model', 'npy', 'npz', 'msgpack', 'nemo', 'wav'}
         
         has_pickle = any(ext in pickle_variants for ext in extensions)
         has_pytorch = any(ext in pytorch_variants for ext in extensions)
         has_safetensors = 'safetensors' in extensions
+        has_any_model_ext = any(ext in model_extensions for ext in extensions)
         
-        if has_pickle:
+        if not has_any_model_ext:
+            return 'no_model_files'  # No known model extensions found
+        elif has_pickle:
             return 'pickle_variant_with_safetensors' if has_safetensors else 'pickle_variant_without_safetensors'
         elif has_pytorch:
             return 'pytorch_variant_with_safetensors' if has_safetensors else 'pytorch_variant_without_safetensors'
         elif has_safetensors:
             return 'only_safetensors'
         else:
-            return 'other_formats'
+            return 'other_formats'  # Has model files but in other formats (not pickle/pytorch/safetensors)
 
     # Extract extensions and create category column
     df['extensions'] = df['filenames'].apply(lambda x: {

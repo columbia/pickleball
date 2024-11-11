@@ -1,4 +1,8 @@
 FROM pickleball-enforce:latest
 
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
+
+# super iamges requires huggingface_hub before 0.26
+RUN pip3 install huggingface_hub==0.25.2
+
 RUN pip3 install super-image

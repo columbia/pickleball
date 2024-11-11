@@ -1,6 +1,5 @@
 import argparse
 from pyannote.audio import Model, Inference
-from scipy.spatial.distance import cdist
 from pyannote.core import Segment
 
 def load_model(model_path):

@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     if not args.model_path:
-        print("ERROR: need to specify model path (pytorch_model.bin file) and test input")
+        print("ERROR: need to specify model path (pytorch_model.bin file) and (optional) test input")
         exit(1)
 
     load_model(args.model_path, args.test)

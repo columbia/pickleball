@@ -105,7 +105,7 @@ def load_data_socket_aug(data_path: str) -> pd.DataFrame:
         
         pickle_variants = {'pkl', 'pickle', 'joblib', 'dill'}
         pytorch_variants = {'pt', 'pth', 'bin'}
-        model_extensions = pickle_variants | pytorch_variants | {'safetensors', 'onnx', 'h5', 'hdf5', 'ckpt', 'pb', 'model', 'npy', 'npz', 'msgpack', 'nemo', 'wav'}
+        model_extensions = pickle_variants | pytorch_variants | {'safetensors', 'onnx', 'h5', 'hdf5', 'ckpt', 'pb', 'model', 'npy', 'npz', 'msgpack', 'nemo', 'wav', 'gguf', 'keras', 'llamafile'}
         
         has_pickle = any(ext in pickle_variants for ext in extensions)
         has_pytorch = any(ext in pytorch_variants for ext in extensions)
@@ -285,7 +285,7 @@ def analysis_extensions(data: pd.DataFrame) -> pd.Series:
     known_extensions = [
         'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle', 'dill',
         'pth', 'pt', 'model', 'pb', 'joblib', 'npy', 'npz',
-        'safetensors', 'onnx', 'msgpack', 'nemo', 'wav'
+        'safetensors', 'onnx', 'msgpack', 'nemo', 'wav', 'gguf', 'keras', 'llamafile'
     ]
     extensions_list = extract_extensions(filenames, known_extensions)
     return pd.Series(extensions_list)
@@ -318,7 +318,8 @@ def plot_extensions_usage(extensions_usage: dict):
     known_extensions = [
         'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle',
         'dill', 'pth', 'pt', 'model', 'pb', 'joblib',
-        'npy', 'npz', 'safetensors', 'onnx', 'msgpack', 'nemo', 'wav'
+        'npy', 'npz', 'safetensors', 'onnx', 'msgpack',
+        'nemo', 'wav', 'gguf', 'keras', 'llamafile'
     ]
     extension_counts = {ext: [] for ext in known_extensions}
 
@@ -509,7 +510,7 @@ def main() -> None:
     relevant_extensions = {
         'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle', 'dill',
         'pth', 'pt', 'model', 'pb', 'joblib', 'npy', 'npz',
-        'safetensors', 'onnx', 'msgpack', 'nemo', 'wav'
+        'safetensors', 'onnx', 'msgpack', 'nemo', 'wav', 'gguf', 'keras', 'llamafile'
     }
 
     data_frames = []

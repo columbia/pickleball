@@ -98,7 +98,52 @@ def load_data_socket_aug(data_path: str) -> pd.DataFrame:
     # Rename 'context_id' to 'model_id' for consistency
     df.rename(columns={'context_id': 'model_id'}, inplace=True)
 
-    # Save top 100000 models to CSV, excluding siblings column
+    # Add category column based on file extensions
+    def categorize_model(extensions):
+        if not extensions:
+            return 'no_model_files'
+        
+        pickle_variants = {'pkl', 'pickle', 'joblib', 'dill'}
+        pytorch_variants = {'pt', 'pth', 'bin'}
+        
+        has_pickle = any(ext in pickle_variants for ext in extensions)
+        has_pytorch = any(ext in pytorch_variants for ext in extensions)
+        has_safetensors = 'safetensors' in extensions
+        
+        if has_pickle:
+            return 'pickle_variant_with_safetensors' if has_safetensors else 'pickle_variant_without_safetensors'
+        elif has_pytorch:
+            return 'pytorch_variant_with_safetensors' if has_safetensors else 'pytorch_variant_without_safetensors'
+        elif has_safetensors:
+            return 'only_safetensors'
+        else:
+            return 'other_formats'
+
+    # Extract extensions and create category column
+    df['extensions'] = df['filenames'].apply(lambda x: {
+        os.path.splitext(f)[1].lower().lstrip('.') 
+        for f in x.split(', ') if f
+    })
+    df['model_category'] = df['extensions'].apply(categorize_model)
+
+    # Save categorized files
+    categories = [
+        'pickle_variant_with_safetensors',
+        'pickle_variant_without_safetensors',
+        'pytorch_variant_with_safetensors',
+        'pytorch_variant_without_safetensors',
+        'no_model_files'
+    ]
+    for category in categories:
+        category_df = df[df['model_category'] == category]
+        category_df.drop('siblings', axis=1).to_csv(f'top_100000_models_24Aug_{category}.csv', index=False)
+
+    # Save models with security status
+    if 'securitystatus' in df.columns:
+        security_df = df[df['securitystatus'].notna()]
+        security_df.drop('siblings', axis=1).to_csv('top_100000_models_24Aug_with_security.csv', index=False)
+
+    # Save main file with new category column, excluding siblings
     df.drop('siblings', axis=1).to_csv('top_100000_models_24Aug.csv', index=False)
 
     return df

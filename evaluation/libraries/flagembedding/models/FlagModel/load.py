@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model-path",
         help=(
-            "Path to the model (parent of pytorch_model.bin)."
+            "Path to the model (parent directory of pytorch_model.bin)."
         ),
     )
     parser.add_argument(
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     if not args.model_path:
-        print("ERROR: need to specify model path (parent of pytorch_model.bin file) and test input")
+        print("ERROR: need to specify model path (parent of pytorch_model.bin file) and (optional) test input")
         exit(1)
 
     load_model(args.model_path, args.test)

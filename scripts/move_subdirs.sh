@@ -22,10 +22,10 @@ while IFS= read -r subdir; do
     processed_subdir=$(echo "$subdir" | sed 's/\//-/g')
 
     # Check if the subdirectory exists in the source directory
-    if [[ -d "$SOURCE_DIR/$subdir" ]]; then
-        echo "Copying $subdir from $SOURCE_DIR to $DEST_DIR"
-        cp -r "$SOURCE_DIR/$subdir" "$DEST_DIR/"
+    if [[ -d "$SOURCE_DIR/$processed_subdir" ]]; then
+        echo "Copying $processed_subdir from $SOURCE_DIR to $DEST_DIR"
+        cp -r "$SOURCE_DIR/$processed_subdir" "$DEST_DIR/"
     else
-        echo "Warning: $subdir does not exist in $SOURCE_DIR"
+        echo "Warning: $processed_subdir does not exist in $SOURCE_DIR"
     fi
 done < "$SUBDIR_LIST_FILE"

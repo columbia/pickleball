@@ -328,6 +328,13 @@ def main():
         ),
     )
     parser.add_argument(
+        "--repositories-list",
+        help=(
+            "Filename containing a list of line separated HuggingFace"
+            "repositories to process, in form of 'namespace/repository'"
+        ),
+    )
+    parser.add_argument(
         "--batch",
         type=int,
         default=0,
@@ -384,13 +391,26 @@ def main():
         except huggingface_hub.utils._errors.RepositoryNotFoundError as err:
             logging.error(err)
             return
+
+    elif args.repositories_list:
+        repositories_list = []
+        with open(args.repositories_list, 'r') as fd:
+            for line in fd:
+                repositories_list.append(line.strip())
+
+        try:
+            repositories = [get_model_info(repository) for repository in repositories_list]
+        except huggingface_hub.utils._errors.RepositoryNotFoundError as err:
+            logging.error(err)
+            return
+
     elif args.batch > 0:
         repositories = popular_repos(args.batch, args.library)
     else:
         logging.error(
             "need to either specify a repository to process with the "
-            "'--repository' argument, or the number of repositories to batch "
-            "process with the --batch argument"
+            "'--repository' argument, '--repositories-list' argument, or the "
+            "number of repositories to batch process with the --batch argument"
         )
         return
 

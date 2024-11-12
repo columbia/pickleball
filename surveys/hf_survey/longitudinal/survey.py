@@ -10,6 +10,7 @@
 """
 
 import os
+import re
 import sys
 import json
 import ast
@@ -97,6 +98,58 @@ def load_data_socket_aug(data_path: str) -> pd.DataFrame:
     # Rename 'context_id' to 'model_id' for consistency
     df.rename(columns={'context_id': 'model_id'}, inplace=True)
 
+    # Add category column based on file extensions
+    def categorize_model(extensions):
+        if not extensions:  # Empty set means no files
+            return 'no_model_files'
+        
+        pickle_variants = {'pkl', 'pickle', 'joblib', 'dill'}
+        pytorch_variants = {'pt', 'pth', 'bin'}
+        model_extensions = pickle_variants | pytorch_variants | {'safetensors', 'onnx', 'h5', 'hdf5', 'ckpt', 'pb', 'model', 'npy', 'npz', 'msgpack', 'nemo', 'wav', 'gguf', 'keras', 'llamafile'}
+        
+        has_pickle = any(ext in pickle_variants for ext in extensions)
+        has_pytorch = any(ext in pytorch_variants for ext in extensions)
+        has_safetensors = 'safetensors' in extensions
+        has_any_model_ext = any(ext in model_extensions for ext in extensions)
+        
+        if not has_any_model_ext:
+            return 'no_model_files'  # No known model extensions found
+        elif has_pickle:
+            return 'pickle_variant_with_safetensors' if has_safetensors else 'pickle_variant_without_safetensors'
+        elif has_pytorch:
+            return 'pytorch_variant_with_safetensors' if has_safetensors else 'pytorch_variant_without_safetensors'
+        elif has_safetensors:
+            return 'only_safetensors'
+        else:
+            return 'other_formats'  # Has model files but in other formats (not pickle/pytorch/safetensors)
+
+    # Extract extensions and create category column
+    df['extensions'] = df['filenames'].apply(lambda x: {
+        os.path.splitext(f)[1].lower().lstrip('.') 
+        for f in x.split(', ') if f
+    })
+    df['model_category'] = df['extensions'].apply(categorize_model)
+
+    # Save categorized files
+    categories = [
+        'pickle_variant_with_safetensors',
+        'pickle_variant_without_safetensors',
+        'pytorch_variant_with_safetensors',
+        'pytorch_variant_without_safetensors',
+        'no_model_files'
+    ]
+    for category in categories:
+        category_df = df[df['model_category'] == category]
+        category_df.drop('siblings', axis=1).to_csv(f'top_100000_models_24Aug_{category}.csv', index=False)
+
+    # Save models with security status
+    if 'securitystatus' in df.columns:
+        security_df = df[df['securitystatus'].notna()]
+        security_df.drop('siblings', axis=1).to_csv('top_100000_models_24Aug_with_security.csv', index=False)
+
+    # Save main file with new category column, excluding siblings
+    df.drop('siblings', axis=1).to_csv('top_100000_models_24Aug.csv', index=False)
+
     return df
 
 def load_data() -> list:
@@ -163,6 +216,11 @@ def extract_filenames_from_siblings(siblings_str):
 
 def extract_extensions(filenames_series, known_extensions):
     extensions_list = []
+    unknown_extensions = Counter()  # Track unknown extensions
+    
+    # Regex to match valid extensions (e.g., alphanumeric, 1-5 chars, excludes numbers and symbols)
+    valid_ext_pattern = re.compile(r'^[a-zA-Z]{1,5}$')
+
     for filenames in filenames_series:
         if pd.isna(filenames):
             extensions_list.append(set())
@@ -170,14 +228,55 @@ def extract_extensions(filenames_series, known_extensions):
         filenames_list = filenames.split(', ')
         extensions = set()
         for filename in filenames_list:
-            ext = os.path.splitext(filename)[1]  # includes the dot
-            if ext.startswith('.'):
-                ext = ext[1:]  # Remove the dot
-            ext = ext.lower()
+            ext = os.path.splitext(filename)[1].lower().lstrip('.')  # Get extension, remove leading dot
+            
+            # Check for valid and known extensions only
             if ext in known_extensions:
                 extensions.add(ext)
+            elif valid_ext_pattern.match(ext):  # Only include valid alphanumeric extensions
+                unknown_extensions[ext] += 1
         extensions_list.append(extensions)
+
+    # Log or return unknown extensions to analyze later
+    logger.info(f"Unknown extensions and counts: {unknown_extensions}")
+    
+    return extensions_list, unknown_extensions
+
+def extract_relevant_extensions(filenames_series, model_names, relevant_extensions):
+    extensions_list = []
+    models_without_relevant_extensions = []  # Track models without relevant extensions
+
+    for filenames, model_name in zip(filenames_series, model_names):
+        if pd.isna(filenames):
+            extensions_list.append(set())
+            models_without_relevant_extensions.append(model_name)
+            continue
+
+        filenames_list = filenames.split(', ')
+        extensions = set()
+        has_relevant_extension = False
+
+        for filename in filenames_list:
+            ext = os.path.splitext(filename)[1].lower().lstrip('.')  # Get extension without dot
+
+            # Check if the extension is relevant
+            if ext in relevant_extensions:
+                extensions.add(ext)
+                has_relevant_extension = True
+
+        extensions_list.append(extensions)
+
+        # If no relevant extensions found, record the model name
+        if not has_relevant_extension:
+            models_without_relevant_extensions.append(model_name)
+
+    # Save model names without relevant extensions to a .txt file
+    with open('models_without_relevant_extensions.txt', 'w') as f:
+        for model_name in models_without_relevant_extensions:
+            f.write(f"{model_name}\n")
+
     return extensions_list
+
 
 def analysis_extensions(data: pd.DataFrame) -> pd.Series:
     filenames = data.get('filenames', data.get('filename'))
@@ -186,7 +285,7 @@ def analysis_extensions(data: pd.DataFrame) -> pd.Series:
     known_extensions = [
         'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle', 'dill',
         'pth', 'pt', 'model', 'pb', 'joblib', 'npy', 'npz',
-        'safetensors', 'onnx'
+        'safetensors', 'onnx', 'msgpack', 'nemo', 'wav', 'gguf', 'keras', 'llamafile'
     ]
     extensions_list = extract_extensions(filenames, known_extensions)
     return pd.Series(extensions_list)
@@ -219,10 +318,22 @@ def plot_extensions_usage(extensions_usage: dict):
     known_extensions = [
         'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle',
         'dill', 'pth', 'pt', 'model', 'pb', 'joblib',
-        'npy', 'npz', 'safetensors', 'onnx'
+        'npy', 'npz', 'safetensors', 'onnx', 'msgpack',
+        'nemo', 'wav', 'gguf', 'keras', 'llamafile'
     ]
     extension_counts = {ext: [] for ext in known_extensions}
 
+    # Get the most recent date's statistics
+    latest_date = dates[-1]
+    latest_usage = extensions_usage[latest_date]
+    total_models = sum(latest_usage.values())
+
+    # Calculate grouped statistics
+    pytorch_formats = sum(latest_usage.get(ext, 0) for ext in ['pt', 'pth', 'bin'])
+    pickle_formats = sum(latest_usage.get(ext, 0) for ext in ['pkl', 'pickle', 'joblib', 'dill'])
+    model_format = latest_usage.get('model', 0)
+
+    # Rest of the plotting code remains the same...
     for date in dates:
         date_usage = extensions_usage[date]
         for ext in known_extensions:
@@ -244,6 +355,153 @@ def plot_extensions_usage(extensions_usage: dict):
     plt.tight_layout()
     plt.savefig('extensions_usage.png')
     plt.close()
+
+def plot_pickle_safetensors_proportion(data: pd.DataFrame):
+    # Redefine pickle-based formats to include both pickle-specific and PyTorch-specific formats
+    pickle_formats = {'pkl', 'pickle', 'joblib', 'dill', 'pt', 'pth', 'bin'}
+    safetensors_format = 'safetensors'
+
+    # Initialize lists for storing proportions over time
+    pickle_with_safetensors = []    # Has pickle-based format AND safetensors
+    pickle_without_safetensors = [] # Has pickle-based format but NO safetensors
+    only_safetensors = []           # Has only safetensors, no other formats
+    no_pickle_but_other = []        # Has other formats but no pickle (excluding safetensors-only)
+    no_models = []                  # Empty extension set
+
+    # Analyze data by date
+    dates = sorted(data['date'].unique())
+    for date in dates:
+        subset = data[data['date'] == date]
+        total_count = len(subset)
+        
+        # Counters for each category
+        count_pickle_with_st = 0
+        count_pickle_without_st = 0
+        count_only_safetensors = 0
+        count_no_pickle_but_other = 0
+        count_no_models = 0
+
+        for extensions in subset['extensions']:
+            has_pickle_format = any(ext in pickle_formats for ext in extensions)
+            has_safetensors = safetensors_format in extensions
+
+            if not extensions:  # Empty set
+                count_no_models += 1
+            elif has_pickle_format:
+                if has_safetensors:
+                    count_pickle_with_st += 1
+                else:
+                    count_pickle_without_st += 1
+            elif extensions == {safetensors_format}:  # Only safetensors
+                count_only_safetensors += 1
+            else:  # Has other formats but no pickle
+                count_no_pickle_but_other += 1
+
+        # Calculate proportions
+        pickle_with_safetensors.append(count_pickle_with_st / total_count)
+        pickle_without_safetensors.append(count_pickle_without_st / total_count)
+        only_safetensors.append(count_only_safetensors / total_count)
+        no_pickle_but_other.append(count_no_pickle_but_other / total_count)
+        no_models.append(count_no_models / total_count)
+
+    # Convert dates to datetime objects for plotting
+    dates = pd.to_datetime(dates)
+
+    # Plotting with larger font sizes
+    plt.figure(figsize=(14, 8))  # Increased figure size
+    plt.rcParams.update({'font.size': 20})  # Increased base font size
+    
+    # Define colors for better visibility
+    colors = ['#2ecc71', '#e74c3c', '#3498db', '#f1c40f', '#9b59b6']
+
+    # Prepare data for plotting
+    proportions = [
+        (pickle_with_safetensors, 'Pickle-based with safetensors'),
+        (pickle_without_safetensors, 'Pickle-based without safetensors'),
+        (only_safetensors, 'Only safetensors'),
+        (no_pickle_but_other, 'Other formats (no pickle)'),
+        (no_models, 'No model files')
+    ]
+
+    # Plot each line
+    last_points = []
+    for (y_data, label), color in zip(proportions, colors):
+        plt.plot(dates, [y * 100 for y in y_data], marker='o', label=label, linewidth=2.5, 
+                 markersize=8, color=color)  # Multiply by 100 to show as percentage
+        last_points.append((y_data[-1] * 100, label, color))  # Save last point as percentage
+
+    # Sort the last points by y-value
+    last_points.sort(reverse=True)  # Highest y at the top
+
+    # Define y-offsets to prevent overlaps
+    y_offsets = [-5, -10, 10, -5, 3]  # Adjust as needed based on number of lines
+
+    # Sort last points by y value in descending order to ensure larger values are plotted above
+    last_points_sorted = sorted(last_points, key=lambda point: point[0], reverse=True)
+
+    # Annotate the last points with adjusted positions to avoid overlaps
+    for (y, label, color), y_offset in zip(last_points_sorted, y_offsets):
+        x = dates[-1]
+        plt.annotate(f'{y:.1f}%', 
+                     (x, y),
+                     textcoords="offset points", 
+                     xytext=(10, y_offset),
+                     ha='left',
+                     va='center',
+                     fontsize=20,
+                     fontweight='bold',
+                     color=color,
+                     bbox=dict(facecolor='white', 
+                               edgecolor='none',
+                               alpha=0.7,
+                               pad=0.5))
+
+    # Add vertical lines for important dates
+    # Define the dates and labels
+    events = [
+        ('2023-03-15', 'SafeTensors Convert Bot'),
+        # ('2023-07-10', 'Additional Pickle-based Attacks Found')
+    ]
+
+    # Plot each event with a vertical line and rotated annotation
+    for event_date_str, event_label in events:
+        event_date = pd.to_datetime(event_date_str)
+        
+        # Draw a vertical line for each event date
+        plt.axvline(x=event_date, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+        
+        # Annotate the event with rotated vertical text at the top
+        plt.annotate(event_label, 
+                     (event_date, plt.gca().get_ylim()[1]),  # Set y position to top of y-axis
+                     textcoords="offset points", 
+                     xytext=(0, -1),  # Position text close to the top
+                     ha='center', 
+                     va='top', 
+                     rotation=90,  # Rotate text vertically
+                     fontsize=25, 
+                     color='black', 
+                     fontweight='bold', 
+                     bbox=dict(facecolor='white', edgecolor='none', alpha=0.6))
+
+    # Customize legend and grid for readability
+    plt.legend(fontsize=20, loc='upper right')
+    plt.grid(True, linestyle='--', alpha=0.4)
+
+    # Set axis titles and percentage format for y-axis
+    plt.xlabel('Date', fontsize=30)
+    plt.ylabel('Percentage (%)', fontsize=30)
+    plt.ylim(0, 100)  # Ensure y-axis is from 0 to 100 for percentage scale
+
+    # Increase tick label sizes
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+
+    # Use tight layout to prevent label cutoff and save the figure
+    plt.tight_layout()
+    plt.savefig('pickle_safetensors_proportion.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+
 
 
 def plot_safetensors_usage(safetensors_usage: dict):
@@ -282,33 +540,41 @@ def plot_models_added_safetensors(dates, cumulative_counts):
     plt.close()
 
 def main() -> None:
-    # Configure logging to show debug messages
+    # Configure logging and load data as needed
     logger.remove()
     logger.add(sys.stderr, level="DEBUG")
 
-    all_data = load_data()
+    # Initialize dictionaries to store usage data
     extensions_usage = {}
-    tags_usage = {}
     safetensors_usage = {}
+    tags_usage = {}
+    all_unknown_extensions = Counter()
+
+    all_data = load_data()
+    relevant_extensions = {
+        'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle', 'dill',
+        'pth', 'pt', 'model', 'pb', 'joblib', 'npy', 'npz',
+        'safetensors', 'onnx', 'msgpack', 'nemo', 'wav', 'gguf', 'keras', 'llamafile'
+    }
 
     data_frames = []
-
     for df in all_data:
         if df.empty:
             continue
-        date = df['date'].iloc[0]  # Assuming all rows in a DataFrame have the same date
 
-        # Prepare the input data by combining tags and libraries
-        tags = df.get('tag_names', df.get('tag_name', df.get('tags', pd.Series(['']*len(df)))))
-        libraries = df.get('libraries', pd.Series(['']*len(df)))
-        input_data = tags if tags is not None else libraries
+        # Attempt to retrieve the date for the current DataFrame
+        if 'date' in df.columns and not df['date'].isna().all():
+            date = df['date'].iloc[0]  # Use the first date in the column
+        else:
+            logger.warning("Date column missing or empty in DataFrame; assigning default date")
+            date = datetime(1970, 1, 1)  # Assign a default date if missing
 
-        # Extract extensions
-        extensions_series = pd.Series(extract_extensions(df.get('filenames', pd.Series(['']*len(df))), known_extensions=[
-            'bin', 'h5', 'hdf5', 'ckpt', 'pkl', 'pickle', 'dill',
-            'pth', 'pt', 'model', 'pb', 'joblib', 'npy', 'npz',
-            'safetensors', 'onnx'
-        ]))
+        # Extract filenames and model names
+        filenames_series = df.get('filenames', pd.Series(['']*len(df)))
+        model_names = df.get('model_id', pd.Series(['']*len(df)))
+
+        # Call extraction function to handle relevant extensions
+        extensions_series = extract_relevant_extensions(filenames_series, model_names, relevant_extensions)
 
         # Determine the correct model identifier column
         if 'model_id' in df.columns:
@@ -406,6 +672,12 @@ def main() -> None:
 
     # Plot Models Adding .safetensors Over Time
     plot_models_added_safetensors(dates, cumulative_models_added_safetensors)
+
+    # Plot Pickle-based formats proportion
+    plot_pickle_safetensors_proportion(full_data)
+
+    # Log full list of unknown extensions across all data
+    logger.info(f"All unknown extensions across datasets: {all_unknown_extensions}")
 
 if __name__ == "__main__":
     main()

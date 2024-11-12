@@ -46,6 +46,9 @@ def repositories_to_process(downloaded_csv, new_models_csv) -> List[str]:
 
     print(f'# existing models: {len(existing_models)}')
     print(existing_models)
+    with open('existing_models', 'w') as fd:
+        for element in existing_models:
+            fd.write(element + '\n')
 
 
 def main():

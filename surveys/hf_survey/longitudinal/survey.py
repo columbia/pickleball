@@ -364,9 +364,9 @@ def plot_pickle_safetensors_proportion(data: pd.DataFrame):
     # Initialize lists for storing proportions over time
     pickle_with_safetensors = []    # Has pickle-based format AND safetensors
     pickle_without_safetensors = [] # Has pickle-based format but NO safetensors
-    only_safetensors = []          # Has only safetensors, no other formats
-    no_pickle_but_other = []       # Has other formats but no pickle (excluding safetensors-only)
-    no_models = []                 # Empty extension set
+    only_safetensors = []           # Has only safetensors, no other formats
+    no_pickle_but_other = []        # Has other formats but no pickle (excluding safetensors-only)
+    no_models = []                  # Empty extension set
 
     # Analyze data by date
     dates = sorted(data['date'].unique())
@@ -384,7 +384,7 @@ def plot_pickle_safetensors_proportion(data: pd.DataFrame):
         for extensions in subset['extensions']:
             has_pickle_format = any(ext in pickle_formats for ext in extensions)
             has_safetensors = safetensors_format in extensions
-            
+
             if not extensions:  # Empty set
                 count_no_models += 1
             elif has_pickle_format:
@@ -404,61 +404,105 @@ def plot_pickle_safetensors_proportion(data: pd.DataFrame):
         no_pickle_but_other.append(count_no_pickle_but_other / total_count)
         no_models.append(count_no_models / total_count)
 
+    # Convert dates to datetime objects for plotting
+    dates = pd.to_datetime(dates)
+
     # Plotting with larger font sizes
     plt.figure(figsize=(14, 8))  # Increased figure size
-    plt.rcParams.update({'font.size': 14})  # Increased base font size
+    plt.rcParams.update({'font.size': 20})  # Increased base font size
     
     # Define colors for better visibility
     colors = ['#2ecc71', '#e74c3c', '#3498db', '#f1c40f', '#9b59b6']
-    
-    # Plot each line and add percentage labels
-    for (y_data, label), color in zip([
+
+    # Prepare data for plotting
+    proportions = [
         (pickle_with_safetensors, 'Pickle-based with safetensors'),
         (pickle_without_safetensors, 'Pickle-based without safetensors'),
         (only_safetensors, 'Only safetensors'),
         (no_pickle_but_other, 'Other formats (no pickle)'),
         (no_models, 'No model files')
-    ], colors):
-        line = plt.plot(dates, y_data, marker='o', label=label, linewidth=2.5, 
-                       markersize=10, color=color)
-        
-        # Add percentage labels with alternating positions
-        for i, (x, y) in enumerate(zip(dates, y_data)):
-            # Alternate between positions above and below the line
-            if i % 2 == 0:
-                y_offset = 15
-                va = 'bottom'
-            else:
-                y_offset = -15
-                va = 'top'
-            
-            plt.annotate(f'{y*100:.1f}%', 
-                        (x, y),
-                        textcoords="offset points", 
-                        xytext=(0, y_offset),
-                        ha='center',
-                        va=va,
-                        fontsize=12,
-                        fontweight='bold',
-                        bbox=dict(facecolor='white', 
-                                edgecolor='none',
-                                alpha=0.7,
-                                pad=0.5))
+    ]
 
-    plt.title('Model Format Distribution Over Time', fontsize=16, pad=20)
-    plt.xlabel('Date', fontsize=14, labelpad=10)
-    plt.ylabel('Proportion of Models', fontsize=14, labelpad=10)
-    plt.xticks(rotation=45, fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.legend(fontsize=12, loc='center left', bbox_to_anchor=(1, 0.5))
-    
-    # Add grid for better readability
-    plt.grid(True, linestyle='--', alpha=0.3)
-    
-    # Adjust layout to prevent label cutoff
+    # Plot each line
+    last_points = []
+    for (y_data, label), color in zip(proportions, colors):
+        plt.plot(dates, [y * 100 for y in y_data], marker='o', label=label, linewidth=2.5, 
+                 markersize=8, color=color)  # Multiply by 100 to show as percentage
+        last_points.append((y_data[-1] * 100, label, color))  # Save last point as percentage
+
+    # Sort the last points by y-value
+    last_points.sort(reverse=True)  # Highest y at the top
+
+    # Define y-offsets to prevent overlaps
+    y_offsets = [-5, -10, 10, -5, 3]  # Adjust as needed based on number of lines
+
+    # Sort last points by y value in descending order to ensure larger values are plotted above
+    last_points_sorted = sorted(last_points, key=lambda point: point[0], reverse=True)
+
+    # Annotate the last points with adjusted positions to avoid overlaps
+    for (y, label, color), y_offset in zip(last_points_sorted, y_offsets):
+        x = dates[-1]
+        plt.annotate(f'{y:.1f}%', 
+                     (x, y),
+                     textcoords="offset points", 
+                     xytext=(10, y_offset),
+                     ha='left',
+                     va='center',
+                     fontsize=20,
+                     fontweight='bold',
+                     color=color,
+                     bbox=dict(facecolor='white', 
+                               edgecolor='none',
+                               alpha=0.7,
+                               pad=0.5))
+
+    # Add vertical lines for important dates
+    # Define the dates and labels
+    events = [
+        ('2023-03-15', 'SafeTensors Convert Bot'),
+        # ('2023-07-10', 'Additional Pickle-based Attacks Found')
+    ]
+
+    # Plot each event with a vertical line and rotated annotation
+    for event_date_str, event_label in events:
+        event_date = pd.to_datetime(event_date_str)
+        
+        # Draw a vertical line for each event date
+        plt.axvline(x=event_date, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+        
+        # Annotate the event with rotated vertical text at the top
+        plt.annotate(event_label, 
+                     (event_date, plt.gca().get_ylim()[1]),  # Set y position to top of y-axis
+                     textcoords="offset points", 
+                     xytext=(0, -1),  # Position text close to the top
+                     ha='center', 
+                     va='top', 
+                     rotation=90,  # Rotate text vertically
+                     fontsize=25, 
+                     color='black', 
+                     fontweight='bold', 
+                     bbox=dict(facecolor='white', edgecolor='none', alpha=0.6))
+
+    # Customize legend and grid for readability
+    plt.legend(fontsize=20, loc='upper right')
+    plt.grid(True, linestyle='--', alpha=0.4)
+
+    # Set axis titles and percentage format for y-axis
+    plt.xlabel('Date', fontsize=30)
+    plt.ylabel('Percentage (%)', fontsize=30)
+    plt.ylim(0, 100)  # Ensure y-axis is from 0 to 100 for percentage scale
+
+    # Increase tick label sizes
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+
+    # Use tight layout to prevent label cutoff and save the figure
     plt.tight_layout()
     plt.savefig('pickle_safetensors_proportion.png', dpi=300, bbox_inches='tight')
     plt.close()
+
+
+
 
 def plot_safetensors_usage(safetensors_usage: dict):
     dates = sorted(safetensors_usage.keys())

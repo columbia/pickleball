@@ -1,4 +1,5 @@
 import argparse
+from pklballcheck import verify_loader_was_used
 from pyannote.audio import Pipeline
 
 def load_model(model_path):
@@ -30,3 +31,4 @@ if __name__ == "__main__":
         exit(1)
 
     load_model(args.model_path)
+    verify_loader_was_used()

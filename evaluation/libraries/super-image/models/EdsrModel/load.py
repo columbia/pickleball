@@ -1,4 +1,5 @@
 from super_image import EdsrModel, ImageLoader
+from pklballcheck import verify_loader_was_used
 from PIL import Image
 import argparse
 
@@ -46,3 +47,4 @@ if __name__ == "__main__":
         exit(1)
 
     load_model(args.model_path, args.test)
+    verify_loader_was_used()

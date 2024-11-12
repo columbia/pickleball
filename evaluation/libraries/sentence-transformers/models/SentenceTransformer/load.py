@@ -1,4 +1,5 @@
 from sentence_transformers import SentenceTransformer
+from pklballcheck import verify_loader_was_used
 import argparse
 
 def load_model(model_path, test=""):
@@ -39,3 +40,4 @@ if __name__ == "__main__":
         exit(1)
 
     load_model(args.model_path, args.test)
+    verify_loader_was_used()

@@ -2,6 +2,7 @@ import torch
 import argparse
 from PIL import Image
 from conch.open_clip_custom import create_model_from_pretrained
+from pklballcheck import verify_loader_was_used
 
 
 def load_model(model_path, test=""):
@@ -45,3 +46,4 @@ if __name__ == "__main__":
         exit(1)
 
     load_model(args.model_path, args.test)
+    verify_loader_was_used()

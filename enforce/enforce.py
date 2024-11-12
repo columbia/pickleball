@@ -40,6 +40,7 @@ from functools import partial
 
 # from hashlib import sha256
 from itertools import islice
+from pathlib import Path
 from struct import pack, unpack
 from sys import maxsize
 from types import FunctionType
@@ -70,6 +71,8 @@ except ImportError:
 # Path containing the PickleBall policies (configurable)
 POLICY_PATH = "/root/policies"
 
+PLACEHOLDER_FILE_PATH = Path("/root/.loader_used")
+
 
 class FakeCallable:
 
@@ -92,7 +95,8 @@ class FakeCallable:
     # value or raise an AttributeError exception
     def __getattr__(self, attrname):
 
-        raise Exception(f"Tried to access {attrname} attribute of {self.orig_name}")
+        raise Exception(
+            f"Tried to access {attrname} attribute of {self.orig_name}")
 
     def __call__(self, *args):
 
@@ -519,7 +523,8 @@ class _Pickler:
         if protocol < 0:
             protocol = HIGHEST_PROTOCOL
         elif not 0 <= protocol <= HIGHEST_PROTOCOL:
-            raise ValueError("pickle protocol must be <= %d" % HIGHEST_PROTOCOL)
+            raise ValueError("pickle protocol must be <= %d" %
+                             HIGHEST_PROTOCOL)
         if buffer_callback is not None and protocol < 5:
             raise ValueError("buffer_callback needs protocol >= 5")
         self._buffer_callback = buffer_callback
@@ -726,7 +731,8 @@ class _Pickler:
                 )
             if obj is not None and cls is not obj.__class__:
                 raise PicklingError(
-                    "args[0] from {} args has the wrong class".format(func_name)
+                    "args[0] from {} args has the wrong class".format(
+                        func_name)
                 )
             if self.proto >= 4:
                 save(cls)
@@ -767,9 +773,11 @@ class _Pickler:
             # Python 2.2).
             cls = args[0]
             if not hasattr(cls, "__new__"):
-                raise PicklingError("args[0] from __newobj__ args has no __new__")
+                raise PicklingError(
+                    "args[0] from __newobj__ args has no __new__")
             if obj is not None and cls is not obj.__class__:
-                raise PicklingError("args[0] from __newobj__ args has the wrong class")
+                raise PicklingError(
+                    "args[0] from __newobj__ args has the wrong class")
             args = args[1:]
             save(cls)
             save(args)
@@ -882,7 +890,8 @@ class _Pickler:
             if not obj:  # bytes object is empty
                 self.save_reduce(bytes, (), obj=obj)
             else:
-                self.save_reduce(codecs.encode, (str(obj, "latin1"), "latin1"), obj=obj)
+                self.save_reduce(
+                    codecs.encode, (str(obj, "latin1"), "latin1"), obj=obj)
             return
         n = len(obj)
         if n <= 0xFF:
@@ -1167,7 +1176,8 @@ class _Pickler:
             obj2, parent = _getattribute(module, name)
         except (ImportError, KeyError, AttributeError):
             raise PicklingError(
-                "Can't pickle %r: it's not found as %s.%s" % (obj, module_name, name)
+                "Can't pickle %r: it's not found as %s.%s" % (
+                    obj, module_name, name)
             ) from None
         else:
             if obj2 is not obj:
@@ -1332,6 +1342,9 @@ class _Unpickler:
         Return the reconstituted object hierarchy specified in the file.
         """
 
+        # Placeholder file to make sure the PickleBall loader was used
+        PLACEHOLDER_FILE_PATH.touch()
+
         # Check whether Unpickler was initialized correctly. This is
         # only needed to mimic the behavior of _pickle.Unpickler.dump().
         if not hasattr(self, "_file_read"):
@@ -1392,7 +1405,8 @@ class _Unpickler:
         try:
             pid = self.readline()[:-1].decode("ascii")
         except UnicodeDecodeError:
-            raise UnpicklingError("persistent IDs in protocol 0 must be ASCII strings")
+            raise UnpicklingError(
+                "persistent IDs in protocol 0 must be ASCII strings")
         self.append(self.persistent_load(pid))
 
     dispatch[PERSID[0]] = load_persid
@@ -1817,13 +1831,15 @@ class _Unpickler:
     #     self.append(obj)
 
     def get_extension(self, code):
-        raise Exception(f"Extensions not supported! Tried to call with code {code}")
+        raise Exception(
+            f"Extensions not supported! Tried to call with code {code}")
 
     def find_class_non_recursive(self, module, name):
         # print(f"Getting attribute {name} from module {sys.modules[module]}")
         if "." in name:
             callable_name = name.split(".")[-1]
-            module = module + "." + ".".join(name.split(".")[:-1]) + "." + callable_name
+            module = module + "." + \
+                ".".join(name.split(".")[:-1]) + "." + callable_name
             name = callable_name
         __import__(module, level=0)
         return getattr(sys.modules[module], name)
@@ -2008,7 +2024,8 @@ class _Unpickler:
             intern = sys.intern
             for k, v in state.items():
                 if k in disallowed_attrs:
-                    raise Exception(f"BUILD attempted to set attribute {k} of {inst}")
+                    raise Exception(
+                        f"BUILD attempted to set attribute {k} of {inst}")
                 if type(k) is str:
                     inst_dict[intern(k)] = v
                 else:
@@ -2016,7 +2033,8 @@ class _Unpickler:
         if slotstate:
             for k, v in slotstate.items():
                 if k in disallowed_attrs:
-                    raise Exception(f"BUILD attempted to set attribute {k} of {inst}")
+                    raise Exception(
+                        f"BUILD attempted to set attribute {k} of {inst}")
                 setattr(inst, k, v)
 
     dispatch[BUILD[0]] = load_build
@@ -2111,13 +2129,15 @@ def _test():
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="display contents of the pickle files")
+    parser = argparse.ArgumentParser(
+        description="display contents of the pickle files")
     parser.add_argument(
         "pickle_file", type=argparse.FileType("br"), nargs="*", help="the pickle file"
     )
     parser.add_argument("--globals", required=True)
     parser.add_argument("--reduces", required=True)
-    parser.add_argument("-t", "--test", action="store_true", help="run self-test suite")
+    parser.add_argument("-t", "--test", action="store_true",
+                        help="run self-test suite")
     parser.add_argument(
         "-v", action="store_true", help="run verbosely; only affects self-test run"
     )

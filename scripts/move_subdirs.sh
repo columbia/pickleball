@@ -18,6 +18,9 @@ mkdir -p "$DEST_DIR"
 
 # Loop over each line in the subdir list file
 while IFS= read -r subdir; do
+
+    processed_subdir=$(echo "$subdir" | sed 's/\//-/g')
+
     # Check if the subdirectory exists in the source directory
     if [[ -d "$SOURCE_DIR/$subdir" ]]; then
         echo "Copying $subdir from $SOURCE_DIR to $DEST_DIR"

@@ -1,3 +1,3 @@
-FROM pickleball-enforce:latest
+FROM pickleball-enforce-deb11:latest
 
 RUN pip3 install tner

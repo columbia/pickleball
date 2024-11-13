@@ -3,4 +3,6 @@
 docker run --rm -it \
     -v $(pwd)/policy.json:/root/policies/policy.json \
     -v $(pwd)/load.py:/load-model/load.py \
-    pickleball-tner /bin/bash
+    -v $(pwd)/try_all.py:/load-model/try_all.py \
+    -v ~/data/malicious/:/models \
+    pickleball-tner11 /bin/bash

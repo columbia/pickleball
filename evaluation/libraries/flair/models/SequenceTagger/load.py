@@ -6,14 +6,14 @@ from pklballcheck import verify_loader_was_used
 def load_model(model_path, test=""):
     try:
         tagger = SequenceTagger.load(model_path)
-        sentence = Sentence(test)
+        #sentence = Sentence(test)
 
-        tagger.predict(sentence)
+        #tagger.predict(sentence)
 
-        print(sentence)
+        #print(sentence)
 
-        for entity in sentence.get_spans('np'):
-            print(entity)
+        #for entity in sentence.get_spans('np'):
+        #    print(entity)
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)

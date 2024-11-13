@@ -13,11 +13,5 @@
     --param inputPath=/pickle-defense/evaluation/libraries/pyannote-audio/pyannote.cpg \
     --param modelClass="pyannote/audio/core/model.py:<module>.Model" \
     --param cache=/pickle-defense/evaluation/cache/ \
-    --param outputPath=/pickle-defense/evaluation/libraries/pyannote-audio/models/Model/policy-model.json \
+    --param outputPath=/pickle-defense/evaluation/libraries/pyannote-audio/models/Model/policy.json \
     > /pickle-defense/evaluation/libraries/pyannote-audio/models/Model/policy.log
-
-    #--param modelClass="pyannote/audio/models/embedding/wespeaker/__init__.py:<module>.WeSpeakerResNet34" \
-    #--param outputPath=/pickle-defense/evaluation/libraries/pyannote-audio/models/WeSpeakerResNet34/policy.json \
-
-# Run analyze.sc script for the Pipeline class policy
-# TODO

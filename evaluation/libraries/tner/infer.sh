@@ -5,7 +5,8 @@
 # be modified.
 
 # Create CPG
-/joern/joern-cli/target/universal/stage/pysrc2cpg \
+#/joern/joern-cli/target/universal/stage/pysrc2cpg \
+/joern/joern-parse \
     -J-Xmx`grep MemTotal /proc/meminfo | awk '{print $2}'`k \
     /pickle-defense/evaluation/libraries/tner/tner/tner/ \
     -o /pickle-defense/evaluation/libraries/tner/tner.cpg

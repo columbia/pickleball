@@ -1,1 +1,1 @@
-pyannote/audio/models/embedding/wespeaker/__init__.py:<module>.WeSpeakerResNet34
+pyannote/audio/core/model.py:<module>.Model

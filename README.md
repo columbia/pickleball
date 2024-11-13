@@ -34,7 +34,8 @@ $ docker build -t joern .
 
 ```
 $ cd enforce
-$ docker build -t pickleball-enforce .
+$ docker build -t pickleball-enforce -f Dockerfile .
+$ docker build -t pickleball-enforce-deb11 -f Dockerfile.deb11 .
 ```
 
 # Policy Generation

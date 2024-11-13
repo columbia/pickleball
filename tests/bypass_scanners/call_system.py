@@ -23,3 +23,5 @@ if __name__ == "__main__":
     data_value = data.getvalue()
     with _open_zipfile_writer("call_system.pkl") as zip_file:
         zip_file.write_record("data.pkl", data_value, len(data_value))
+    state_dict = torch.load("call_system.pkl")
+    torch.save(state_dict, 'pytorch_model.bin')

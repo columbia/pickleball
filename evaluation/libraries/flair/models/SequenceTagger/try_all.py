@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Iterable, List, Tuple, Optional
 import glob, argparse
-ALLOWED_PATTERNS = ("pytorch_model.bin",)
+ALLOWED_PATTERNS = ("*.bin", "*.pkl", "*pt", "*pth")
 
 def get_model_paths(
     directory: Path, model_patterns: Tuple[str] = ALLOWED_PATTERNS
@@ -35,6 +35,7 @@ if __name__ == "__main__":
         print("ERROR: need to specify model path")
 
     model_paths = get_model_paths(args.all_model_path)
+    print(len(model_paths))
 
     from load import load_model
     for model_path in model_paths:

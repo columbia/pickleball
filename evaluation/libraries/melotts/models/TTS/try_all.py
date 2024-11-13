@@ -36,7 +36,10 @@ if __name__ == "__main__":
 
     model_paths = get_model_paths(args.all_model_path)
 
+    count = 0
     from load import load_model
     for model_path in model_paths:
-        print(model_path)
-        load_model(model_path, model_path.replace("checkpoint.pth", "config.json"))
+        if(os.path.exists(model_path.replace("checkpoint.pth", "config.json"))):
+            load_model(model_path, model_path.replace("checkpoint.pth", "config.json"))
+            count += 1
+    print(count)

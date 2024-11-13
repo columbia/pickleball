@@ -25,7 +25,6 @@ else:
 
 import huggingface_hub
 import huggingface_hub.hf_api
-import huggingface_hub.utils._errors
 from fickling import fickle, tracing
 from fickling.pytorch import PyTorchModelWrapper
 

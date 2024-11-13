@@ -73,11 +73,13 @@ POLICY_PATH = "/root/policies"
 
 PLACEHOLDER_FILE_PATH = Path("/root/.loader_used")
 
+stub_objects_created = set()
 
-class FakeCallable:
+
+class StubObject:
 
     def __new__(cls, *args, **kwargs):
-        # If we already instantiated a FakeCallable for this, just return it,
+        # If we already instantiated a StubObject for this, just return it,
         # else create a new one
         if not isinstance(cls, type):
             return cls
@@ -87,12 +89,10 @@ class FakeCallable:
     def __init__(self, orig_name):
         print(f"Creating fake callable for {orig_name}")
         self.orig_name = orig_name
+        stub_objects_created.add(orig_name)
 
     # Called unconditionally to implement attribute accesses for instances of
-    # the class. If the class also defines __getattr__(), the latter will not
-    # be called unless __getattribute__() either calls it explicitly or raises
-    # an AttributeError. This method should return the (computed) attribute
-    # value or raise an AttributeError exception
+    # the class.
     def __getattr__(self, attrname):
 
         raise Exception(
@@ -104,7 +104,7 @@ class FakeCallable:
 
     # TODO: Probably remove this
     # def __repr__(self):
-    #     return f"FakeCallable for {self.orig_name}"
+    #     return f"StubObject for {self.orig_name}"
 
 
 disallowed_attrs = ["__name__", "__module__"]
@@ -1335,7 +1335,6 @@ class _Unpickler:
         self.proto = 0
         self.fix_imports = fix_imports
 
-    # def load(self, globals, reduces):
     def load(self):
         """Read a pickled object representation from the open file.
 
@@ -1371,6 +1370,9 @@ class _Unpickler:
                 assert isinstance(key, bytes_types)
                 dispatch[key[0]](self)
         except _Stop as stopinst:
+            print(f"Total stub object created: {len(stub_objects_created)}")
+            if len(stub_objects_created) > 0:
+                print("\n".join(stub_objects_created))
             return stopinst.value
 
     # Return a list of items pushed in the stack after last MARK instruction.
@@ -1715,7 +1717,7 @@ class _Unpickler:
     #     if full_path in self.allowed_globals:
     #         klass = self.find_class_non_recursive(module, name)
     #     else:
-    #         klass = FakeCallable(full_path)
+    #         klass = StubObject(full_path)
     #     self._instantiate(klass, self.pop_mark())
 
     def load_inst(self):
@@ -1771,7 +1773,7 @@ class _Unpickler:
         if full_path in self.allowed_globals:
             self.append(self.find_class(module, name))
         else:
-            self.append(FakeCallable(full_path))
+            self.append(StubObject(full_path))
 
     dispatch[GLOBAL[0]] = load_global
 
@@ -1792,7 +1794,7 @@ class _Unpickler:
         if full_path in self.allowed_globals:
             self.append(self.find_class(module, name))
         else:
-            self.append(FakeCallable(full_path))
+            self.append(StubObject(full_path))
 
     dispatch[STACK_GLOBAL[0]] = load_stack_global
 
@@ -1864,7 +1866,7 @@ class _Unpickler:
         func = stack[-1]
         func_fullname = func.__module__ + "." + func.__name__
         if func_fullname not in self.allowed_reduces:
-            func = FakeCallable(func_fullname)
+            func = StubObject(func_fullname)
         stack[-1] = func(*args)
 
     dispatch[REDUCE[0]] = load_reduce

@@ -46,3 +46,6 @@
 [submodule "evaluation/libraries/huggingsound/huggingsound"]
 	path = evaluation/libraries/huggingsound/huggingsound
 	url = https://github.com/jonatasgrosman/huggingsound.git
+[submodule "evaluation/libraries/pysentimiento/pysentimiento"]
+	path = evaluation/libraries/pysentimiento/pysentimiento
+	url = https://github.com/pysentimiento/pysentimiento.git

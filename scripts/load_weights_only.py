@@ -1,10 +1,11 @@
 import argparse
+import pickle
 from pathlib import Path
 
 import torch
 
 def load(model_path):
-    torch.load(model_path, weights_only=True)
+    torch.load(model_path, weights_only=True,map_location=torch.device('cpu'))
 
 
 def main():
@@ -44,14 +45,14 @@ def main():
             load(str(filename))
             success += 1
             models[str(filename)] = 'SUCCESS'
-        except torch._pickle.UnpicklingError:
+        except pickle.UnpicklingError as err:
             fails += 1
-            models[str(filename)] = 'FAILURE'
+            models[str(filename)] = f'FAILURE: {err}'
 
     with open(args.out, 'w') as file:
-        file.write(f'Attempted models: {attempts}')
-        file.write(f'Successful loads: {success}')
-        file.write(f'Failed loads: {fails}')
+        file.write(f'Attempted models: {attempts}\n')
+        file.write(f'Successful loads: {success}\n')
+        file.write(f'Failed loads: {fails}\n')
         for key, value in models.items():
             file.write(f'{key}: {value}\n')
 

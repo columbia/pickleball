@@ -18,6 +18,7 @@ zenodo_urls = [
     "https://zenodo.org/records/8240989/files/dump_20230812.zip?download=1",
     "https://zenodo.org/records/8324809/files/dump_20230907.zip?download=1",
     "https://zenodo.org/records/10020642/files/dump_20231009.zip?download=1", 
+    "https://zenodo.org/records/13929743/files/dump_hfc_20241001.zip?download=1"
 ]
 
 # Local directory where files will be saved

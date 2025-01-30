@@ -35,7 +35,7 @@ for library, values in config['libraries'].items():
     library_path = LIBRARIES_DIR / pathlib.Path(values['library_path'])
     model_class = values['model_class']
     use_cpg = values['use_cpg']
-    ignore_paths = values['ignore_paths']
+    ignore_paths = values['ignore_paths'] if 'ignore_paths' in values else ''
     policy_path = POLICIES_DIR / pathlib.Path(f'{library}.json')
     cpg_path = pathlib.Path("/tmp") / pathlib.Path(f'{library}.cpg')
 

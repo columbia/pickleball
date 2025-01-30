@@ -1,0 +1,26 @@
+title = "PickleBall Evaluation Manifest"
+
+[system]
+
+mem = "all"
+libraries_dir = "evaluation/libraries/"
+cache_dir = "evaluation/cache/"
+policies_dir = "evaluation/policies/"
+joern_dir = "/joern/" # TODO: Make relative
+analyzer_path = "/pickle-defense/analyze/analyze.sc" # TODO: Make relative
+
+[libraries]
+
+[libraries.flair]
+
+library_path = "flair"
+model_class = "flair/models/sequence_tagger_model.py:<module>.SequenceTagger"
+use_cpg = false
+ignore_paths = "flair/tests/,flair/examples/,flair/datasets"
+
+[libraries.pyannote]
+
+library_path = "pyannote-audio"
+model_class = "pyannote/audio/core/model.py:<module>.Model"
+use_cpg = false
+ignore_paths = "tests/,tutorials/"

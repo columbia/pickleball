@@ -1,5 +1,9 @@
 *.cpg
 case-studies/
+evaluation/policies/*
+!evaluation/policies/baseline/
+!evaluation/policies/baseline/**
+
 .venv/
 
 __pycache__/

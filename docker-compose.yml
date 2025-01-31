@@ -1,0 +1,17 @@
+services:
+
+  pickleball-generate:
+    image: pickleball-generate
+    build:
+      dockerfile: Dockerfile.generate
+
+  generate-all:
+    image: pickleball-generate-evaluation
+    build:
+      context: ./evaluation/
+      dockerfile: Dockerfile.evaluate
+    depends_on:
+      - pickleball-generate
+    volumes:
+      - .:/pickleball
+    command: /pickleball/policy-evaluation.sh

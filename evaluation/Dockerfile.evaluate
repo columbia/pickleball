@@ -1,0 +1,3 @@
+FROM pickleball-generate
+
+RUN apt-get install -y texlive-latex-base texlive-latex-extra

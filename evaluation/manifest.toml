@@ -7,7 +7,7 @@ libraries_dir = "libraries/"
 cache_dir = "cache/"
 policies_dir = "policies/"
 joern_dir = "/joern/" # TODO: Make relative
-analyzer_path = "/pickle-defense/analyze/analyze.sc" # TODO: Make relative
+analyzer_path = "/pickleball/analyze/analyze.sc" # TODO: Make relative
 
 [libraries]
 

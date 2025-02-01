@@ -14,4 +14,4 @@ services:
       - pickleball-generate
     volumes:
       - .:/pickleball
-    command: /pickleball/policy-evaluation.sh
+    command: /pickleball/evaluation/policy-evaluation.sh

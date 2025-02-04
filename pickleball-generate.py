@@ -41,7 +41,6 @@ def create_cpg(
 
     cmd = [
         str(joern_utility),
-        # TODO: If using joern-parse, the command line options change
         f'-J-Xmx{system_mem}k',
         str(library_path),
         '-o', str(out_path),

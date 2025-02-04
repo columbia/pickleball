@@ -73,11 +73,14 @@ library_path = "pysentimiento"
 model_class = "pysentimiento/analyzer.py:<module>.BaseAnalyzer"
 use_cpg = false
 
-#[libraries.sentencetransformers]
+[libraries.sentencetransformers]
 
-#library_path = "sentence-transformers/sentence_transformers"
-#model_class = "SentenceTransformer.py:<module>.SentenceTransformer"
+# This fails when Joern crashes
+# TODO: Make Joern use CPG robustly
+library_path = "sentence-transformers/sentence_transformers"
+model_class = "SentenceTransformer.py:<module>.SentenceTransformer"
 #use_cpg = true
+use_cpg = false
 
 [libraries.superimage]
 
@@ -85,11 +88,14 @@ library_path = "super-image/src"
 model_class = "super_image/models/edsr/modeling_edsr.py:<module>.EdsrModel"
 use_cpg = false
 
-#[libraries.tner]
+[libraries.tner]
 
-#library_path = "tner/tner"
-#model_class = "ner_model.py:<module>.TransformersNER"
+# This fails when Joern crashes
+# TODO: Make Joern use CPG robustly
+library_path = "tner/tner"
+model_class = "ner_model.py:<module>.TransformersNER"
 #use_cpg = true
+use_cpg = false
 
 [libraries.tweetnlp]
 

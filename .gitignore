@@ -1,5 +1,9 @@
 *.cpg
 case-studies/
+evaluation/policies/*
+!evaluation/policies/baseline/
+!evaluation/policies/baseline/**
+
 .venv/
 
 __pycache__/
@@ -7,3 +11,9 @@ __pycache__/
 .scala-build/
 .vscode/
 .metals/
+
+# Outputs from evaluation generation
+*.aux
+*.pdf
+*.log
+*.tex

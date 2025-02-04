@@ -13,8 +13,10 @@ RUN mkdir -p /data/App \
     && tar zxvf *.tar.gz \
     && rm *.tar.gz
 
+WORKDIR /
 RUN git clone https://github.com/wunused/joern.git
-WORKDIR joern/
+
+WORKDIR /joern/
 RUN git checkout pyinference-develop
 
 ENV LANG=en_US.UTF-8 \

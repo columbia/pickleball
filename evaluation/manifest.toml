@@ -1,0 +1,98 @@
+title = "PickleBall Evaluation Manifest"
+
+[system]
+
+mem = "all"
+libraries_dir = "libraries/"
+cache_dir = "cache/"
+policies_dir = "policies/"
+joern_dir = "/joern/" # TODO: Make relative
+analyzer_path = "/pickleball/analyze/analyze.sc" # TODO: Make relative
+
+[libraries]
+
+[libraries.conch]
+
+library_path = "conch/CONCH/conch"  # TODO: Update library paths
+model_class = "open_clip_custom/coca_model.py:<module>.CoCa"
+use_cpg = false
+
+[libraries.flagembedding]
+
+library_path = "flagembedding/FlagEmbedding/FlagEmbedding" # TODO: Update
+model_class = "flag_models.py:<module>.FlagModel"
+use_cpg = false
+
+[libraries.flair]
+
+library_path = "flair/flair"   # TODO: Update once library directory structure updates
+model_class = "flair/models/sequence_tagger_model.py:<module>.SequenceTagger"
+use_cpg = false
+ignore_paths = "flair/tests/,flair/examples/,flair/datasets"
+
+[libraries.gliner]
+
+library_path = "gliner/GLiNER/gliner"
+model_class = "model.py:<module>.GLiNER"
+use_cpg = false
+
+[libraries.huggingsound]
+
+library_path = "huggingsound/huggingsound/huggingsound" # TODO: Update library paths
+model_class = "speech_recognition/model.py:<module>.SpeechRecognitionModel"
+use_cpg = false
+
+[libaries.languagebind]
+
+library_path = "languagebind/LanguageBind" # TODO: Update
+model_class = "languagebind/__init__.py:<module>.LanguageBind"
+use_cpg = false
+
+[libraries.melotts]
+
+library_path = "melotts/MeloTTS/melo" # TODO: Update
+model_class = "api.py:<module>.TTS"
+use_cpg = false
+
+[libraries.parrot]
+
+library_path = "parrot/Parrot_Paraphraser/parrot"
+model_class = "parrot.py:<module>.Parrot"
+use_cpg = false
+
+[libraries.pyannote]
+
+library_path = "pyannote-audio/pyannote-audio"  # TODO: Update once library directory structure updates
+model_class = "pyannote/audio/core/model.py:<module>.Model"
+use_cpg = false
+ignore_paths = "tests/,tutorials/"
+
+[libraries.pysentimiento]
+
+library_path = "pysentimiento/pysentimiento" # TODO: Update
+model_class = "pysentimiento/analyzer.py:<module>.BaseAnalyzer"
+use_cpg = false
+
+#[libraries.sentencetransformers]
+
+#library_path = "sentence-transformers/sentence-transformers/sentence_transformers" # TODO: Update
+#model_class = "SentenceTransformer.py:<module>.SentenceTransformer"
+#use_cpg = true
+
+[libraries.superimage]
+
+library_path = "super-image/super-image/src" # TODO: Update
+model_class = "super_image/models/edsr/modeling_edsr.py:<module>.EdsrModel"
+use_cpg = false
+
+#[libraries.tner]
+
+#library_path = "tner/tner/tner" # TODO: Update
+#model_class = "ner_model.py:<module>.TransformersNER"
+#use_cpg = true
+
+[libraries.tweetnlp]
+
+library_path = "tweetnlp/tweetnlp/tweetnlp"
+model_class = "text_classification/model.py:<module>.Classifier"
+use_cpg = false

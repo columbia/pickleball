@@ -3,6 +3,7 @@ case-studies/
 evaluation/policies/*
 !evaluation/policies/baseline/
 !evaluation/policies/baseline/**
+evaluation/libraries/*
 
 .venv/
 

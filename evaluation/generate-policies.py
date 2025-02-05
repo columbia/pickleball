@@ -38,9 +38,10 @@ for library, values in config['libraries'].items():
     ignore_paths = values['ignore_paths'] if 'ignore_paths' in values else ''
     policy_path = POLICIES_DIR / pathlib.Path(f'{library}.json')
     cpg_path = pathlib.Path("/tmp") / pathlib.Path(f'{library}.cpg')
+    log_path = pathlib.Path("/tmp") / pathlib.Path(f'{library}.log')
 
-    # TODO: Logging
     # TODO: Timing
+    print('-------------------------------------------------------------')
     print(f'Generating CPG and policy for: {library}')
     pickleball.create_cpg(
         library_path,
@@ -57,5 +58,6 @@ for library, values in config['libraries'].items():
         ANALYZER_PATH,
         JOERN_DIR,
         CACHE_DIR,
-        policy_path
+        policy_path,
+        log_path=log_path
     )

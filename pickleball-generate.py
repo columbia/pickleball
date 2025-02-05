@@ -3,6 +3,7 @@
 import argparse
 import pathlib
 import subprocess
+from typing import Optional
 
 ANALYZE_PATH = pathlib.Path('analyze/analyze.sc')
 
@@ -51,9 +52,11 @@ def create_cpg(
     print(f'Creating CPG:\n'
           f'{" ".join(cmd)}')
 
-    if not dry_run:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print(result.stdout)
+    if dry_run:
+        return
+
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    print(result.stdout)
 
 
 def generate_policy(
@@ -64,7 +67,8 @@ def generate_policy(
         joern_path: pathlib.Path,
         cache_path: pathlib.Path,
         policy_path: pathlib.Path,
-        #log_path: pathlib.Path,
+        log_path: Optional[pathlib.Path] = None,
+        verbose: bool = False,
         dry_run: bool = False):
     """Generate a model loading policy for the ML library."""
 
@@ -84,8 +88,22 @@ def generate_policy(
     print(f'Analyzing CPG:\n'
           f'{" ".join(cmd)}')
 
-    if not dry_run:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    if dry_run:
+        return
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    # TODO: determine if CPG is AST or full CPG, and only handle crashes if
+    # full CPG
+    while result.returncode != 0:
+        print(f'Joern exit ({result.returncode}): {result.stderr}')
+        print(f'retrying...')
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if log_path:
+        log_path.write_text(result.stdout)
+
+    if verbose:
         print(result.stdout)
 
 if __name__ == '__main__':

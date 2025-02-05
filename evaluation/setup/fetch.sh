@@ -17,9 +17,12 @@ git checkout 02d6ac5
 cd $LIBRARIES_DIR
 git clone --recurse-submodules https://github.com/FlagOpen/FlagEmbedding.git
 cd FlagEmbedding
-# TODO: Investigate which commit is clostest to one we used in our experiments
-#git checkout 2bfc922 # This is the commit we used, but it no longer exists
-git checkout cbf98a6 # This is most recent commit, but with incorrect analysis results
+# The original evaluation used the 2bfc922 commit, but the FlagEmbedding
+# library has been significantly rewritten and the git commit history has been
+# overwritten. We have identified the bf6b649 commit as being close to the
+# library state when we did our evaluation.
+#git checkout 2bfc922
+git checkout bf6b649
 
 # flair
 cd $LIBRARIES_DIR

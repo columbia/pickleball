@@ -42,7 +42,7 @@ library_path = "huggingsound/huggingsound"
 model_class = "speech_recognition/model.py:<module>.SpeechRecognitionModel"
 use_cpg = false
 
-[libaries.languagebind]
+[libraries.languagebind]
 
 library_path = "LanguageBind"
 model_class = "languagebind/__init__.py:<module>.LanguageBind"
@@ -58,7 +58,7 @@ use_cpg = false
 
 library_path = "Parrot_Paraphraser/parrot"
 model_class = "parrot.py:<module>.Parrot"
-use_cpg = false
+use_cpg = true
 
 [libraries.pyannote]
 
@@ -75,12 +75,10 @@ use_cpg = false
 
 [libraries.sentencetransformers]
 
-# This fails when Joern crashes
-# TODO: Make Joern use CPG robustly
 library_path = "sentence-transformers/sentence_transformers"
 model_class = "SentenceTransformer.py:<module>.SentenceTransformer"
-#use_cpg = true
-use_cpg = false
+use_cpg = true
+#use_cpg = false
 
 [libraries.superimage]
 
@@ -90,12 +88,9 @@ use_cpg = false
 
 [libraries.tner]
 
-# This fails when Joern crashes
-# TODO: Make Joern use CPG robustly
 library_path = "tner/tner"
 model_class = "ner_model.py:<module>.TransformersNER"
-#use_cpg = true
-use_cpg = false
+use_cpg = true
 
 [libraries.tweetnlp]
 

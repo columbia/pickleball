@@ -4,6 +4,9 @@ services:
     image: pickleball-generate
     build:
       dockerfile: Dockerfile.generate
+    volumes:
+      - .:/pickleball
+    command: /bin/bash
 
   generate-all:
     image: pickleball-generate-evaluation

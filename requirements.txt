@@ -1,2 +1,3 @@
+setuptools
 fickling
 huggingface-hub

@@ -79,9 +79,9 @@ def parse_manifest(manifest: pathlib.Path) -> Tuple[SystemConfig, List[LibraryCo
                              cpg_path=cpg_path, log_path=log_path)
 
     # Map parse_library_config to each library entry in the manifest file.
-    librariescfgs = [parse_library_config(library, values, systemcfg) for library, values in config['libraries'].items()]
+    librarycfgs = [parse_library_config(library, values, systemcfg) for library, values in config['libraries'].items()]
 
-    return systemcfg, librariescfgs
+    return systemcfg, librarycfgs
 
 def print_libraries(librarycfs: List[LibraryConfig]) -> None:
 
@@ -119,8 +119,10 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if args.fixtures:
+        # Filter the libraries specified in the fixture list
         evaluation_libraries = [library.name in args.fixtures for library in librarycfgs]
     else:
+        # Otherwise, use all libraries in the manifest
         evaluation_libraries = librarycfgs
 
     if systemcfg.mem == 'all':

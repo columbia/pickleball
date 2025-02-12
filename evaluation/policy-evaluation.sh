@@ -8,10 +8,8 @@ cd /pickleball/evaluation/
 # Fetch all evaluation libraries
 setup/fetch.sh
 
-# Generate all evaluation library policies
-python3 generate-policies.py
-
-# Generate table
-python3 /pickleball/scripts/generatetable.py manifest.toml > tables/table.tex
-cd tables/
-pdflatex table.tex
+# Generate all evaluation library policies and generate table
+python3 generate-policies.py manifest.toml \
+    && python3 /pickleball/scripts/generatetable.py manifest.toml > tables/table.tex \
+    && cd tables/ \
+    && pdflatex table.tex

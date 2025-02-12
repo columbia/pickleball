@@ -1,63 +1,151 @@
 #!/usr/bin/python3
 
+import argparse
 import importlib
 import pathlib
 import os
 import sys
 import tomllib
 
-# Get the parent directory of the current script
-# Add parent directory to sys.path if not already added
-# Import the module from the parent directory
+from dataclasses import dataclass
+from typing import Tuple, List, Dict
+
+# This is hacky - because the module name is 'pickleball-generate' (with a dash)
+# and in a parent directory.
+# - Get the parent directory of the current script
+# - Add parent directory to sys.path if not already added
+# - Import the module from the parent directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 module_name = "pickleball-generate"
 pickleball = importlib.__import__(module_name)
 
-MANIFEST = 'manifest.toml'
+OUTPATH = pathlib.Path('/tmp')
 
-with open(MANIFEST, 'rb') as manifest_file:
-    config = tomllib.load(manifest_file)
 
-MEM = config['system']['mem']
-LIBRARIES_DIR = pathlib.Path(config['system']['libraries_dir'])
-CACHE_DIR = pathlib.Path(config['system']['cache_dir'])
-POLICIES_DIR = pathlib.Path(config['system']['policies_dir'])
-JOERN_DIR = pathlib.Path(config['system']['joern_dir'])
-ANALYZER_PATH = pathlib.Path(config['system']['analyzer_path'])
+@dataclass
+class SystemConfig(object):
+    mem: str
+    libraries_dir: pathlib.Path
+    cache_dir: pathlib.Path
+    policies_dir: pathlib.Path
+    joern_dir: pathlib.Path
+    analyzer_path: pathlib.Path
 
-if MEM == 'all':
-    mem = pickleball.get_available_mem()
+@dataclass
+class LibraryConfig(object):
+    name: str
+    library_path: pathlib.Path
+    model_class: str
+    cpg_mode: str
+    ignore_paths: str
+    policy_path: pathlib.Path
+    cpg_path: pathlib.Path
+    log_path: pathlib.Path
 
-for library, values in config['libraries'].items():
 
-    library_path = LIBRARIES_DIR / pathlib.Path(values['library_path'])
-    model_class = values['model_class']
-    use_cpg = values['use_cpg']
-    ignore_paths = values['ignore_paths'] if 'ignore_paths' in values else ''
-    policy_path = POLICIES_DIR / pathlib.Path(f'{library}.json')
-    cpg_path = pathlib.Path("/tmp") / pathlib.Path(f'{library}.cpg')
-    log_path = pathlib.Path("/tmp") / pathlib.Path(f'{library}.log')
+# Parse the manifest file into a SystemConfig and and list of LibraryConfigs
+def parse_manifest(manifest: pathlib.Path) -> Tuple[SystemConfig, List[LibraryConfig]]:
 
-    # TODO: Timing
-    print('-------------------------------------------------------------')
-    print(f'Generating CPG and policy for: {library}')
-    pickleball.create_cpg(
-        library_path,
-        JOERN_DIR,
-        mem,
-        out_path=cpg_path,
-        ignore_paths=ignore_paths,
-        use_cpg=use_cpg
+    with open(manifest, 'rb') as manifest_file:
+        config = tomllib.load(manifest_file)
+
+    mem = config['system']['mem']
+    libraries_dir = pathlib.Path(config['system']['libraries_dir'])
+    cache_dir = pathlib.Path(config['system']['cache_dir'])
+    policies_dir = pathlib.Path(config['system']['policies_dir'])
+    joern_dir = pathlib.Path(config['system']['joern_dir'])
+    analyzer_path = pathlib.Path(config['system']['analyzer_path'])
+
+    systemcfg = SystemConfig(mem=mem, libraries_dir=libraries_dir,
+                        cache_dir=cache_dir, policies_dir=policies_dir,
+                        joern_dir=joern_dir, analyzer_path=analyzer_path)
+
+    def parse_library_config(library_name: str, library_setting: Dict[str, str],
+                            systemcfg: SystemConfig):
+
+        library_path = systemcfg.libraries_dir / pathlib.Path(library_setting['library_path'])
+        model_class = library_setting['model_class']
+        cpg_mode = library_setting['use_cpg']
+        ignore_paths = library_setting['ignore_paths'] if 'ignore_paths' in library_setting else ''
+        policy_path = systemcfg.policies_dir / pathlib.Path(f'{library_name}.json')
+        cpg_path = OUTPATH / pathlib.Path(f'{library_name}.cpg')
+        log_path = OUTPATH / pathlib.Path(f'{library_name}.log')
+
+        return LibraryConfig(name=library_name, library_path=library_path,
+                             model_class=model_class, cpg_mode=cpg_mode,
+                             ignore_paths=ignore_paths, policy_path=policy_path,
+                             cpg_path=cpg_path, log_path=log_path)
+
+    # Map parse_library_config to each library entry in the manifest file.
+    librariescfgs = [parse_library_config(library, values, systemcfg) for library, values in config['libraries'].items()]
+
+    return systemcfg, librariescfgs
+
+def print_libraries(librarycfs: List[LibraryConfig]) -> None:
+
+    for library in librarycfgs:
+        print(library.name)
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        description="Generate all policies defined for an experiment")
+    parser.add_argument(
+        "manifest",
+        type=pathlib.Path,
+        help="Path to manifest file describing experiment setup"
     )
-    pickleball.generate_policy(
-        cpg_path,
-        model_class,
-        mem,
-        ANALYZER_PATH,
-        JOERN_DIR,
-        CACHE_DIR,
-        policy_path,
-        log_path=log_path
+    parser.add_argument(
+        "--list-libraries",
+        action='store_true',
+        help="List all libraries in manifest"
     )
+    parser.add_argument(
+        "--fixtures",
+        nargs="*",
+        help=("A list of individual libraries to evaluate. If none are provided, "
+            "defaults to generating policies for all libraries"),
+        default=[]
+    )
+    args = parser.parse_args()
+
+    systemcfg, librarycfgs = parse_manifest(args.manifest)
+
+    if args.list_libraries:
+        print_libraries(librarycfgs)
+        sys.exit(0)
+
+    if args.fixtures:
+        evaluation_libraries = [library.name in args.fixtures for library in librarycfgs]
+    else:
+        evaluation_libraries = librarycfgs
+
+    if systemcfg.mem == 'all':
+        systemmem = pickleball.get_available_mem()
+
+    for librarycfg in evaluation_libraries:
+
+        # TODO: Timing
+        print('-------------------------------------------------------------')
+        print(f'Generating CPG and policy for: {librarycfg.name}')
+        pickleball.create_cpg(
+            librarycfg.library_path,
+            systemcfg.joern_dir,
+            systemmem,
+            out_path=librarycfg.cpg_path,
+            ignore_paths=librarycfg.ignore_paths,
+            use_cpg=librarycfg.cpg_mode
+        )
+        pickleball.generate_policy(
+            librarycfg.cpg_path,
+            librarycfg.model_class,
+            systemmem,
+            systemcfg.analyzer_path,
+            systemcfg.joern_dir,
+            systemcfg.cache_dir,
+            librarycfg.policy_path,
+            log_path=librarycfg.log_path
+        )

@@ -78,10 +78,35 @@ def parse_manifest(manifest: pathlib.Path) -> Tuple[SystemConfig, List[LibraryCo
                              ignore_paths=ignore_paths, policy_path=policy_path,
                              cpg_path=cpg_path, log_path=log_path)
 
-    # Map parse_library_config to each library entry in the manifest file.
+    # Run parse_library_config on each library entry in the manifest file.
     librarycfgs = [parse_library_config(library, values, systemcfg) for library, values in config['libraries'].items()]
 
     return systemcfg, librarycfgs
+
+def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int) -> None:
+
+    # TODO: Timing
+    print('-------------------------------------------------------------')
+    print(f'Generating CPG and policy for: {librarycfg.name}')
+    pickleball.create_cpg(
+        librarycfg.library_path,
+        systemcfg.joern_dir,
+        systemmem,
+        out_path=librarycfg.cpg_path,
+        ignore_paths=librarycfg.ignore_paths,
+        use_cpg=librarycfg.cpg_mode
+    )
+    pickleball.generate_policy(
+        librarycfg.cpg_path,
+        librarycfg.model_class,
+        systemmem,
+        systemcfg.analyzer_path,
+        systemcfg.joern_dir,
+        systemcfg.cache_dir,
+        librarycfg.policy_path,
+        log_path=librarycfg.log_path
+    )
+
 
 def print_libraries(librarycfs: List[LibraryConfig]) -> None:
 
@@ -129,25 +154,4 @@ if __name__ == '__main__':
         systemmem = pickleball.get_available_mem()
 
     for librarycfg in evaluation_libraries:
-
-        # TODO: Timing
-        print('-------------------------------------------------------------')
-        print(f'Generating CPG and policy for: {librarycfg.name}')
-        pickleball.create_cpg(
-            librarycfg.library_path,
-            systemcfg.joern_dir,
-            systemmem,
-            out_path=librarycfg.cpg_path,
-            ignore_paths=librarycfg.ignore_paths,
-            use_cpg=librarycfg.cpg_mode
-        )
-        pickleball.generate_policy(
-            librarycfg.cpg_path,
-            librarycfg.model_class,
-            systemmem,
-            systemcfg.analyzer_path,
-            systemcfg.joern_dir,
-            systemcfg.cache_dir,
-            librarycfg.policy_path,
-            log_path=librarycfg.log_path
-        )
+        generate_policy(librarycfg, systemcfg, systemmem)

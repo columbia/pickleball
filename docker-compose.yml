@@ -8,6 +8,12 @@ services:
       - .:/pickleball
     command: /bin/bash
 
+  pickleball-enforce:
+    image: pickleball-enforce
+    build:
+      context: ./enforce/
+      dockerfile: Dockerfile
+
   generate-all:
     image: pickleball-generate-evaluation
     build:

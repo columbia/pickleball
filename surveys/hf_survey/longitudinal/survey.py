@@ -872,6 +872,292 @@ def plot_pickle_safetensors_counts(data: pd.DataFrame):
     plt.savefig('pickle_safetensors_counts.png', dpi=300, bbox_inches='tight')
     plt.close()
 
+def plot_pickle_downloads(data: pd.DataFrame, show_labels: bool = True):
+    # Define pickle formats
+    pickle_formats = {'pkl', 'pickle', 'joblib', 'dill', 'pt', 'pth', 'bin'}
+    safetensors_format = 'safetensors'
+
+    # Initialize lists for data
+    dates = []
+    pickle_models = []
+    pickle_no_safe_models = []
+    pickle_downloads = []
+    pickle_no_safe_downloads = []
+
+    # Process data by date
+    for date in sorted(data['date'].unique()):
+        subset = data[data['date'] == date]
+        
+        # Count models and downloads with pickle formats
+        pickle_mask = subset['extensions'].apply(
+            lambda exts: any(ext in pickle_formats for ext in exts))
+        pickle_no_safe_mask = subset['extensions'].apply(
+            lambda exts: any(ext in pickle_formats for ext in exts) 
+            and safetensors_format not in exts)
+
+        dates.append(date)
+        pickle_models.append(sum(pickle_mask))
+        pickle_no_safe_models.append(sum(pickle_no_safe_mask))
+        pickle_downloads.append(subset[pickle_mask]['downloads'].sum())
+        pickle_no_safe_downloads.append(subset[pickle_no_safe_mask]['downloads'].sum())
+
+    # Create figure with two y-axes
+    fig, ax1 = plt.subplots(figsize=(14, 8))
+    ax2 = ax1.twinx()
+
+    # Plot number of models (solid lines)
+    line1 = ax1.plot(dates, pickle_models, 
+                     color='#2ecc71', linewidth=2.5, marker='o',
+                     label='Models with Pickle Format')
+    line2 = ax1.plot(dates, pickle_no_safe_models,
+                     color='#e74c3c', linewidth=2.5, marker='o',
+                     label='Models with Pickle (No SafeTensors)')
+
+    # Plot downloads (dashed lines)
+    line3 = ax2.plot(dates, pickle_downloads,
+                     color='#2ecc71', linewidth=2.5, marker='s', linestyle='--',
+                     label='Downloads (Pickle Format)')
+    line4 = ax2.plot(dates, pickle_no_safe_downloads,
+                     color='#e74c3c', linewidth=2.5, marker='s', linestyle='--',
+                     label='Downloads (Pickle, No SafeTensors)')
+
+    if show_labels:
+        # Remove the model count labels and keep only download labels
+        for i, (value1, value2) in enumerate(zip(pickle_downloads, pickle_no_safe_downloads)):
+            ax2.annotate(f'{value1/1e6:.1f}M',
+                        (dates[i], value1),
+                        xytext=(0, 10),
+                        textcoords='offset points',
+                        ha='center', va='bottom',
+                        fontsize=16, color='#2ecc71')
+            
+            ax2.annotate(f'{value2/1e6:.1f}M',
+                        (dates[i], value2),
+                        xytext=(0, -10),
+                        textcoords='offset points',
+                        ha='center', va='top',
+                        fontsize=16, color='#e74c3c')
+
+    # Customize axes
+    ax1.set_xlabel('Date', fontsize=20)
+    ax1.set_ylabel('Number of Models', fontsize=20)
+    ax2.set_ylabel('Number of Downloads', fontsize=20)
+
+    # Format y-axis with comma separator for thousands
+    ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: format(int(x), ',')))
+    ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x/1e6:.1f}M'))
+
+    # Customize ticks
+    plt.xticks(rotation=45, fontsize=16)
+    ax1.tick_params(axis='y', labelsize=16)
+    ax2.tick_params(axis='y', labelsize=16)
+
+    # Add grid
+    ax1.grid(True, linestyle='--', alpha=0.4)
+
+    # Combine legends from both axes
+    lines = line1 + line2 + line3 + line4
+    labels = [l.get_label() for l in lines]
+    ax1.legend(lines, labels, fontsize=16, loc='upper left')
+
+    # Save plot
+    plt.tight_layout()
+    plt.savefig(f'pickle_downloads{"_with_labels" if show_labels else ""}.png', 
+                dpi=300, bbox_inches='tight')
+    plt.close()
+
+def plot_format_distribution(data: pd.DataFrame, show_labels: bool = True):
+    # Define pickle formats
+    pickle_formats = {'pkl', 'pickle', 'joblib', 'dill', 'pt', 'pth', 'bin'}
+    
+    # Initialize lists for data
+    dates = []
+    pickle_only_models = []
+    safetensors_only_models = []
+    both_models = []
+    pickle_only_downloads = []
+    safetensors_only_downloads = []
+    both_downloads = []
+
+    # Process data by date
+    for date in sorted(data['date'].unique()):
+        subset = data[data['date'] == date]
+        dates.append(date)
+        
+        # Create masks for each category
+        has_pickle = subset['extensions'].apply(
+            lambda exts: any(ext in pickle_formats for ext in exts))
+        has_safetensors = subset['extensions'].apply(
+            lambda exts: 'safetensors' in exts)
+        
+        # Calculate masks for each category
+        pickle_only_mask = has_pickle & ~has_safetensors
+        safetensors_only_mask = ~has_pickle & has_safetensors
+        both_mask = has_pickle & has_safetensors
+        
+        # Count models
+        pickle_only_models.append(sum(pickle_only_mask))
+        safetensors_only_models.append(sum(safetensors_only_mask))
+        both_models.append(sum(both_mask))
+        
+        # Sum downloads
+        pickle_only_downloads.append(subset[pickle_only_mask]['downloads'].sum())
+        safetensors_only_downloads.append(subset[safetensors_only_mask]['downloads'].sum())
+        both_downloads.append(subset[both_mask]['downloads'].sum())
+
+    # Create figure with two y-axes
+    fig, ax1 = plt.subplots(figsize=(14, 8))
+    ax2 = ax1.twinx()
+
+    # Define colors
+    colors = {
+        'pickle_only': '#e74c3c',    # red
+        'safetensors_only': '#3498db',  # blue
+        'both': '#2ecc71'    # green
+    }
+
+    # Plot data
+    lines = []
+    
+    # Plot models (solid lines)
+    line1 = ax1.plot(dates, pickle_only_models, color=colors['pickle_only'], 
+                     linewidth=2.5, marker='o', label='Models (Pickle Only)')
+    line2 = ax1.plot(dates, safetensors_only_models, color=colors['safetensors_only'], 
+                     linewidth=2.5, marker='o', label='Models (SafeTensors Only)')
+    line3 = ax1.plot(dates, both_models, color=colors['both'], 
+                     linewidth=2.5, marker='o', label='Models (Both)')
+
+    # Plot downloads (dashed lines)
+    line4 = ax2.plot(dates, pickle_only_downloads, color=colors['pickle_only'], 
+                     linewidth=2.5, marker='s', linestyle='--', label='Downloads (Pickle Only)')
+    line5 = ax2.plot(dates, safetensors_only_downloads, color=colors['safetensors_only'], 
+                     linewidth=2.5, marker='s', linestyle='--', label='Downloads (SafeTensors Only)')
+    line6 = ax2.plot(dates, both_downloads, color=colors['both'], 
+                     linewidth=2.5, marker='s', linestyle='--', label='Downloads (Both)')
+
+    if show_labels:
+        # Remove the model count labels and keep only download labels
+        for i, (p_down, st_down, both_down) in enumerate(zip(pickle_only_downloads, 
+                                                            safetensors_only_downloads, 
+                                                            both_downloads)):
+            ax2.annotate(f'{p_down/1e6:.1f}M', (dates[i], p_down), 
+                        xytext=(0, -10), textcoords='offset points',
+                        ha='center', va='top', fontsize=14, color=colors['pickle_only'])
+            ax2.annotate(f'{st_down/1e6:.1f}M', (dates[i], st_down), 
+                        xytext=(0, -10), textcoords='offset points',
+                        ha='center', va='top', fontsize=14, color=colors['safetensors_only'])
+            ax2.annotate(f'{both_down/1e6:.1f}M', (dates[i], both_down), 
+                        xytext=(0, -10), textcoords='offset points',
+                        ha='center', va='top', fontsize=14, color=colors['both'])
+
+    # Customize axes
+    ax1.set_xlabel('Date', fontsize=20)
+    ax1.set_ylabel('Number of Models', fontsize=20)
+    ax2.set_ylabel('Number of Downloads', fontsize=20)
+
+    # Format y-axis
+    ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: format(int(x), ',')))
+    ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x/1e6:.1f}M'))
+
+    # Customize ticks
+    plt.xticks(rotation=45, fontsize=16)
+    ax1.tick_params(axis='y', labelsize=16)
+    ax2.tick_params(axis='y', labelsize=16)
+
+    # Add grid
+    ax1.grid(True, linestyle='--', alpha=0.4)
+
+    # Combine legends
+    lines = line1 + line2 + line3 + line4 + line5 + line6
+    labels = [l.get_label() for l in lines]
+    ax1.legend(lines, labels, fontsize=16, loc='upper left')
+
+    # Save plot
+    plt.tight_layout()
+    plt.savefig(f'format_distribution{"_with_labels" if show_labels else ""}.png', 
+                dpi=300, bbox_inches='tight')
+    plt.close()
+
+def analyze_august_2024_data(data: pd.DataFrame):
+    """Analyze August 2024 data for model and download percentages."""
+    # Filter for August 2024 data
+    aug_data = data[data['date'] == datetime(2024, 8, 1)]
+    
+    if aug_data.empty:
+        logger.error("No data found for August 2024")
+        return
+    
+    # Calculate total models and downloads
+    total_models = len(aug_data)
+    total_downloads = aug_data['downloads'].sum()
+    
+    # Define formats
+    pickle_formats = {'pkl', 'pickle', 'joblib', 'dill', 'pt', 'pth', 'bin'}
+    
+    # Create masks for each category
+    pickle_only_mask = aug_data['extensions'].apply(
+        lambda exts: any(ext in pickle_formats for ext in exts) 
+        and 'safetensors' not in exts
+        and 'gguf' not in exts
+    )
+    
+    safetensors_only_mask = aug_data['extensions'].apply(
+        lambda exts: 'safetensors' in exts 
+        and not any(ext in pickle_formats for ext in exts)
+        and 'gguf' not in exts
+    )
+    
+    both_pickle_safe_mask = aug_data['extensions'].apply(
+        lambda exts: 'safetensors' in exts 
+        and any(ext in pickle_formats for ext in exts)
+        and 'gguf' not in exts
+    )
+    
+    gguf_mask = aug_data['extensions'].apply(
+        lambda exts: 'gguf' in exts
+    )
+    
+    # Calculate counts and percentages for each category
+    categories = {
+        'Pickle only': {
+            'models': sum(pickle_only_mask),
+            'downloads': aug_data[pickle_only_mask]['downloads'].sum()
+        },
+        'SafeTensors only': {
+            'models': sum(safetensors_only_mask),
+            'downloads': aug_data[safetensors_only_mask]['downloads'].sum()
+        },
+        'Both Pickle & SafeTensors': {
+            'models': sum(both_pickle_safe_mask),
+            'downloads': aug_data[both_pickle_safe_mask]['downloads'].sum()
+        },
+        'GGUF': {
+            'models': sum(gguf_mask),
+            'downloads': aug_data[gguf_mask]['downloads'].sum()
+        }
+    }
+    
+    # Calculate percentages and log results
+    logger.info("\nAugust 2024 Analysis:")
+    logger.info(f"Total models: {total_models:,}")
+    logger.info(f"Total downloads: {total_downloads:,}")
+    
+    results = {}
+    for category, stats in categories.items():
+        model_percentage = (stats['models'] / total_models) * 100
+        download_percentage = (stats['downloads'] / total_downloads) * 100
+        
+        logger.info(f"\n{category}:")
+        logger.info(f"Models: {stats['models']:,} ({model_percentage:.1f}%)")
+        logger.info(f"Downloads: {stats['downloads']:,} ({download_percentage:.1f}%)")
+        
+        results[category] = {
+            'model_percentage': model_percentage,
+            'download_percentage': download_percentage
+        }
+    
+    return results
+
 def main() -> None:
     # Configure logging and load data as needed
     logger.remove()
@@ -924,7 +1210,8 @@ def main() -> None:
         df_date = pd.DataFrame({
             'model_id': model_ids,
             'extensions': extensions_series,
-            'date': date
+            'date': date,
+            'downloads': df['downloads'] if 'downloads' in df.columns else 0  # Add downloads column
         })
 
         data_frames.append(df_date)
@@ -1012,11 +1299,20 @@ def main() -> None:
     # Plot absolute counts
     plot_pickle_safetensors_counts(full_data)
 
+    # Generate both versions of the plots
+    plot_pickle_downloads(full_data, show_labels=True)
+    plot_pickle_downloads(full_data, show_labels=False)
+    plot_format_distribution(full_data, show_labels=True)
+    plot_format_distribution(full_data, show_labels=False)
+
     # Log full list of unknown extensions across all data
     logger.info(f"All unknown extensions across datasets: {all_unknown_extensions}")
 
     # Compute and save extension proportions
     compute_extension_proportions(full_data, relevant_extensions)
+
+    # Add this after loading the data:
+    august_stats = analyze_august_2024_data(full_data)
 
 if __name__ == "__main__":
     main()

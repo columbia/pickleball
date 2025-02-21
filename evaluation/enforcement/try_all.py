@@ -7,10 +7,16 @@ import argparse
 import glob
 import logging
 
-from load import load_model
+import loadflair
+
+LOADS = {
+    'flair': loadflair.load_model,
+}
+
+LIBRARY = 'flair'
 
 DIR = Path(__file__).parent
-LOG = DIR / ".." / "results" / "flair.log"
+LOG = DIR / "results" / f"{LIBRARY}.log"
 
 ALLOWED_PATTERNS = ("*.bin", "*.pkl", "*pt", "*pth")
 
@@ -46,12 +52,6 @@ def get_model_paths(
     return models
 
 
-def print_current_handlers():
-    logger = logging.getLogger()
-    for handler in logger.handlers:
-        print(f"Handler: {handler}")
-
-
 if __name__ == "__main__":
     """Main function. Collect command line arguments and begin"""
     parser = argparse.ArgumentParser()
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     if not args.all_model_path:
         print("ERROR: need to specify model path")
 
-    logging.info(f"loading all flair libraries")
+    logging.info(f"loading all {LIBRARY} libraries")
     logging.info(f"writing log to {str(LOG)}")
     logging.info(f"time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logging.info(f"models: {args.all_model_path}")
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     successes = 0
     for model_path in model_paths:
         logging.debug(f"loading model: {model_path}")
-        if load_model(model_path):
+        if LOADS[LIBRARY](model_path):
             logging.info(f"{model_path} SUCCESS")
             successes += 1
         else:

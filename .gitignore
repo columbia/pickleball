@@ -1,9 +1,22 @@
 *.cpg
 case-studies/
+evaluation/policies/*
+!evaluation/policies/baseline/
+!evaluation/policies/baseline/**
+evaluation/libraries/*
+evaluation/models/*
+
 .venv/
+.pickleball-venv/
 
 __pycache__/
 .bsp/
 .scala-build/
 .vscode/
 .metals/
+
+# Outputs from evaluation generation
+*.aux
+*.pdf
+*.log
+*.tex

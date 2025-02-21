@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Fetch libraries
+# TODO
+
+cd /pickleball/evaluation/
+
+# Fetch all evaluation libraries
+setup/fetch.sh
+
+# Generate all evaluation library policies and generate table
+python3 generate-policies.py manifest.toml \
+    && python3 /pickleball/scripts/generatetable.py manifest.toml > tables/table.tex \
+    && cd tables/ \
+    && pdflatex table.tex

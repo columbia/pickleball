@@ -14,7 +14,7 @@ def load_model(model_path, test=""):
         #print(f"Similarity scores:\n{scores}")
 
     except Exception as e:
-        print(f"\033[91mFAILED in {model_path}\033[0m")
+        print(f"\033[91mFAILED in {model_path}\033[0m: {e}")
         print(e)
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")

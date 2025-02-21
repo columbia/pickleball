@@ -4,8 +4,9 @@ RUN apt-get update && apt-get install -y git
 
 #RUN pip install packaging wheel
 #RUN pip install FlagEmbedding peft
+WORKDIR /
 RUN git clone https://github.com/FlagOpen/FlagEmbedding.git
-WORKDIR FlagEmbedding
+WORKDIR /FlagEmbedding
 RUN pip install .
 RUN pip install transformers==4.46.1
 

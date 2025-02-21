@@ -10,7 +10,7 @@ import logging
 from load import load_model
 
 DIR = Path(__file__).parent
-LOG = DIR / "flair.log"
+LOG = DIR / ".." / "results" / "flair.log"
 
 ALLOWED_PATTERNS = ("*.bin", "*.pkl", "*pt", "*pth")
 
@@ -68,11 +68,12 @@ if __name__ == "__main__":
         print("ERROR: need to specify model path")
 
     logging.info(f"loading all flair libraries")
+    logging.info(f"writing log to {str(LOG)}")
     logging.info(f"time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logging.info(f"models: {args.all_model_path}")
 
     model_paths = get_model_paths(args.all_model_path)
-    logging.info(f"#models: {len(model_paths)}")
+    logging.info(f"# models: {len(model_paths)}")
 
     successes = 0
     for model_path in model_paths:

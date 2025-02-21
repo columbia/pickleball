@@ -38,12 +38,18 @@ if __name__ == '__main__':
         type=str,
         help='Name of output file'
     )
+    parser.add_argument(
+        '--modelfile-name',
+        type=str,
+        default='pytorch_model.bin',
+        help='If the model does not use the pytorch_model.bin filename, specify it'
+    )
 
     args = parser.parse_args()
 
     policies = {}
     root_path = Path(args.modelsdir)
-    for filename in root_path.rglob('pytorch_model.bin'):
+    for filename in root_path.rglob(args.modelfile_name):
     #for filename in args.filenames:
         # Create an opcode trace at {filename}.opcode
         print(f'tracing: {str(filename)}')

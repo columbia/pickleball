@@ -14,6 +14,12 @@ services:
       context: ./enforce/
       dockerfile: Dockerfile
 
+  pickleball-enforce-deb11:
+    image: pickleball-enforce-deb11
+    build:
+      context: ./enforce/
+      dockerfile: Dockerfile.deb11
+
   generate-all:
     image: pickleball-generate-evaluation
     build:
@@ -24,3 +30,20 @@ services:
     volumes:
       - .:/pickleball
     command: /pickleball/evaluation/policy-evaluation.sh
+
+  enforce-flair:
+    image: pickleball-enforce-flair
+    build:
+      context: ./evaluation/enforcement/flair/
+      dockerfile: Dockerfile.flair
+    depends_on:
+      - generate-all
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/flair.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/flair/try_all.py --all-model-path /models/benign/flair
+
+

@@ -48,6 +48,21 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch --library conch
 
+  enforce-flagembedding:
+    image: pickleball-enforce-flagembedding
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.flagembedding
+    depends_on:
+      - generate-all
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/flagembedding.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding --library flagembedding
+
   enforce-flair:
     image: pickleball-enforce-flair
     build:
@@ -65,11 +80,13 @@ services:
 
   enforce-all:
     image: pickleball-enforce
-    command: ["echo", "All services completed"]
+    command: ["echo", "All model load tests completed"]
     depends_on:
       enforce-conch:
         condition: service_completed_successfully
+      enforce-flagembedding:
+        condition: service_completed_successfully
       enforce-flair:
         condition: service_completed_successfully
-
+      
 

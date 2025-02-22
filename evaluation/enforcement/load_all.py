@@ -14,6 +14,7 @@ ALLOWED_PATTERNS = ("*.bin", "*.pkl", "*pt", "*pth")
 LIBRARIES = [
     'conch',
     'flair',
+    'flagembedding',
 ]
 
 

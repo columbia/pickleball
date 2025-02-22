@@ -15,6 +15,7 @@ LIBRARIES = [
     'conch',
     'flair',
     'flagembedding',
+    'gliner',
 ]
 
 

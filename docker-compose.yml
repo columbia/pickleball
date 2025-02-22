@@ -203,8 +203,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers --library sentencetransformers
 
-  # FIXME: loads fail because of non-standard naming
-  enforce-superimage:
     image: pickleball-enforce-superimage
     build:
       context: ./evaluation/

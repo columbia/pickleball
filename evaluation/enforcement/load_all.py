@@ -27,6 +27,8 @@ LIBRARIES = [
     'pysentimiento',
     'sentencetransformers',
     'superimage',
+    'tner',
+    'tweetnlp',
 ]
 
 

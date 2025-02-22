@@ -203,6 +203,7 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers --library sentencetransformers
 
+  enforce-superimage:
     image: pickleball-enforce-superimage
     build:
       context: ./evaluation/
@@ -216,6 +217,36 @@ services:
       - ./evaluation/policies/superimage.json:/root/policies/policy.json
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image-mod --library superimage
+
+  enforce-tner:
+    image: pickleball-enforce-tner
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.tner
+    depends_on:
+      - generate-all
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/tner.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner --library tner
+
+  enforce-tweetnlp:
+    image: pickleball-enforce-tweetnlp
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.tweetnlp
+    depends_on:
+      - generate-all
+      - pickleball-enforce-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/tweetnlp.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp --library tweetnlp
 
   enforce-all:
     image: pickleball-enforce
@@ -244,4 +275,8 @@ services:
       enforce-sentencetransformers:
         condition: service_completed_successfully
       enforce-superimage:
+        condition: service_completed_successfully
+      enforce-tner:
+        condition: service_completed_successfully
+      enforce-tweetnlp:
         condition: service_completed_successfully

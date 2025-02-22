@@ -20,6 +20,7 @@ services:
       context: ./enforce/
       dockerfile: Dockerfile.deb11
 
+  # Evaluate all libraries by generating loading policies
   generate-all:
     image: pickleball-generate-evaluation
     build:
@@ -32,9 +33,41 @@ services:
     command: /pickleball/evaluation/policy-evaluation.sh
 
   #
-  # Evaluate enforcement
+  # Evaluate enforcement of loading policies
   #
-  
+  enforce-all:
+    image: pickleball-enforce
+    command: ["echo", "All model load tests completed"]
+    depends_on:
+      enforce-conch:
+        condition: service_completed_successfully
+      enforce-flagembedding:
+        condition: service_completed_successfully
+      enforce-flair:
+        condition: service_completed_successfully
+      enforce-gliner:
+        condition: service_completed_successfully
+      enforce-huggingsound:
+        condition: service_completed_successfully
+      enforce-languagebind:
+        condition: service_completed_successfully
+      enforce-melotts:
+        condition: service_completed_successfully
+      enforce-parrot:
+        condition: service_completed_successfully
+      enforce-pyannote:
+        condition: service_completed_successfully
+      enforce-pysentimiento:
+        condition: service_completed_successfully
+      enforce-sentencetransformers:
+        condition: service_completed_successfully
+      enforce-superimage:
+        condition: service_completed_successfully
+      enforce-tner:
+        condition: service_completed_successfully
+      enforce-tweetnlp:
+        condition: service_completed_successfully
+
   enforce-conch:
     image: pickleball-enforce-conch
     build:
@@ -247,36 +280,3 @@ services:
       - ./evaluation/policies/tweetnlp.json:/root/policies/policy.json
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp --library tweetnlp
-
-  enforce-all:
-    image: pickleball-enforce
-    command: ["echo", "All model load tests completed"]
-    depends_on:
-      enforce-conch:
-        condition: service_completed_successfully
-      enforce-flagembedding:
-        condition: service_completed_successfully
-      enforce-flair:
-        condition: service_completed_successfully
-      enforce-gliner:
-        condition: service_completed_successfully
-      enforce-huggingsound:
-        condition: service_completed_successfully
-      enforce-languagebind:
-        condition: service_completed_successfully
-      enforce-melotts:
-        condition: service_completed_successfully
-      enforce-parrot:
-        condition: service_completed_successfully
-      enforce-pyannote:
-        condition: service_completed_successfully
-      enforce-pysentimiento:
-        condition: service_completed_successfully
-      enforce-sentencetransformers:
-        condition: service_completed_successfully
-      enforce-superimage:
-        condition: service_completed_successfully
-      enforce-tner:
-        condition: service_completed_successfully
-      enforce-tweetnlp:
-        condition: service_completed_successfully

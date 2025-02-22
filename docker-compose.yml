@@ -171,6 +171,22 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio --library pyannote
 
+  # FIXME: not currently loading with PickleBall loader
+  enforce-pysentimiento:
+    image: pickleball-enforce-pysentimiento
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.pysentimiento
+    depends_on:
+      - generate-all
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/pysentimiento.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento --library pysentimiento
+
   enforce-all:
     image: pickleball-enforce
     command: ["echo", "All model load tests completed"]
@@ -192,4 +208,6 @@ services:
       enforce-parrot:
         condition: service_completed_successfully
       enforce-pyannote:
+        condition: service_completed_successfully
+      enforce-pysentimiento:
         condition: service_completed_successfully

@@ -24,6 +24,7 @@ LIBRARIES = [
     'melotts',
     'parrot',
     'pyannote',
+    'pysentimiento',
 ]
 
 

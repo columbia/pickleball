@@ -1,0 +1,4 @@
+FROM pickleball-enforce:latest
+
+# TODO: pin version
+RUN pip3 install pysentimiento

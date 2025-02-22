@@ -18,6 +18,7 @@ LATEX_TABLE_HEADER = """
 
 \\begin{table*}[t!]
 \\centering
+\\resizebox{\\textwidth}{!}{%
 \\begin{tabular}{l | r r r | r r r r | r r r}
     \\toprule
     & \\multicolumn{3}{c|}{\\textbf{Imports}} & \\multicolumn{3}{c|}{\\textbf{Invocations}} & \\multicolumn{2}{c}{\\textbf{Loading}} \\\\
@@ -28,6 +29,7 @@ LATEX_TABLE_HEADER = """
 LATEX_TABLE_FOOTER = """
     \\bottomrule
 \\end{tabular}
+} % \\resizebox
 \\end{table*}
 
 \\end{document}
@@ -58,7 +60,7 @@ def generate_table(results: Dict[str, Library]) -> str:
         row = (f"{library} & {values.globals_observed} & {values.globals_allowed} & "
                f"{values.globals_missed} & {values.reduces_observed} & {values.reduces_allowed} & "
                f"{values.reduces_missed} & {values.models_loaded} & {values.models_attempted} "
-               f"{(rate * 100):.0%}\\%) \\\\\n")
+               f"({rate * 100:.1f}\\%) \\\\\n")
         latex_table += row
 
     total_attempted = sum([library.models_attempted for library in results.values()])
@@ -67,7 +69,7 @@ def generate_table(results: Dict[str, Library]) -> str:
 
     latex_table += "\\midrule\n"
 
-    latex_table += f"\\textbf{{Total}} & & & & & & & {total_loaded} & {total_attempted} ({(total_rate * 100):.1%}\\%) \\\\\n"
+    latex_table += f"\\textbf{{Total}} & & & & & & & {total_loaded} & {total_attempted} ({total_rate * 100:.1f}\\%) \\\\\n"
     latex_table += "\\bottomrule\n"
 
     latex_table += LATEX_TABLE_FOOTER
@@ -150,9 +152,11 @@ if __name__ == "__main__":
             last_line = read_last_line(result_file)
             # Assumes that the last line of the file contains "success:total"
             assert len(last_line.split(":")) == 2
-            success, total = last_line.split(":")
+            success_str, total_str = last_line.split(":")
+            success = int(success_str)
+            total = int(total_str)
 
-            assert library in library_results.keys()
+            assert library_name in libraries.keys()
 
             libraries[library_name].models_attempted = total
             libraries[library_name].models_loaded = success

@@ -187,6 +187,22 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento --library pysentimiento
 
+  # FIXME: Debug failures
+  enforce-sentencetransformers:
+    image: pickleball-enforce-sentencetransformers
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.sentencetransformers
+    depends_on:
+      - generate-all
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/sentencetransformers.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers --library sentencetransformers
+
   enforce-all:
     image: pickleball-enforce
     command: ["echo", "All model load tests completed"]
@@ -210,4 +226,6 @@ services:
       enforce-pyannote:
         condition: service_completed_successfully
       enforce-pysentimiento:
+        condition: service_completed_successfully
+      enforce-sentencetransformers:
         condition: service_completed_successfully

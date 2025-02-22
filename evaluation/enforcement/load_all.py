@@ -25,6 +25,7 @@ LIBRARIES = [
     'parrot',
     'pyannote',
     'pysentimiento',
+    'sentencetransformers',
 ]
 
 

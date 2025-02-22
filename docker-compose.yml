@@ -141,6 +141,21 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo --library melotts
 
+  enforce-parrot:
+    image: pickleball-enforce-parrot
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.parrot
+    depends_on:
+      - generate-all
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/parrot.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot --library parrot
+
   enforce-all:
     image: pickleball-enforce
     command: ["echo", "All model load tests completed"]

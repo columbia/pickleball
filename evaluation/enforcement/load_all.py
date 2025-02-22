@@ -12,6 +12,7 @@ from pklballcheck import verify_loader_was_used
 
 DIR = Path(__file__).parent
 ALLOWED_PATTERNS = ("*.bin", "*.pkl", "*pt", "*pth")
+EXCLUDED_FILES = ['training_args.bin']
 
 LIBRARIES = [
     'conch',
@@ -21,6 +22,7 @@ LIBRARIES = [
     'huggingsound',
     'languagebind',
     'melotts',
+    'parrot',
 ]
 
 
@@ -38,7 +40,9 @@ def get_model_paths(
     for pattern in model_patterns:
         glob_pattern = str(directory / Path('**') / Path(pattern))
         models += glob.glob(glob_pattern, recursive=True)
-    return models
+    
+    # Remove any matched files that should not be included
+    return [model for model in models if Path(model).name not in EXCLUDED_FILES]
 
 
 if __name__ == "__main__":

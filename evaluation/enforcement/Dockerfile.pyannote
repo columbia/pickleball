@@ -1,0 +1,7 @@
+FROM pickleball-enforce:latest
+
+RUN pip3 install pyannote.audio
+RUN pip install https://github.com/marianne-m/brouhaha-vad/archive/main.zip
+# Downgrade numpy so that new version does not break pyannote compatibility
+RUN pip uninstall numpy --yes
+RUN pip install numpy==1.26.3

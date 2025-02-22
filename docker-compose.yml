@@ -156,6 +156,21 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot --library parrot
 
+  enforce-pyannote:
+    image: pickleball-enforce-pyannote
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.pyannote
+    depends_on:
+      - generate-all
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/pyannote.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio --library pyannote
+
   enforce-all:
     image: pickleball-enforce
     command: ["echo", "All model load tests completed"]
@@ -173,4 +188,8 @@ services:
       enforce-languagebind:
         condition: service_completed_successfully
       enforce-melotts:
+        condition: service_completed_successfully
+      enforce-parrot:
+        condition: service_completed_successfully
+      enforce-pyannote:
         condition: service_completed_successfully

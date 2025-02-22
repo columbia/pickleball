@@ -12,7 +12,7 @@ from pklballcheck import verify_loader_was_used
 
 DIR = Path(__file__).parent
 ALLOWED_PATTERNS = ("*.bin", "*.pkl", "*pt", "*pth")
-EXCLUDED_FILES = ['training_args.bin']
+EXCLUDED_FILES = ['training_args.bin', 'tfevents.bin']
 
 LIBRARIES = [
     'conch',
@@ -23,6 +23,7 @@ LIBRARIES = [
     'languagebind',
     'melotts',
     'parrot',
+    'pyannote',
 ]
 
 

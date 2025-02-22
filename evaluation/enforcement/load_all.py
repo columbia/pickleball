@@ -8,6 +8,8 @@ import glob
 import importlib
 import logging
 
+from pklballcheck import verify_loader_was_used
+
 DIR = Path(__file__).parent
 ALLOWED_PATTERNS = ("*.bin", "*.pkl", "*pt", "*pth")
 
@@ -17,6 +19,8 @@ LIBRARIES = [
     'flagembedding',
     'gliner',
     'huggingsound',
+    'languagebind',
+    'melotts',
 ]
 
 
@@ -98,7 +102,7 @@ if __name__ == "__main__":
     successes = 0
     for model_path in model_paths:
         logging.debug(f"loading model: {model_path}")
-        if loading_module.load_model(model_path):
+        if loading_module.load_model(model_path) and verify_loader_was_used():
             logging.info(f"{model_path} SUCCESS")
             successes += 1
         else:

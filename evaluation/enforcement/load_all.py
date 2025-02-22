@@ -16,6 +16,7 @@ LIBRARIES = [
     'flair',
     'flagembedding',
     'gliner',
+    'huggingsound',
 ]
 
 

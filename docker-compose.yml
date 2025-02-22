@@ -31,7 +31,9 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/policy-evaluation.sh
 
+  #
   # Evaluate enforcement
+  #
   
   enforce-conch:
     image: pickleball-enforce-conch
@@ -93,6 +95,21 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner --library gliner
 
+  # TODO: Determine why this is fetching models remotely
+  enforce-huggingsound:
+    image: pickleball-enforce-huggingsound
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.huggingsound
+    depends_on:
+      - generate-all
+      - pickleball-enforce-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/huggingsound.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound --library huggingsound
 
   enforce-all:
     image: pickleball-enforce
@@ -105,5 +122,7 @@ services:
       enforce-flair:
         condition: service_completed_successfully
       enforce-gliner:
+        condition: service_completed_successfully
+      enforce-huggingsound:
         condition: service_completed_successfully
 

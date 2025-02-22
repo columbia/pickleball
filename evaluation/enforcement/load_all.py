@@ -26,6 +26,7 @@ LIBRARIES = [
     'pyannote',
     'pysentimiento',
     'sentencetransformers',
+    'superimage',
 ]
 
 

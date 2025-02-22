@@ -31,6 +31,23 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/policy-evaluation.sh
 
+  # Evaluate enforcement
+  
+  enforce-conch:
+    image: pickleball-enforce-conch
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.conch
+    depends_on:
+      - generate-all
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/conch.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch --library conch
+
   enforce-flair:
     image: pickleball-enforce-flair
     build:
@@ -44,6 +61,15 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/flair.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/try_all.py --all-model-path /models/benign/flair
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair --library flair
+
+  enforce-all:
+    image: pickleball-enforce
+    command: ["echo", "All services completed"]
+    depends_on:
+      enforce-conch:
+        condition: service_completed_successfully
+      enforce-flair:
+        condition: service_completed_successfully
 
 

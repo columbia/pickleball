@@ -1,16 +1,18 @@
 import torch
 import argparse
+from pathlib import Path
 from PIL import Image
 from conch.open_clip_custom import create_model_from_pretrained
 from pklballcheck import verify_loader_was_used
 
+DIR = Path(__file__).parent
 
 def load_model(model_path, test="") -> bool:
     try:
 
         model, preprocess = create_model_from_pretrained("conch_ViT-B-16", checkpoint_path=model_path)
 
-        image = Image.open("test.jpg")
+        image = Image.open(str(DIR / "conch-test" / "test.jpg"))
         image = preprocess(image).unsqueeze(0)
         with torch.inference_mode():
             image_embs = model.encode_image(image, proj_contrast=False, normalize=False)

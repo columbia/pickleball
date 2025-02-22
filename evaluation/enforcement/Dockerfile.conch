@@ -1,0 +1,7 @@
+FROM pickleball-enforce:latest
+
+# Relative path from evaluations directory
+COPY ./libraries/CONCH/ /CONCH
+
+WORKDIR /CONCH
+RUN pip install --upgrade pip && pip install -e .

@@ -102,10 +102,14 @@ if __name__ == "__main__":
     successes = 0
     for model_path in model_paths:
         logging.debug(f"loading model: {model_path}")
-        if loading_module.load_model(model_path) and verify_loader_was_used():
+        is_success = loading_module.load_model(model_path)
+        loader_used = verify_loader_was_used()
+        if is_success and loader_used:
             logging.info(f"{model_path} SUCCESS")
             successes += 1
         else:
+            if not loader_used:
+                logging.error(f'ERROR: pickleball loader was not used')
             logging.info(f"{model_path} FAILURE")
 
     logging.info(f"{successes}:{len(model_paths)}")

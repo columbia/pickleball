@@ -81,7 +81,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/conch.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch --library conch
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch/CoCa --library conch
 
   enforce-flagembedding:
     image: pickleball-enforce-flagembedding
@@ -96,7 +96,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/flagembedding.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding --library flagembedding
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding/FlagModel --library flagembedding
 
   enforce-flair:
     image: pickleball-enforce-flair
@@ -111,7 +111,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/flair.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair --library flair
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair
 
   enforce-gliner:
     image: pickleball-enforce-gliner
@@ -126,7 +126,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/gliner.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner --library gliner
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner
 
   # TODO: Determine why this is fetching models remotely
   enforce-huggingsound:
@@ -142,7 +142,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/huggingsound.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound --library huggingsound
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound
 
   enforce-languagebind:
     image: pickleball-enforce-languagebind
@@ -157,7 +157,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/languagebind.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind --library languagebind
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind
 
   enforce-melotts:
     image: pickleball-enforce-melotts
@@ -172,7 +172,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/melotts.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo --library melotts
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo/TTS --library melotts
 
   enforce-parrot:
     image: pickleball-enforce-parrot
@@ -187,7 +187,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/parrot.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot --library parrot
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot
 
   enforce-pyannote:
     image: pickleball-enforce-pyannote
@@ -202,9 +202,8 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/pyannote.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio --library pyannote
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote
 
-  # FIXME: not currently loading with PickleBall loader
   enforce-pysentimiento:
     image: pickleball-enforce-pysentimiento
     build:
@@ -218,9 +217,8 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/pysentimiento.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento --library pysentimiento
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento
 
-  # FIXME: Debug failures
   enforce-sentencetransformers:
     image: pickleball-enforce-sentencetransformers
     build:
@@ -234,7 +232,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/sentencetransformers.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers --library sentencetransformers
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns "pytorch_model.bin"
 
   enforce-superimage:
     image: pickleball-enforce-superimage
@@ -249,7 +247,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/superimage.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image-mod --library superimage
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "pytorch_model_2x.pt"
 
   enforce-tner:
     image: pickleball-enforce-tner
@@ -264,7 +262,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/tner.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner --library tner
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner
 
   enforce-tweetnlp:
     image: pickleball-enforce-tweetnlp
@@ -279,4 +277,4 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/tweetnlp.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp --library tweetnlp
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp

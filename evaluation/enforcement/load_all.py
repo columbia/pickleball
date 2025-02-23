@@ -11,7 +11,7 @@ import logging
 from pklballcheck import verify_loader_was_used
 
 DIR = Path(__file__).parent
-ALLOWED_PATTERNS = ("*.bin", "*.pkl", "*pt", "*pth")
+ALLOWED_PATTERNS = ["*.bin", "*.pkl", "*pt", "*pth"]
 EXCLUDED_FILES = ['training_args.bin', 'tfevents.bin']
 
 LIBRARIES = [
@@ -33,8 +33,9 @@ LIBRARIES = [
 
 
 def get_model_paths(
-    directory: Path, model_patterns: Tuple[str] = ALLOWED_PATTERNS
-) -> List[str]:
+        directory: Path, 
+        model_patterns: List[str] = ALLOWED_PATTERNS
+    ) -> List[str]:
     """Given a directory that contains downloaded models and a list of file
     extensions of models, return a list of paths to all models found in the
     directory.
@@ -45,7 +46,7 @@ def get_model_paths(
     models = []
     for pattern in model_patterns:
         glob_pattern = str(directory / Path('**') / Path(pattern))
-        models += glob.glob(glob_pattern, recursive=True)
+        models += glob.glob(glob_pattern)
     
     # Remove any matched files that should not be included
     return [model for model in models if Path(model).name not in EXCLUDED_FILES]
@@ -64,6 +65,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--library",
         help="name of library to evaluate"
+    )
+    parser.add_argument(
+        "--allowed-patterns",
+        nargs="*",
+        help=("A list of patterns indicating a model of this type. If none "
+              "are provided, defaults to ALLOWED_PATTERNS"),
+        default=ALLOWED_PATTERNS,
     )
 
     args = parser.parse_args()
@@ -106,7 +114,7 @@ if __name__ == "__main__":
     logging.info(f"models: {args.all_model_path}")
     logging.info(f"load function: {module_name}.load_model")
 
-    model_paths = get_model_paths(args.all_model_path)
+    model_paths = get_model_paths(args.all_model_path, model_patterns=args.allowed_patterns)
     logging.info(f"# models: {len(model_paths)}")
 
     successes = 0

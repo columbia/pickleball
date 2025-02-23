@@ -1,6 +1,6 @@
 FROM debian:12
 
-RUN apt update && apt install -y python3-dev python3-pip python3-venv vim
+RUN apt update && apt install -y python3-dev python3-pip python3-venv vim git-lfs
 
 WORKDIR /root
 

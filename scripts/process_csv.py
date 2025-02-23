@@ -204,8 +204,8 @@ def main():
 
     filtered_repos = {k: v for k, v in repos.items()
                       if k not in failures}
-
     repos = filtered_repos
+
     violations = violating_models(repos)
     violating_repositories = violating_repos(violations)
     pytorch_violations = violating_models_pytorch(violations)
@@ -213,8 +213,7 @@ def main():
     print(f'total repositories: {total_repositories(repos)}')
     print(f'failed analyses: {len(failures)} ({(len(failures) / total_repositories(repos)) * 100:.2f}%)')
     print(f'violating repositories: {len(violating_repositories)} ({(len(violating_repositories) / total_repositories(repos)) * 100:.2f}%)')
-    print(failures)
-
+    print(violating_repositories)
 
     print(f'total models: {total_models(repos)}')
     print(f'violating models: {len(violations)} ({(len(violations) / total_models(repos)) * 100:.2f}%)')

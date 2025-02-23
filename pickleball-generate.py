@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
 import argparse
-import pathlib
 import subprocess
 from typing import Optional
+from pathlib import Path
 
-ANALYZE_PATH = pathlib.Path('analyze/analyze.sc')
+ANALYZE_PATH = Path('analyze/analyze.sc')
 
 def get_available_mem() -> int:
     """
@@ -33,19 +33,19 @@ def gb_to_kb(mem_gb: int) -> int:
     return mem_gb << 20
 
 def create_cpg(
-        library_path: pathlib.Path,
-        joern_path: pathlib.Path,
+        library_path: Path,
+        joern_path: Path,
         system_mem: int,
-        out_path: pathlib.Path = pathlib.Path('/tmp/out.cpg'),
+        out_path: Path = Path('/tmp/out.cpg'),
         ignore_paths: str = '',
         use_cpg: bool = False,
         dry_run: bool = False):
     """Generate a CPG (or AST) of the ML library code."""
 
     if use_cpg:
-        joern_utility = joern_path / pathlib.Path('joern-parse')
+        joern_utility = joern_path / Path('joern-parse')
     else:
-        joern_utility = joern_path / pathlib.Path('joern-cli/target/universal/stage/pysrc2cpg')
+        joern_utility = joern_path / Path('joern-cli/target/universal/stage/pysrc2cpg')
 
     cmd = [
         str(joern_utility),
@@ -67,20 +67,20 @@ def create_cpg(
 
 
 def generate_policy(
-        cpg_path: pathlib.Path,
+        cpg_path: Path,
         model_class: str,
         system_mem: int,
-        analyzer_path: pathlib.Path,
-        joern_path: pathlib.Path,
-        cache_path: pathlib.Path,
-        policy_path: pathlib.Path,
-        log_path: Optional[pathlib.Path] = None,
+        analyzer_path: Path,
+        joern_path: Path,
+        cache_path: Path,
+        policy_path: Path,
+        log_path: Optional[Path] = None,
         verbose: bool = False,
         dry_run: bool = False):
     """Generate a model loading policy for the ML library."""
 
     cmd = [
-        str(joern_path / pathlib.Path("joern")),
+        str(joern_path / Path("joern")),
         f'--script', str(analyzer_path),
         f'-J-Xmx{system_mem}k',
         f'--param', f'inputPath={str(cpg_path)}',
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     # Required arguments
     parser.add_argument(
             '--library-path',
-            type=pathlib.Path,
+            type=Path,
             required=True,
             help='Path to the ML library source code directory')
 
@@ -136,14 +136,14 @@ if __name__ == '__main__':
 
     parser.add_argument(
             '--joern-path',
-            type=pathlib.Path,
-            default=pathlib.Path('/joern'),
+            type=Path,
+            default=Path('/joern'),
             help='Path to the joern directory')
 
     parser.add_argument(
             '--policy-path',
-            type=pathlib.Path,
-            default=pathlib.Path('policy.json'),
+            type=Path,
+            default=Path('policy.json'),
             help='Output policy path')
 
     parser.add_argument(
@@ -155,8 +155,8 @@ if __name__ == '__main__':
 
     parser.add_argument(
             '--cache-path',
-            type=pathlib.Path,
-            default=pathlib.Path(''),
+            type=Path,
+            default=Path(''),
             help="Path to cache directory")
 
     parser.add_argument(
@@ -183,7 +183,7 @@ if __name__ == '__main__':
         available_mem = get_available_mem()
 
     # TODO: Configure
-    intermediate_cpg = pathlib.Path('/tmp/out.cpg')
+    intermediate_cpg = Path('/tmp/out.cpg')
 
     create_cpg(
         args.library_path,

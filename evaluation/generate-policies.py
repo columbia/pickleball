@@ -88,24 +88,30 @@ def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int
     # TODO: Timing
     print('-------------------------------------------------------------')
     print(f'Generating CPG and policy for: {librarycfg.name}')
-    pickleball.create_cpg(
-        librarycfg.library_path,
-        systemcfg.joern_dir,
-        systemmem,
-        out_path=librarycfg.cpg_path,
-        ignore_paths=librarycfg.ignore_paths,
-        use_cpg=librarycfg.cpg_mode
-    )
-    pickleball.generate_policy(
-        librarycfg.cpg_path,
-        librarycfg.model_class,
-        systemmem,
-        systemcfg.analyzer_path,
-        systemcfg.joern_dir,
-        systemcfg.cache_dir,
-        librarycfg.policy_path,
-        log_path=librarycfg.log_path
-    )
+    try:
+        pickleball.create_cpg(
+            librarycfg.library_path,
+            systemcfg.joern_dir,
+            systemmem,
+            out_path=librarycfg.cpg_path,
+            ignore_paths=librarycfg.ignore_paths,
+            use_cpg=librarycfg.cpg_mode
+        )
+        pickleball.generate_policy(
+            librarycfg.cpg_path,
+            librarycfg.model_class,
+            systemmem,
+            systemcfg.analyzer_path,
+            systemcfg.joern_dir,
+            systemcfg.cache_dir,
+            librarycfg.policy_path,
+            log_path=librarycfg.log_path
+        )
+    except pickleball.JoernRuntimeError as err:
+        print(err)
+        if librarycfg.cpg_mode:
+            print("retrying...")
+            generate_policy(librarycfg, systemcfg, mem)
 
 
 def print_libraries(librarycfs: List[LibraryConfig]) -> None:
@@ -145,10 +151,11 @@ if __name__ == '__main__':
 
     if args.fixtures:
         # Filter the libraries specified in the fixture list
-        evaluation_libraries = [library.name in args.fixtures for library in librarycfgs]
+        evaluation_libraries: List[LibraryConfig] = [library for library in librarycfgs
+                                                     if library.name in args.fixtures]
     else:
         # Otherwise, use all libraries in the manifest
-        evaluation_libraries = librarycfgs
+        evaluation_libraries: List[LibraryConfig] = librarycfgs
 
     if systemcfg.mem == 0:
         systemmem = pickleball.get_available_mem()

@@ -7,6 +7,10 @@ from pathlib import Path
 
 ANALYZE_PATH = Path('analyze/analyze.sc')
 
+class JoernRuntimeError(Exception):
+    """Error raised when Joern crashes"""
+
+
 def get_available_mem() -> int:
     """
     Determine available system RAM in KiB.
@@ -100,15 +104,8 @@ def generate_policy(
 
     result = subprocess.run(cmd, capture_output=True, text=True)
 
-    # TODO: determine if CPG is AST or full CPG, and only handle crashes if
-    # full CPG
-    while result.returncode != 0:
-        print(f'Joern exit ({result.returncode}): {result.stderr}')
-        print(f'retrying...')
-        print(f'Analyzing CPG:\n'
-              f'{" ".join(cmd)}')
-
-        result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise JoernRuntimeError(f"Joern exit ({result.returncode}): {result.stderr}")
 
     if log_path:
         log_path.write_text(result.stdout)

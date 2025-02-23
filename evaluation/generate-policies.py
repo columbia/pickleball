@@ -26,7 +26,7 @@ OUTPATH = pathlib.Path('/tmp')
 
 @dataclass
 class SystemConfig(object):
-    mem: str
+    mem: int
     libraries_dir: pathlib.Path
     cache_dir: pathlib.Path
     policies_dir: pathlib.Path
@@ -51,7 +51,7 @@ def parse_manifest(manifest: pathlib.Path) -> Tuple[SystemConfig, List[LibraryCo
     with open(manifest, 'rb') as manifest_file:
         config = tomllib.load(manifest_file)
 
-    mem = config['system']['mem']
+    mem: int = config['system']['mem']
     libraries_dir = pathlib.Path(config['system']['libraries_dir'])
     cache_dir = pathlib.Path(config['system']['cache_dir'])
     policies_dir = pathlib.Path(config['system']['policies_dir'])
@@ -150,8 +150,10 @@ if __name__ == '__main__':
         # Otherwise, use all libraries in the manifest
         evaluation_libraries = librarycfgs
 
-    if systemcfg.mem == 'all':
+    if systemcfg.mem == 0:
         systemmem = pickleball.get_available_mem()
+    else:
+        systemmem = pickleball.gb_to_kb(systemcfg.mem)
 
     for librarycfg in evaluation_libraries:
         generate_policy(librarycfg, systemcfg, systemmem)

@@ -25,6 +25,13 @@ def get_available_mem() -> int:
     # TODO: Check assumption or handle error.
     return int(mem_total)
 
+
+def gb_to_kb(mem_gb: int) -> int:
+    """
+    Convert value in GiB to KiB.
+    """
+    return mem_gb << 20
+
 def create_cpg(
         library_path: pathlib.Path,
         joern_path: pathlib.Path,
@@ -98,6 +105,9 @@ def generate_policy(
     while result.returncode != 0:
         print(f'Joern exit ({result.returncode}): {result.stderr}')
         print(f'retrying...')
+        print(f'Analyzing CPG:\n'
+              f'{" ".join(cmd)}')
+
         result = subprocess.run(cmd, capture_output=True, text=True)
 
     if log_path:
@@ -153,16 +163,25 @@ if __name__ == '__main__':
             '--use-cpg',
             action='store_true',
             help=('Enable CPG mode (enhanced over AST). Note: this may '
-                  'introduce instability in Joern analysis.'))
+                  'introduce instability in Joern analysis'))
 
     parser.add_argument(
             '--dry-run',
             action='store_true',
-            help=('Dry run without executing the Joern utility.'))
+            help=('Dry run without executing the Joern utility'))
 
+    parser.add_argument(
+            '--mem',
+            type=int,
+            help=('Amount of system RAM (in GB) to use. If not provided, '
+                  'defaults to using all available memory.'))
     args = parser.parse_args()
 
-    available_mem = get_available_mem()
+    if args.mem:
+        available_mem = gb_to_kb(args.mem)
+    else:
+        available_mem = get_available_mem()
+
     # TODO: Configure
     intermediate_cpg = pathlib.Path('/tmp/out.cpg')
 

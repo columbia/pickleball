@@ -2,7 +2,7 @@ title = "PickleBall Evaluation Manifest"
 
 [system]
 
-mem = "all"
+mem = 32    # Max system RAM to use, in GB. Set to 0 to use all available RAM.
 libraries_dir = "libraries/"
 cache_dir = "cache/"
 policies_dir = "policies/"

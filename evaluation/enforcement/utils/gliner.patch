@@ -1,0 +1,26 @@
+--- a/pickle-venv/lib/python3.11/site-packages/gliner/model.py	2025-02-24 01:30:26.169956283 +0000
++++ b/pickle-venv/lib/python3.11/site-packages/gliner/model.py	2025-02-24 01:35:53.426647360 +0000
+@@ -6,6 +6,8 @@ from tqdm import tqdm
+ from pathlib import Path
+ from typing import Dict, List, Optional, Union
+
++from pklballcheck import _pklball_accessed_attrs
++
+ import onnxruntime as ort
+ import torch
+ from torch.utils.data import DataLoader
+@@ -99,6 +101,14 @@ class GLiNER(nn.Module, PyTorchModelHubM
+         # to suppress an AttributeError when training
+         self._keys_to_ignore_on_save = None
+
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+     def forward(self, *args, **kwargs):
+         """Wrapper function for the model's forward pass."""
+         output = self.model(*args, **kwargs)

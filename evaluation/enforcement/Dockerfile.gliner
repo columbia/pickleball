@@ -2,3 +2,7 @@ FROM pickleball-enforce:latest
 
 RUN pip3 install gliner
 #TODO: pin version
+
+# Relative to evaluation/enforceement
+COPY ./utils/gliner.patch /root/gliner.patch
+RUN cd /root && patch -p1 < /root/gliner.patch

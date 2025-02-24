@@ -1,20 +1,20 @@
---- sequence_tagger_model.py	2025-02-24 00:10:21.624127967 +0000
-+++ /root/pickle-venv/lib/python3.11/site-packages/flair/models/sequence_tagger_model.py	2025-02-24 00:24:40.516597012 +0000
+--- a/pickle-venv/lib/python3.11/site-packages/flair/models/sequence_tagger_model.py	2025-02-24 00:10:21.624127967 +0000
++++ b/pickle-venv/lib/python3.11/site-packages/flair/models/sequence_tagger_model.py	2025-02-24 00:24:40.516597012 +0000
 @@ -17,6 +17,7 @@ from flair.file_utils import cached_path
  from flair.models.sequence_tagger_utils.crf import CRF
  from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
  from flair.training_utils import store_embeddings
 +from pklballcheck import _pklball_accessed_attrs
- 
+
  log = logging.getLogger("flair")
- 
+
 @@ -209,6 +210,15 @@ class SequenceTagger(flair.nn.Classifier
- 
+
          self.to(flair.device)
- 
+
 +    def __getattribute__(self, name):
 +        _pklball_accessed_attrs.add(name)
-+        return super().__getattribute__(name)
++        return object.__getattribute__(name)
 +
 +    def __getattr__(self, name):
 +        _pklball_accessed_attrs.add(name)

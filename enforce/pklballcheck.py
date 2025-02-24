@@ -1,5 +1,6 @@
 import inspect
 from pathlib import Path
+from pickle import StubObject
 
 PLACEHOLDER_FILE_PATH = Path("/root/.loader_used")
 
@@ -29,4 +30,13 @@ def collect_attr_stats(_pklball_instance):
     for attr in _pklball_accessed_attrs:
         if attr not in allattrs:
             raise Exception(f"{attr} was accessed but not found in all attrs")
-    print(f"{100.0*len(_pklball_accessed_attrs)/len(allattrs)}%")
+
+    total_stubs = 0
+    for attrname in dir(_pklball_instance):
+        attr = getattr(_pklball_instance, attrname)
+        if isinstance(attr, StubObject):
+            print(f"Stub object found for {attrname}: {attr}")
+            total_stubs += 1
+
+    print(f"Total attrs accessed compared to all attrs: {100.0*len(_pklball_accessed_attrs)/len(allattrs)}%")
+    print(f"Total stub objects compared to all attrs: {100.0*total_stubs/len(allattrs)}%")

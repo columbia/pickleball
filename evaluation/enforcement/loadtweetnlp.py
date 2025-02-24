@@ -2,10 +2,10 @@ import argparse
 from pathlib import Path
 
 import tweetnlp
-
-from pklballcheck import verify_loader_was_used
+from pklballcheck import collect_attr_stats, verify_loader_was_used
 
 TEST = "The happy man has been eating at the diner"
+
 
 def load_model(model_path, test=TEST) -> bool:
 
@@ -24,7 +24,8 @@ def load_model(model_path, test=TEST) -> bool:
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         return True
-
+    finally:
+        collect_attr_stats(model)
 
 
 if __name__ == "__main__":
@@ -39,13 +40,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--test",
         default="The happy man has been eating at the diner",
-        help=(
-            "test input for the model (string type)"
-        ),
+        help=("test input for the model (string type)"),
     )
     args = parser.parse_args()
     if not args.model_path:
-        print("ERROR: need to specify model path (directory containing pytorch_model.bin and config) and test input")
+        print(
+            "ERROR: need to specify model path (directory containing pytorch_model.bin and config) and test input"
+        )
         exit(1)
 
     load_model(args.model_path, args.test)

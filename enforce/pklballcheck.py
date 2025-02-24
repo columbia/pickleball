@@ -27,10 +27,13 @@ def collect_attr_stats(_pklball_instance):
     print(
         f"Accessed attributes for {_pklball_instance.__class__}: {_pklball_accessed_attrs} ({len(_pklball_accessed_attrs)})"
     )
-    for attr in _pklball_accessed_attrs:
+    for attr in _pklball_accessed_attrs.copy():
         if attr not in allattrs:
-            raise Exception(f"{attr} was accessed but not found in all attrs")
-    print(f"Total attrs accessed compared to all attrs: {100.0*len(_pklball_accessed_attrs)/len(allattrs)}%")
+            # raise Exception(f"{attr} was accessed but not found in all attrs")
+            _pklball_accessed_attrs.remove(attr)
+    print(
+        f"Total attrs accessed compared to all attrs: {100.0*len(_pklball_accessed_attrs)/len(allattrs)}%"
+    )
 
     # XXX This needs to run after the previous part has finished because we need
     # access every attribute in the instance
@@ -41,4 +44,6 @@ def collect_attr_stats(_pklball_instance):
             print(f"Stub object found for {attrname}: {attr}")
             total_stubs += 1
 
-    print(f"Total stub objects compared to all attrs: {100.0*total_stubs/len(allattrs)}%")
+    print(
+        f"Total stub objects compared to all attrs: {100.0*total_stubs/len(allattrs)}%"
+    )

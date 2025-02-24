@@ -108,7 +108,7 @@ if __name__ == "__main__":
     with open(args.manifest, "rb") as manifest_file:
         config = tomllib.load(manifest_file)
 
-    policies_dir = pathlib.Path(config["system"]["policies_dir"])
+    policies_dir = args.manifest.parent / pathlib.Path(config["system"]["policies_dir"])
 
     # For each library in the manifest, compare the baseline policy to the
     # generated policy. Collect values.
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
             last_line = read_last_line(result_file)
             # Assumes that the last line of the file contains "success:total"
-            assert len(last_line.split(":")) == 2
+            assert len(last_line.split(":")) == 2, f"{result_file}"
             success_str, total_str = last_line.split(":")
             success = int(success_str)
             total = int(total_str)

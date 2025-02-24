@@ -22,10 +22,7 @@ services:
 
   # Evaluate all libraries by generating loading policies
   generate-all:
-    image: pickleball-generate-evaluation
-    build:
-      context: ./evaluation/
-      dockerfile: Dockerfile.evaluate
+    image: pickleball-generate
     depends_on:
       - pickleball-generate
     volumes:

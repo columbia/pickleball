@@ -22,9 +22,9 @@ def collect_attr_stats(_pklball_instance):
         f"{_pklball_instance.__class__} defined at {inspect.getfile(_pklball_instance.__class__)}"
     )
     allattrs = set(dir(_pklball_instance))
-    print(f"Attributes for {_pklball_instance}: {allattrs} ({len(allattrs)})")
+    print(f"Attributes for {_pklball_instance.__class__}: {allattrs} ({len(allattrs)})")
     print(
-        f"Accessed attributes for {_pklball_instance}: {_pklball_accessed_attrs} ({len(_pklball_accessed_attrs)})"
+        f"Accessed attributes for {_pklball_instance.__class__}: {_pklball_accessed_attrs} ({len(_pklball_accessed_attrs)})"
     )
     for attr in _pklball_accessed_attrs:
         if attr not in allattrs:

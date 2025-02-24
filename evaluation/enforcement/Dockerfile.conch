@@ -7,4 +7,4 @@ WORKDIR /CONCH
 RUN pip install --upgrade pip && pip install -e .
 
 COPY ./enforcement/utils/conch.patch /root/conch.patch
-RUN cd /root && patch -p1 < /root/conch.patch
+RUN cd / && patch -p1 < /root/conch.patch

@@ -1,0 +1,25 @@
+--- coca_model.py	2025-02-24 14:51:00.665297845 +0000
++++ /CONCH/conch/open_clip_custom/coca_model.py	2025-02-24 14:51:49.398037076 +0000
+@@ -6,6 +6,7 @@ from torch.nn import functional as F
+ import numpy as np
+ from dataclasses import dataclass
+ import logging
++from pklballcheck import _pklball_accessed_attrs
+ 
+ from .transformer import MultimodalTransformer
+ 
+@@ -191,6 +192,14 @@ class CoCa(nn.Module):
+         self.embed_dim = embed_dim
+         self.embed_dim_caption = embed_dim_caption
+     
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+     def lock_temperature(self):
+         self.logit_scale.requires_grad = False
+ 

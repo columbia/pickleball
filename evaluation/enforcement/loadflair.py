@@ -8,7 +8,7 @@ from pklballcheck import collect_attr_stats, verify_loader_was_used
 def load_model(model_path, test="") -> bool:
     try:
         tagger = SequenceTagger.load(model_path)
-        # sentence = Sentence(test)
+        sentence = Sentence(test)
 
         tagger.predict(sentence)
 

@@ -1,0 +1,24 @@
+--- a/pickle-venv/lib/python3.11/site-packages/parrot/parrot.py	2025-02-24 03:15:30.812944008 +0000
++++ b/pickle-venv/lib/python3.11/site-packages/parrot/parrot.py	2025-02-24 03:15:05.212583014 +0000
+@@ -1,3 +1,5 @@
++from pklballcheck import _pklball_accessed_attrs
++
+ class Parrot():
+   
+   def __init__(self, model_tag="prithivida/parrot_paraphraser_on_T5", use_gpu=False):
+@@ -13,6 +15,15 @@ class Parrot():
+     self.fluency_score  = Fluency()
+     self.diversity_score= Diversity()
+ 
++  def __getattribute__(self, name):
++      _pklball_accessed_attrs.add(name)
++      return object.__getattribute__(self, name)
++  
++  def __getattr__(self, name):
++      _pklball_accessed_attrs.add(name)
++      return super().__getattr__(name)
++
++
+   def rephrase(self, input_phrase, use_gpu=False, diversity_ranker="levenshtein", do_diverse=False, style=1, max_length=32, adequacy_threshold = 0.90, fluency_threshold = 0.90):
+       if use_gpu:
+         device= "cuda:0"

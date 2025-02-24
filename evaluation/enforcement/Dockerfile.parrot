@@ -6,4 +6,6 @@ RUN pip install git+https://github.com/PrithivirajDamodaran/Parrot_Paraphraser.g
 
 # Path relative to evaluation directory
 COPY ./enforcement/utils/modeling_utils.patch /root/modeling_utils.patch
+COPY ./enforcement/utils/parrot.patch /root/parrot.patch
 RUN cd /root && patch -p1 < /root/modeling_utils.patch
+RUN cd /root && patch -p1 < /root/parrot.patch

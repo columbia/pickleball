@@ -14,7 +14,7 @@
 
 +    def __getattribute__(self, name):
 +        _pklball_accessed_attrs.add(name)
-+        return object.__getattribute__(name)
++        return object.__getattribute__(self, name)
 +
 +    def __getattr__(self, name):
 +        _pklball_accessed_attrs.add(name)

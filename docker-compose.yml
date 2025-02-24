@@ -116,8 +116,8 @@ services:
   enforce-gliner:
     image: pickleball-enforce-gliner
     build:
-      context: ./evaluation/enforcement/
-      dockerfile: Dockerfile.gliner
+      context: ./evaluation/
+      dockerfile: enforcement/Dockerfile.gliner
     depends_on:
       - generate-all
       - pickleball-enforce

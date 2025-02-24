@@ -1,12 +1,12 @@
 import argparse
 from pathlib import Path
 
-from pyannote.audio import Model, Inference
+from pklballcheck import collect_attr_stats, verify_loader_was_used
+from pyannote.audio import Inference, Model
 from pyannote.core import Segment
 
-from pklballcheck import verify_loader_was_used
-
 DIR = Path(__file__).parent
+
 
 def load_model(model_path) -> bool:
 
@@ -23,6 +23,8 @@ def load_model(model_path) -> bool:
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         return True
+    finally:
+        collect_attr_stats(model)
 
 
 if __name__ == "__main__":
@@ -30,13 +32,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model-path",
-        help=(
-            "Path to the model (pytorch_model.bin)."
-        ),
+        help=("Path to the model (pytorch_model.bin)."),
     )
     args = parser.parse_args()
     if not args.model_path:
-        print("ERROR: need to specify model path (pytorch_model.bin file). No test is needed.")
+        print(
+            "ERROR: need to specify model path (pytorch_model.bin file). No test is needed."
+        )
         exit(1)
 
     load_model(args.model_path)

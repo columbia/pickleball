@@ -5,3 +5,6 @@ RUN pip install https://github.com/marianne-m/brouhaha-vad/archive/main.zip
 # Downgrade numpy so that new version does not break pyannote compatibility
 RUN pip uninstall numpy --yes
 RUN pip install numpy==1.26.3
+
+COPY ./enforcement/utils/pyannote.patch /root/pyannote.patch
+RUN cd /root && patch -p1 < /root/pyannote.patch

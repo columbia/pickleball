@@ -1,5 +1,5 @@
---- model.py	2025-02-24 01:54:44.110994986 +0000
-+++ /root/pickle-venv/lib/python3.9/site-packages/huggingsound/speech_recognition/model.py	2025-02-24 01:55:14.955442102 +0000
+--- a/pickle-venv/lib/python3.9/site-packages/huggingsound/speech_recognition/model.py	2025-02-24 01:54:44.110994986 +0000
++++ b/pickle-venv/lib/python3.9/site-packages/huggingsound/speech_recognition/model.py	2025-02-24 01:55:14.955442102 +0000
 @@ -17,6 +17,7 @@ from huggingsound.normalizer import Defa
  from huggingsound.trainer import TrainingArguments, ModelArguments, finetune_ctc
  from huggingsound.speech_recognition.decoder import Decoder, GreedyDecoder

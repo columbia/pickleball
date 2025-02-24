@@ -1,0 +1,24 @@
+--- modeling_audio.py	2025-02-24 02:08:06.914613031 +0000
++++ /languagebind/languagebind/audio/modeling_audio.py	2025-02-24 02:07:25.138009253 +0000
+@@ -1,5 +1,6 @@
+ import math
+ from typing import Optional, Tuple, Union
++from pklballcheck import _pklball_accessed_attrs
+ 
+ import torch
+ from einops import rearrange
+@@ -772,6 +773,14 @@ class LanguageBindAudio(CLIPPreTrainedMo
+         self.convert_to_lora()
+         self.resize_pos(self.vision_model.embeddings, vision_config)
+ 
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+     def convert_to_lora(self):
+         if self.lora_r == 0:
+             return

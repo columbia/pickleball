@@ -13,11 +13,11 @@ from languagebind import (
     LanguageBindVideoProcessor,
     LanguageBindVideoTokenizer,
 )
+from pklballcheck import collect_attr_stats, verify_loader_was_used
 
-from pklballcheck import verify_loader_was_used
 
 def load_model(model_path) -> bool:
-   
+
     model_dir = Path(model_path).parent
 
     if "AUDIO" in model_dir.name.upper():
@@ -27,7 +27,9 @@ def load_model(model_path) -> bool:
     elif "VIDEO" in model_dir.name.upper():
         return load_video_model(str(model_dir))
     else:
-        raise RuntimeError("Unable to identify LanguageBind model type (AUDIO, IMAGE, VIDEO)")
+        raise RuntimeError(
+            "Unable to identify LanguageBind model type (AUDIO, IMAGE, VIDEO)"
+        )
 
 
 def load_audio_model(model_path) -> bool:
@@ -51,6 +53,8 @@ def load_audio_model(model_path) -> bool:
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         return True
+    finally:
+        collect_attr_stats(model)
 
 
 def load_image_model(model_path):
@@ -74,6 +78,8 @@ def load_image_model(model_path):
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         return True
+    finally:
+        collect_attr_stats(model)
 
 
 def load_video_model(model_path) -> bool:
@@ -97,6 +103,8 @@ def load_video_model(model_path) -> bool:
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         return True
+    finally:
+        collect_attr_stats(model)
 
 
 if __name__ == "__main__":

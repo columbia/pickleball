@@ -9,3 +9,7 @@ WORKDIR /languagebind
 RUN pip install -r requirements.txt
 RUN pip install torch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1
 ENV PYTHONPATH=/languagebind
+
+# Relative to evaluation
+COPY ./enforcement/utils/flair.patch /root/flair.patch
+RUN cd /root && patch -p1 < /root/flair.patch

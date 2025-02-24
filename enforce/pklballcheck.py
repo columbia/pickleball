@@ -1,6 +1,9 @@
+import inspect
 from pathlib import Path
 
 PLACEHOLDER_FILE_PATH = Path("/root/.loader_used")
+
+_pklball_accessed_attrs = set()
 
 
 def verify_loader_was_used() -> bool:
@@ -15,18 +18,15 @@ def verify_loader_was_used() -> bool:
 def collect_attr_stats(_pklball_instance):
 
     print()
-    # allattrs = set(
-    #     list(_pklball_instance.__dict__.keys())
-    #     + list(_pklball_instance.__class__.__dict__.keys())
-    # )
-    allattrs = set(dir(_pklball_instance))
-    allattrs.remove("_pklball_accessed_attrs")
-    print(f"Attributes for {_pklball_instance}: {allattrs} ({len(allattrs)})")
-    accessed_attrs = _pklball_instance._pklball_accessed_attrs
     print(
-        f"Accessed attributes for {_pklball_instance}: {accessed_attrs} ({len(accessed_attrs)})"
+        f"{_pklball_instance.__class__} defined at {inspect.getfile(_pklball_instance.__class__)}"
     )
-    for attr in accessed_attrs:
+    allattrs = set(dir(_pklball_instance))
+    print(f"Attributes for {_pklball_instance}: {allattrs} ({len(allattrs)})")
+    print(
+        f"Accessed attributes for {_pklball_instance}: {_pklball_accessed_attrs} ({len(_pklball_accessed_attrs)})"
+    )
+    for attr in _pklball_accessed_attrs:
         if attr not in allattrs:
             raise Exception(f"{attr} was accessed but not found in all attrs")
-    print(f"{100.0*len(accessed_attrs)/len(allattrs)}%")
+    print(f"{100.0*len(_pklball_accessed_attrs)/len(allattrs)}%")

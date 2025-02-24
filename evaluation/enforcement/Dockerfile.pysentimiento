@@ -2,3 +2,6 @@ FROM pickleball-enforce:latest
 
 # TODO: pin version
 RUN pip3 install pysentimiento
+
+COPY ./enforcement/utils/pysentimiento.patch /root/pysentimiento.patch
+RUN cd /root && patch -p1 < /root/pysentimiento.patch

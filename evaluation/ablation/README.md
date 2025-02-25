@@ -3,6 +3,12 @@
 We measure the effectiveness of policy generation and lazy loading features in
 isolation.
 
+## Ablation Experiment 0:
+
+What is the effectiveness of lazy loading with empty policies?
+
+Set up as with Ablation Experiment 2, but use empty policy (`empty.json`).
+
 ## Ablation Experiment 1:
 
 What is the effectiveness of policy generation without lazy loading?

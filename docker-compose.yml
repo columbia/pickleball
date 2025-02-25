@@ -11,13 +11,13 @@ services:
   pickleball-enforce:
     image: pickleball-enforce
     build:
-      context: ./enforce/
+      context: enforce
       dockerfile: Dockerfile
 
   pickleball-enforce-deb11:
     image: pickleball-enforce-deb11
     build:
-      context: ./enforce/
+      context: enforce
       dockerfile: Dockerfile.deb11
 
   # Evaluate all libraries by generating loading policies
@@ -71,7 +71,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.conch
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -86,7 +85,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.flagembedding
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -101,7 +99,6 @@ services:
       context: ./evaluation/enforcement/
       dockerfile: Dockerfile.flair
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -116,7 +113,6 @@ services:
       context: ./evaluation/
       dockerfile: enforcement/Dockerfile.gliner
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -132,7 +128,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.huggingsound
     depends_on:
-      - generate-all
       - pickleball-enforce-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -147,7 +142,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.languagebind
     depends_on:
-      - generate-all
       - pickleball-enforce-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -162,7 +156,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.melotts
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -177,7 +170,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.parrot
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -192,7 +184,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.pyannote
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -207,7 +198,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.pysentimiento
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -222,7 +212,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.sentencetransformers
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -237,7 +226,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.superimage
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -252,7 +240,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.tner
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
@@ -267,7 +254,6 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.tweetnlp
     depends_on:
-      - generate-all
       - pickleball-enforce-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign

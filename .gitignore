@@ -8,6 +8,7 @@ evaluation/models/*
 
 .venv/
 .pickleball-venv/
+.env
 
 __pycache__/
 .bsp/

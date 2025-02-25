@@ -4,14 +4,13 @@ from pathlib import Path
 from pklballcheck import collect_attr_stats, verify_loader_was_used
 from sentence_transformers import SentenceTransformer
 
-TEST = ("The happy man has been eating at the diner",)
-
+TEST = "The happy man has been eating at the diner"
 
 def load_model(model_path, test=TEST) -> bool:
 
     model_dir = Path(model_path).parent
+    sentences = [test]
     try:
-        sentences = [test]
 
         model = SentenceTransformer(str(model_dir), trust_remote_code=True)
         embeddings = model.encode(sentences)
@@ -48,4 +47,7 @@ if __name__ == "__main__":
         exit(1)
 
     load_model(args.model_path, args.test)
-    verify_loader_was_used()
+    if verify_loader_was_used():
+        print("Loader used")
+    else:
+        print("Error: loader not used")

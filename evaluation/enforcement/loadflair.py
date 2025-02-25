@@ -12,8 +12,6 @@ def load_model(model_path, test="") -> bool:
 
         tagger.predict(sentence)
 
-        # print(sentence)
-
         # for entity in sentence.get_spans('np'):
         #    print(entity)
     except Exception as e:

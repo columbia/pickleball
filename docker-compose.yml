@@ -11,21 +11,18 @@ services:
   pickleball-enforce:
     image: pickleball-enforce
     build:
-      context: ./enforce/
+      context: enforce
       dockerfile: Dockerfile
 
   pickleball-enforce-deb11:
     image: pickleball-enforce-deb11
     build:
-      context: ./enforce/
+      context: enforce
       dockerfile: Dockerfile.deb11
 
   # Evaluate all libraries by generating loading policies
   generate-all:
-    image: pickleball-generate-evaluation
-    build:
-      context: ./evaluation/
-      dockerfile: Dockerfile.evaluate
+    image: pickleball-generate
     depends_on:
       - pickleball-generate
     volumes:
@@ -74,14 +71,13 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.conch
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/conch.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch --library conch
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch/CoCa --library conch
 
   enforce-flagembedding:
     image: pickleball-enforce-flagembedding
@@ -89,14 +85,13 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.flagembedding
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/flagembedding.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding --library flagembedding
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding/FlagModel --library flagembedding
 
   enforce-flair:
     image: pickleball-enforce-flair
@@ -104,29 +99,27 @@ services:
       context: ./evaluation/enforcement/
       dockerfile: Dockerfile.flair
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/flair.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair --library flair
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair
 
   enforce-gliner:
     image: pickleball-enforce-gliner
     build:
-      context: ./evaluation/enforcement/
-      dockerfile: Dockerfile.gliner
+      context: ./evaluation/
+      dockerfile: enforcement/Dockerfile.gliner
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/gliner.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner --library gliner
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner
 
   # TODO: Determine why this is fetching models remotely
   enforce-huggingsound:
@@ -135,14 +128,13 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.huggingsound
     depends_on:
-      - generate-all
       - pickleball-enforce-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/huggingsound.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound --library huggingsound
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound
 
   enforce-languagebind:
     image: pickleball-enforce-languagebind
@@ -150,14 +142,13 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.languagebind
     depends_on:
-      - generate-all
       - pickleball-enforce-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/languagebind.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind --library languagebind
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind
 
   enforce-melotts:
     image: pickleball-enforce-melotts
@@ -165,14 +156,13 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.melotts
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/melotts.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo --library melotts
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo/TTS --library melotts
 
   enforce-parrot:
     image: pickleball-enforce-parrot
@@ -180,14 +170,13 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.parrot
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/parrot.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot --library parrot
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot
 
   enforce-pyannote:
     image: pickleball-enforce-pyannote
@@ -195,46 +184,41 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.pyannote
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/pyannote.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio --library pyannote
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote
 
-  # FIXME: not currently loading with PickleBall loader
   enforce-pysentimiento:
     image: pickleball-enforce-pysentimiento
     build:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.pysentimiento
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/pysentimiento.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento --library pysentimiento
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento
 
-  # FIXME: Debug failures
   enforce-sentencetransformers:
     image: pickleball-enforce-sentencetransformers
     build:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.sentencetransformers
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/sentencetransformers.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers --library sentencetransformers
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns "pytorch_model.bin"
 
   enforce-superimage:
     image: pickleball-enforce-superimage
@@ -242,14 +226,13 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.superimage
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/superimage.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image-mod --library superimage
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "pytorch_model_2x.pt"
 
   enforce-tner:
     image: pickleball-enforce-tner
@@ -257,14 +240,13 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.tner
     depends_on:
-      - generate-all
       - pickleball-enforce
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/tner.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner --library tner
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner
 
   enforce-tweetnlp:
     image: pickleball-enforce-tweetnlp
@@ -272,11 +254,10 @@ services:
       context: ./evaluation/
       dockerfile: ./enforcement/Dockerfile.tweetnlp
     depends_on:
-      - generate-all
       - pickleball-enforce-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/tweetnlp.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp --library tweetnlp
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp

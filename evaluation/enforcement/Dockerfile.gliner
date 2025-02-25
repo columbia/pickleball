@@ -1,8 +1,17 @@
 FROM pickleball-enforce:latest
 
-RUN pip3 install gliner
-#TODO: pin version
+RUN apt-get update && apt-get install git -y
 
-# Relative to evaluation/enforceement
-COPY ./utils/gliner.patch /root/gliner.patch
-RUN cd /root && patch -p1 < /root/gliner.patch
+WORKDIR /
+RUN git clone https://github.com/urchade/GLiNER.git && cd GLiNER && git checkout 1169120
+# Patch GLiNER to explicitly disable WOUnpickler (for evaluation purposes)
+COPY ./enforcement/utils/gliner.patch /root/gliner.patch
+WORKDIR /GLiNER
+RUN git apply /root/gliner.patch
+RUN pip install -e .
+
+RUN pip install transformers==4.46.1
+
+# Path relative to the evaluation directory
+COPY ./enforcement/utils/modeling_utils.patch /root/modeling_utils.patch
+RUN cd /root && patch -p1 < /root/modeling_utils.patch

@@ -56,14 +56,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--test",
         default="The happy man has been eating at the diner",
-        help=("test input for the model (current string type)"),
+        help=(
+            "test input for the model (current string type)"
+        ),
     )
     args = parser.parse_args()
     if not args.model_path:
-        print(
-            "ERROR: need to specify model path (pytorch_model.bin file) and (optional) test input"
-        )
+        print("ERROR: need to specify model directory (pytorch_model.bin) and (optional) test input")
         exit(1)
 
     load_model(args.model_path, args.test)
-    verify_loader_was_used()
+    if verify_loader_was_used():
+        print("Loader used")
+    else:
+        print("Error: Loader not used")

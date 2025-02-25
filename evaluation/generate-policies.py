@@ -26,7 +26,7 @@ OUTPATH = pathlib.Path('/tmp')
 
 @dataclass
 class SystemConfig(object):
-    mem: str
+    mem: int
     libraries_dir: pathlib.Path
     cache_dir: pathlib.Path
     policies_dir: pathlib.Path
@@ -51,7 +51,7 @@ def parse_manifest(manifest: pathlib.Path) -> Tuple[SystemConfig, List[LibraryCo
     with open(manifest, 'rb') as manifest_file:
         config = tomllib.load(manifest_file)
 
-    mem = config['system']['mem']
+    mem: int = config['system']['mem']
     libraries_dir = pathlib.Path(config['system']['libraries_dir'])
     cache_dir = pathlib.Path(config['system']['cache_dir'])
     policies_dir = pathlib.Path(config['system']['policies_dir'])
@@ -88,24 +88,30 @@ def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int
     # TODO: Timing
     print('-------------------------------------------------------------')
     print(f'Generating CPG and policy for: {librarycfg.name}')
-    pickleball.create_cpg(
-        librarycfg.library_path,
-        systemcfg.joern_dir,
-        systemmem,
-        out_path=librarycfg.cpg_path,
-        ignore_paths=librarycfg.ignore_paths,
-        use_cpg=librarycfg.cpg_mode
-    )
-    pickleball.generate_policy(
-        librarycfg.cpg_path,
-        librarycfg.model_class,
-        systemmem,
-        systemcfg.analyzer_path,
-        systemcfg.joern_dir,
-        systemcfg.cache_dir,
-        librarycfg.policy_path,
-        log_path=librarycfg.log_path
-    )
+    try:
+        pickleball.create_cpg(
+            librarycfg.library_path,
+            systemcfg.joern_dir,
+            systemmem,
+            out_path=librarycfg.cpg_path,
+            ignore_paths=librarycfg.ignore_paths,
+            use_cpg=librarycfg.cpg_mode
+        )
+        pickleball.generate_policy(
+            librarycfg.cpg_path,
+            librarycfg.model_class,
+            systemmem,
+            systemcfg.analyzer_path,
+            systemcfg.joern_dir,
+            systemcfg.cache_dir,
+            librarycfg.policy_path,
+            log_path=librarycfg.log_path
+        )
+    except pickleball.JoernRuntimeError as err:
+        print(err)
+        if librarycfg.cpg_mode:
+            print("retrying...")
+            generate_policy(librarycfg, systemcfg, mem)
 
 
 def print_libraries(librarycfs: List[LibraryConfig]) -> None:
@@ -145,13 +151,16 @@ if __name__ == '__main__':
 
     if args.fixtures:
         # Filter the libraries specified in the fixture list
-        evaluation_libraries = [library.name in args.fixtures for library in librarycfgs]
+        evaluation_libraries: List[LibraryConfig] = [library for library in librarycfgs
+                                                     if library.name in args.fixtures]
     else:
         # Otherwise, use all libraries in the manifest
-        evaluation_libraries = librarycfgs
+        evaluation_libraries: List[LibraryConfig] = librarycfgs
 
-    if systemcfg.mem == 'all':
+    if systemcfg.mem == 0:
         systemmem = pickleball.get_available_mem()
+    else:
+        systemmem = pickleball.gb_to_kb(systemcfg.mem)
 
     for librarycfg in evaluation_libraries:
         generate_policy(librarycfg, systemcfg, systemmem)

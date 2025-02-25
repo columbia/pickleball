@@ -36,7 +36,7 @@ LATEX_TABLE_FOOTER = """
 """
 
 
-@dataclass
+@dataclass(slots=True)
 class Library(object):
     name: str
     globals_observed: int = 0
@@ -57,9 +57,9 @@ def generate_table(results: Dict[str, Library]) -> str:
 
         rate = values.models_loaded / values.models_attempted if values.models_attempted != 0 else 0
 
-        row = (f"{library} & {values.globals_observed} & {values.globals_allowed} & "
-               f"{values.globals_missed} & {values.reduces_observed} & {values.reduces_allowed} & "
-               f"{values.reduces_missed} & {values.models_loaded} & {values.models_attempted} "
+        row = (f"{library} & {values.globals_observed} & {values.globals_inferred} & "
+               f"{values.globals_missed} & {values.reduces_observed} & {values.reduces_inferred} & "
+               f"{values.reduces_missed} & {values.models_attempted} & {values.models_loaded} "
                f"({rate * 100:.1f}\\%) \\\\\n")
         latex_table += row
 
@@ -69,7 +69,7 @@ def generate_table(results: Dict[str, Library]) -> str:
 
     latex_table += "\\midrule\n"
 
-    latex_table += f"\\textbf{{Total}} & & & & & & & {total_loaded} & {total_attempted} ({total_rate * 100:.1f}\\%) \\\\\n"
+    latex_table += f"\\textbf{{Total}} & & & & & & & {total_attempted} & {total_loaded} ({total_rate * 100:.1f}\\%) \\\\\n"
     latex_table += "\\bottomrule\n"
 
     latex_table += LATEX_TABLE_FOOTER
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     with open(args.manifest, "rb") as manifest_file:
         config = tomllib.load(manifest_file)
 
-    policies_dir = pathlib.Path(config["system"]["policies_dir"])
+    policies_dir = args.manifest.parent / pathlib.Path(config["system"]["policies_dir"])
 
     # For each library in the manifest, compare the baseline policy to the
     # generated policy. Collect values.
@@ -129,13 +129,13 @@ if __name__ == "__main__":
         library.reduces_observed = (reduce_values["in_baseline_not_inferred"] +
                                     reduce_values["in_both"])
 
-        library.globals_allowed = (global_values["in_inferred_not_baseline"] +
+        library.globals_inferred = (global_values["in_inferred_not_baseline"] +
                                    global_values["in_both"])
-        library.reduces_allowed = (reduce_values["in_inferred_not_baseline"] +
+        library.reduces_inferred = (reduce_values["in_inferred_not_baseline"] +
                                    reduce_values["in_both"])
 
-        library.globals_stubbed = global_values["in_baseline_not_inferred"]
-        library.reduces_stubbed = reduce_values["in_baseline_not_inferred"]
+        library.globals_missed = global_values["in_baseline_not_inferred"]
+        library.reduces_missed = reduce_values["in_baseline_not_inferred"]
 
         libraries[library_name] = library
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
             last_line = read_last_line(result_file)
             # Assumes that the last line of the file contains "success:total"
-            assert len(last_line.split(":")) == 2
+            assert len(last_line.split(":")) == 2, f"{result_file}"
             success_str, total_str = last_line.split(":")
             success = int(success_str)
             total = int(total_str)

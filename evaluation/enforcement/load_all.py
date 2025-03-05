@@ -33,7 +33,7 @@ LIBRARIES = [
 
 
 def get_model_paths(
-        directory: Path, 
+        directory: Path,
         model_patterns: List[str] = ALLOWED_PATTERNS
     ) -> List[str]:
     """Given a directory that contains downloaded models and a list of file
@@ -47,7 +47,7 @@ def get_model_paths(
     for pattern in model_patterns:
         glob_pattern = str(directory / Path('**') / Path(pattern))
         models += glob.glob(glob_pattern)
-    
+
     # Remove any matched files that should not be included
     return [model for model in models if Path(model).name not in EXCLUDED_FILES]
 
@@ -72,6 +72,14 @@ if __name__ == "__main__":
         help=("A list of patterns indicating a model of this type. If none "
               "are provided, defaults to ALLOWED_PATTERNS"),
         default=ALLOWED_PATTERNS,
+    )
+    parser.add_argument(
+        "--disable-verify",
+        help=("Disable verification that pickleball loader was used to load "
+              "libraries. If not set, a test fails if the loader is not "
+              "detected. This can be set if the loader is used without "
+              "pickleball."),
+        action="store_true"
     )
 
     args = parser.parse_args()
@@ -121,7 +129,7 @@ if __name__ == "__main__":
     for model_path in model_paths:
         logging.debug(f"loading model: {model_path}")
         is_success = loading_module.load_model(model_path)
-        loader_used = verify_loader_was_used()
+        loader_used = verify_loader_was_used() or args.disable_verify
         if is_success and loader_used:
             logging.info(f"{model_path} SUCCESS")
             successes += 1

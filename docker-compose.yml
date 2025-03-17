@@ -322,7 +322,6 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/conch.json:/root/policies/policy.json
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch/CoCa --library conch --disable-verify
 
@@ -332,41 +331,38 @@ services:
       context: ./evaluation/
       dockerfile: ./control/Dockerfile.flagembedding
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/flagembedding.json:/root/policies/policy.json
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding/FlagModel --library flagembedding --disable-verify
 
   control-load-flair:
-    image: compose-load-flair
+    image: control-load-flair
     build:
       context: evaluation
       dockerfile: control/Dockerfile.flair
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/flair.json:/root/policies/policy.json
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair --disable-verify
 
   control-load-gliner:
-    image: pickleball-enforce-gliner
+    image: control-load-gliner
     build:
       context: ./evaluation/
-      dockerfile: enforcement/Dockerfile.gliner
+      dockerfile: control/Dockerfile.gliner
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/gliner.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner --disable-verify
 
   # TODO: Determine why this is fetching models remotely
   control-load-huggingsound:

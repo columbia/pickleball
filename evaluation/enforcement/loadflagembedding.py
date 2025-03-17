@@ -1,18 +1,27 @@
 import argparse
+import traceback
 from pathlib import Path
 
 from FlagEmbedding import FlagModel
 from pklballcheck import collect_attr_stats
 
+TEST = "The happy man has been eating at the diner"
+sentences_1 = ["样例数据-1", "样例数据-2"]
+sentences_2 = ["样例数据-3", "样例数据-4"]
 
-def load_model(model_path, test="") -> bool:
+
+def load_model(model_path, test=TEST) -> bool:
+    model = None
     try:
         # the model_path is a path to the pytorch.bin file,
         # but the model loading API expects the model directory.
         model_dir = str(Path(model_path).parent)
 
         sentences = [test]
-        model = FlagModel(model_dir)
+        #model = FlagModel(model_dir)
+        model = FlagModel(model_dir,
+                  query_instruction_for_retrieval="为这个句子生成表示以用于检索相关文章：")
+                  #use_fp16=True)
 
         embeddings = model.encode(sentences)
         print(embeddings)
@@ -22,6 +31,8 @@ def load_model(model_path, test="") -> bool:
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m: {e}")
         print(e)
+        stack_trace = traceback.format_exc()
+        print(stack_trace)
         return False
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")

@@ -4,8 +4,9 @@ from flair.data import Sentence
 from flair.models import SequenceTagger
 from pklballcheck import collect_attr_stats, verify_loader_was_used
 
+TEST = "I love berlin."
 
-def load_model(model_path, test="") -> bool:
+def load_model(model_path, test=TEST) -> bool:
     try:
         tagger = SequenceTagger.load(model_path)
         sentence = Sentence(test)

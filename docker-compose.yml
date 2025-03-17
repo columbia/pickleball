@@ -366,18 +366,17 @@ services:
 
   # TODO: Determine why this is fetching models remotely
   control-load-huggingsound:
-    image: pickleball-enforce-huggingsound
+    image: control-load-huggingsound
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.huggingsound
+      dockerfile: control/Dockerfile.huggingsound
     depends_on:
-      - pickleball-enforce-deb11
+      - control-load-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/huggingsound.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound --disable-verify
 
   control-load-languagebind:
     image: pickleball-enforce-languagebind

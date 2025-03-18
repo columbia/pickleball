@@ -1,0 +1,12 @@
+FROM control-load:latest
+
+# TODO: Errors when loading models, need to be resolved
+# Model was trained with pyannote.audio 0.0.1, yours is 3.2.0. Bad things might happen unless you revert pyannote.audio to 0.x.
+# Model was trained with torch 1.8.1+cu102, yours is 2.5.0+cpu. Bad things might happen unless you revert torch to 1.x.
+# /root/pickle-venv/lib/python3.11/site-packages/pytorch_lightning/core/saving.py:195: Found keys that are not in the model state dict but in the checkpoint: ['loss_func.W']
+
+RUN pip3 install pyannote.audio
+RUN pip install https://github.com/marianne-m/brouhaha-vad/archive/main.zip
+# Downgrade numpy so that new version does not break pyannote compatibility
+RUN pip uninstall numpy --yes
+RUN pip install numpy==1.26.3

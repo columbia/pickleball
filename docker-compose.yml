@@ -379,127 +379,118 @@ services:
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound --disable-verify
 
   control-load-languagebind:
-    image: pickleball-enforce-languagebind
+    image: control-load-languagebind
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.languagebind
+      dockerfile: control/Dockerfile.languagebind
     depends_on:
-      - pickleball-enforce-deb11
+      - control-load-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/languagebind.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind --disable-verify
 
   control-load-melotts:
-    image: pickleball-enforce-melotts
+    image: control-load-melotts
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.melotts
+      dockerfile: control/Dockerfile.melotts
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/melotts.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo/TTS --library melotts
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo/TTS --library melotts --disable-verify
 
   control-load-parrot:
-    image: pickleball-enforce-parrot
+    image: control-load-parrot
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.parrot
+      dockerfile: control/Dockerfile.parrot
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/parrot.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot --disable-verify
 
   control-load-pyannote:
-    image: pickleball-enforce-pyannote
+    image: control-load-pyannote
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.pyannote
+      dockerfile: control/Dockerfile.pyannote
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/pyannote.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --disable-verify
 
   control-load-pysentimiento:
-    image: pickleball-enforce-pysentimiento
+    image: control-load-pysentimiento
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.pysentimiento
+      dockerfile: control/Dockerfile.pysentimiento
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/pysentimiento.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento --disable-verify
 
   control-load-sentencetransformers:
-    image: pickleball-enforce-sentencetransformers
+    image: control-load-sentencetransformers
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.sentencetransformers
+      dockerfile: control/Dockerfile.sentencetransformers
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/sentencetransformers.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns "pytorch_model.bin"
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns "pytorch_model.bin" --disable-verify
 
   control-load-superimage:
-    image: pickleball-enforce-superimage
+    image: control-load-superimage
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.superimage
+      dockerfile: control/Dockerfile.superimage
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/superimage.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "pytorch_model_2x.pt"
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "pytorch_model_2x.pt" --disable-verify
 
   control-load-tner:
-    image: pickleball-enforce-tner
+    image: control-load-tner
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.tner
+      dockerfile: control/Dockerfile.tner
     depends_on:
-      - pickleball-enforce
+      - control-load
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/tner.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner --disable-verify
 
   control-load-tweetnlp:
-    image: pickleball-enforce-tweetnlp
+    image: control-load-tweetnlp
     build:
       context: ./evaluation/
-      dockerfile: ./enforcement/Dockerfile.tweetnlp
+      dockerfile: control/Dockerfile.tweetnlp
     depends_on:
-      - pickleball-enforce-deb11
+      - control-load-deb11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/tweetnlp.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp --disable-verify

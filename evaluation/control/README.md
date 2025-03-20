@@ -33,6 +33,10 @@ Expect that all models (100%) are loaded.
 
 ## Ensure all libraries are vulnerable
 
-We provide a "malicious" model that uses disallowed (by the PyTorch Weights Only
-Unpickler) callables to write a file to the file system. If this model is
-successfully loaded and used to write the file, then the library is vulnerable.
+We provide a "malicious" model for each library that uses disallowed (by the
+PyTorch Weights Only Unpickler) callables to write a file to the file system.
+If this model is writes the file (even if the model is not fully loaded), then
+the library is vulnerable.
+
+Each malicious model writes a file named `.hacked-<library>`. For example, the
+malicious model for `flair` writes a file named `.hacked-flair`.

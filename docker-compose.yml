@@ -495,6 +495,21 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp --disable-verify
 
+  control-load-yolov5:
+    image: control-load-yolov5
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.yolov5
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/bash
+    #command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/ --library yolov5 --disable-verify
+
+
   check-vulnerable-all:
     image: control-load
     command: ["echo", "All model load tests completed"]

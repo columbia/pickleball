@@ -155,4 +155,32 @@ zpbrent_reuse_reuse_vocab.pkl
 ours_call_system.pkl
 ```
 
+## Steps to add library to evaluation
 
+1. Ensure that library can load benign example model and is vulnerable to a
+   backdoor model.
+
+    a. Download example benign model.
+    b. Create a backdoor version of the example model.
+    c. Create a loading program that interfaces with the enforce/load_all.py
+       script.
+    f. Add library to manifest and fetch.sh
+    d. Run the loading program to ensure that the benign model is loaded
+       correctly, and the backdoor model executes its malicious payload. (add
+       to docker compose task)
+
+2. Evaluate PickleBall on the library and model
+
+    e. Create an initial baseline trace from the benign model
+        - fickling --trace
+        - parsetrace
+        - modelunion
+    g. Use PickleBall to generate a policy for the library (add to manifest)
+        - first do dry run to find Joern name for model class (manual)
+    h. Create enforce container for the model
+    i. Enforce model loading
+        - create service in docker-compose.yml
+
+3. Identify more benign models and reproduce result with full baseline trace
+
+4. Evaluate malicious models on policy

@@ -2,6 +2,7 @@
 
 import argparse
 import subprocess
+import sys
 from typing import Optional
 from pathlib import Path
 
@@ -172,6 +173,10 @@ if __name__ == '__main__':
             type=int,
             help=('Amount of system RAM (in GB) to use. If not provided, '
                   'defaults to using all available memory.'))
+    parser.add_argument(
+            '--only-cpg',
+            action='store_true',
+            help=('Only create CPG and return (without also generating policy)'))
     args = parser.parse_args()
 
     if args.mem:
@@ -189,6 +194,9 @@ if __name__ == '__main__':
         out_path=intermediate_cpg,
         ignore_paths=args.ignore_paths,
         dry_run=args.dry_run)
+
+    if args.only_cpg:
+        sys.exit(0)
 
     generate_policy(
         intermediate_cpg,

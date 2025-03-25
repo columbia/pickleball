@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Fetch libraries
-# TODO
-
 cd /pickleball/evaluation/
 
 # Fetch all evaluation libraries

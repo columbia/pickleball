@@ -97,3 +97,9 @@ use_cpg = true
 library_path = "tweetnlp/tweetnlp"
 model_class = "text_classification/model.py:<module>.Classifier"
 use_cpg = false
+
+[libraries.yolov5]
+
+library_path = "yolov5/yolov5"
+model_class = "models/yolo.py:<module>.BaseModel"
+use_cpg = false

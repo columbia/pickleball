@@ -14,7 +14,7 @@ clone_and_checkout() {
     local apply_diff=$4
 
     cd "$LIBRARIES_DIR" || return 1
-    git clone --recurse-submodules "$repo_url" || return 1
+    git clone --recurse-submodules "$repo_url" "$repo_name" || return 1
     cd "$repo_name" || return 1
     git checkout "$commit_hash" || return 1
 
@@ -44,3 +44,4 @@ clone_and_checkout https://github.com/UKPLab/sentence-transformers.git sentence-
 clone_and_checkout https://github.com/eugenesiow/super-image.git super-image 50439ea
 clone_and_checkout https://github.com/asahi417/tner.git tner 7730a62
 clone_and_checkout https://github.com/cardiffnlp/tweetnlp.git tweetnlp 68b08c8
+clone_and_checkout https://github.com/fcakyon/yolov5-pip.git yolov5 40a1887

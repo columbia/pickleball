@@ -29,6 +29,7 @@ LIBRARIES = [
     'superimage',
     'tner',
     'tweetnlp',
+    'yolov5'
 ]
 
 

@@ -1,9 +1,10 @@
 import argparse
 from pathlib import Path
 
-from pklballcheck import collect_attr_stats, verify_loader_was_used
 from pyannote.audio import Inference, Model
 from pyannote.core import Segment
+
+from pklballcheck import collect_attr_stats, verify_loader_was_used
 
 DIR = Path(__file__).parent
 
@@ -22,9 +23,8 @@ def load_model(model_path) -> bool:
         return False
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        return True
-    finally:
         collect_attr_stats(model)
+        return True
 
 
 if __name__ == "__main__":

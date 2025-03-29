@@ -23,9 +23,8 @@ def load_model(model_path, test=TEST) -> bool:
         return False
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        return True
-    finally:
         collect_attr_stats(model)
+        return True
 
 
 if __name__ == "__main__":

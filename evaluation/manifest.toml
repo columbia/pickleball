@@ -106,6 +106,6 @@ use_cpg = false
 
 [libraries.yolov11]
 
-library_path = ""
-model_class = ""
+library_path = "yolov11/ultralytics"
+model_class = "engine/model.py:<module>.Model"
 use_cpg = false

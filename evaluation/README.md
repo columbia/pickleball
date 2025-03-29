@@ -157,6 +157,16 @@ ours_call_system.pkl
 
 ## Steps to add library to evaluation
 
+1. Does the library APIs permit arbitrary pickle behaviors?
+2. Does the library distribute models on Hugging Face (or other platform?)
+3. Can you load the available models using the library APIs?
+4. What callables are in the available models?
+5. What callables does PickleBall identify in the model loading policy?
+6. Can PickleBall load the available models while enforcing the model loading
+   policy?
+7. Does PickleBall reject all malicious models when enforcing the model loading
+   policy?
+
 1. Ensure that library can load benign example model and is vulnerable to a
    backdoor model.
 
@@ -164,14 +174,14 @@ ours_call_system.pkl
     b. Create a backdoor version of the example model.
     c. Create a loading program that interfaces with the enforce/load_all.py
        script.
-    f. Add library to manifest and fetch.sh
-    d. Run the loading program to ensure that the benign model is loaded
+    d. Add library to manifest and fetch.sh
+    e. Run the loading program to ensure that the benign model is loaded
        correctly, and the backdoor model executes its malicious payload. (add
        to docker compose task)
 
 2. Evaluate PickleBall on the library and model
 
-    e. Create an initial baseline trace from the benign model
+    f. Create an initial baseline trace from the benign model
         - fickling --trace
         - parsetrace
         - modelunion

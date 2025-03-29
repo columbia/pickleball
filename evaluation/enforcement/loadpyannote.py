@@ -1,11 +1,13 @@
 import argparse
 from pathlib import Path
 
-from pklballcheck import collect_attr_stats, verify_loader_was_used
 from pyannote.audio import Inference, Model
 from pyannote.core import Segment
 
+from pklballcheck import collect_attr_stats, verify_loader_was_used
+
 DIR = Path(__file__).parent
+TEST_FILE = DIR / Path("test-pyannote") / Path("test.wav")
 
 
 def load_model(model_path) -> bool:
@@ -14,17 +16,17 @@ def load_model(model_path) -> bool:
         model = Model.from_pretrained(model_path)
 
         inference = Inference(model, step=2.5)
-        output = inference(str(DIR / "test-pyannote" / "sample.wav"))
+        output = inference(str(TEST_FILE))
         print(output.data.shape)
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
+        print(e)
         return False
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        return True
-    finally:
         collect_attr_stats(model)
+        return True
 
 
 if __name__ == "__main__":

@@ -103,3 +103,9 @@ use_cpg = false
 library_path = "yolov5/yolov5"
 model_class = "models/yolo.py:<module>.BaseModel"
 use_cpg = false
+
+[libraries.yolov11]
+
+library_path = ""
+model_class = ""
+use_cpg = false

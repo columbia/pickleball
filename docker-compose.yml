@@ -330,6 +330,8 @@ services:
         condition: service_completed_successfully
       control-load-yolov5:
         condition: service_completed_successfully
+      control-load-yolov11:
+        condition: service_completed_successfully
 
   control-load-conch:
     image: control-load-conch
@@ -527,6 +529,19 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov5/ --library yolov5 --disable-verify --allowed-patterns "*.pt"
 
+  control-load-yolov11:
+    image: control-load-yolov11
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.yolov11
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11/ --library yolov11 --disable-verify --allowed-patterns "*.pt"
+
 
   check-vulnerable-all:
     image: control-load
@@ -561,6 +576,8 @@ services:
       check-vulnerable-tweetnlp:
         condition: service_completed_successfully
       check-vulnerable-yolov5:
+        condition: service_completed_successfully
+      check-vulnerable-yolov11:
         condition: service_completed_successfully
 
   check-vulnerable-conch:
@@ -758,3 +775,16 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "cd /pickleball && python3 evaluation/enforcement/loadyolov5.py --model-path /models/malicious/synthetic/yolov5/yolov5m-smoke-backdoor/best.pt"
+
+  check-vulnerable-yolov11:
+    image: control-load-yolov11
+    build:
+      context: evaluation/
+      dockerfile: control/Dockerfile.yolov11
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "cd /pickleball && python3 evaluation/enforcement/loadyolov11.py --model-path /models/malicious/synthetic/yolov11/ariakang-YOLOv11n-face-detection-backdoor/model.pt"

@@ -10,6 +10,8 @@ from loguru import logger
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+DOWNLOAD_THRESHOLD = 1000
+
 def load_ptmtorrent_data(data_path: str) -> pd.DataFrame:
     with open(data_path, 'r') as file:
         data = json.load(file)
@@ -29,13 +31,13 @@ def load_ptmtorrent_data(data_path: str) -> pd.DataFrame:
         })
 
     df = pd.DataFrame(filtered_data)
-    df = df[df['downloads'] > 100]  # Filter models with over 100 downloads
+    df = df[df['downloads'] > DOWNLOAD_THRESHOLD]  # Filter models with over 100 downloads
 
-    return df
+    return df   
 
 def load_hfcommunity_data(data_path: str) -> pd.DataFrame:
     df = pd.read_csv(data_path, dtype={'tag_names': str, 'filenames': str, 'libraries': str, 'model_id': str})
-    df = df[df['downloads'] > 100]  # Filter models with over 100 downloads
+    df = df[df['downloads'] > DOWNLOAD_THRESHOLD]  # Filter models with over 100 downloads
 
     # Parse the libraries column
     if 'libraries' in df.columns:
@@ -74,7 +76,7 @@ def load_data_socket(data_path: str, date: datetime) -> pd.DataFrame:
         'libraries': str,
         'context_id': str  # Use 'context_id' for data_Socket files
     })
-    df = df[df['downloads'] > 100]  # Filter models with over 100 downloads
+    df = df[df['downloads'] > DOWNLOAD_THRESHOLD]  # Filter models with over 100 downloads
     df['date'] = date
 
     # Extract filenames from the 'siblings' column
@@ -143,7 +145,8 @@ def load_data_socket(data_path: str, date: datetime) -> pd.DataFrame:
 
 def load_data() -> list:
     data_Aug24 = load_data_socket("./data/data_Socket_Aug.csv", datetime(2024, 8, 1))
-    # data_Nov = load_data_socket("./data/data_Socket_Nov.csv", datetime(2024, 11, 1))
+    data_Nov24 = load_data_socket("./data/data_Socket_Nov.csv", datetime(2024, 11, 15))
+    data_Mar25 = load_data_socket("./data/data_Socket_Mar25.csv", datetime(2025, 3, 17))
 
     data_ptmtorrent = load_ptmtorrent_data("./data/PTMTorrent.json")
 
@@ -159,7 +162,7 @@ def load_data() -> list:
 
     # Combine all data into a single list
     # all_data = [data_Aug24, data_Nov, data_ptmtorrent] + data_hfcommunity
-    all_data = [data_Aug24, data_ptmtorrent] + data_hfcommunity
+    all_data = [data_Aug24, data_Nov24, data_Mar25, data_ptmtorrent] + data_hfcommunity
 
     return all_data
 
@@ -380,7 +383,7 @@ def plot_pickle_safetensors_proportion(data: pd.DataFrame):
         for extensions in subset['extensions']:
             has_pickle_format = any(ext in pickle_formats for ext in extensions)
             has_safetensors = safetensors_format in extensions
-            has_gguf = gguf_format in extensions  # Check for GGUF
+            has_gguf = gguf_format in extensions
 
             if has_gguf:
                 count_gguf += 1    # Prioritize GGUF classification
@@ -901,6 +904,42 @@ def plot_pickle_downloads(data: pd.DataFrame, show_labels: bool = True):
         pickle_downloads.append(subset[pickle_mask]['downloads'].sum())
         pickle_no_safe_downloads.append(subset[pickle_no_safe_mask]['downloads'].sum())
 
+    if show_labels:
+        # Use the correct date that matches your March dataset
+        mar25_data = data[data['date'] == pd.Timestamp('2025-03-17')]
+        
+        # Use the intended pickle formats
+        pickle_formats = ['pt', 'bin', 'ckpt', 'pth', 'h5', 'model', 'pkl']
+        safetensors_format = 'safetensors'
+        
+        pickle_only_models = []
+        pickle_only_downloads = []  # New list to store downloads
+        for _, row in mar25_data.iterrows():
+            # Ensure extensions is treated as a set
+            model_extensions = set(row['extensions']) if isinstance(row['extensions'], (list, set)) else set()
+            has_pickle = any(ext in model_extensions for ext in pickle_formats)
+            has_safetensors = safetensors_format in model_extensions
+            
+            if has_pickle and not has_safetensors:
+                pickle_only_models.append(row['model_id'])
+                pickle_only_downloads.append(row['downloads'])  # Store the downloads
+        
+        # Save models and their downloads to a file
+        with open('pickle_only_models_mar2025.txt', 'w') as f:
+            for model, downloads in zip(pickle_only_models, pickle_only_downloads):
+                f.write(f"{model}, {int(downloads)}\n")
+            f.write(f"\nTotal models: {len(pickle_only_models)}")
+
+        # Print random sample of 20 models (for console output)
+        print("Models from March 2025 with pickle format but no safetensors:")
+        sample_size = min(20, len(pickle_only_models))
+        indices = np.random.choice(len(pickle_only_models), size=sample_size, replace=False)
+        for idx in indices:
+            print(f"  - {pickle_only_models[idx]} ({pickle_only_downloads[idx]:,} downloads)")
+        if len(pickle_only_models) > 20:
+            print(f"  ... and {len(pickle_only_models) - 20} more")
+
+
     # Create figure with two y-axes
     fig, ax1 = plt.subplots(figsize=(14, 8))
     ax2 = ax1.twinx()
@@ -908,10 +947,10 @@ def plot_pickle_downloads(data: pd.DataFrame, show_labels: bool = True):
     # Plot number of models (solid lines)
     line1 = ax1.plot(dates, pickle_models, 
                      color='#2ecc71', linewidth=2.5, marker='o',
-                     label='Models with Pickle Format')
+                     label='Repos with Pickle Format')
     line2 = ax1.plot(dates, pickle_no_safe_models,
                      color='#e74c3c', linewidth=2.5, marker='o',
-                     label='Models with Pickle (No SafeTensors)')
+                     label='Repos with Pickle (No SafeTensors)')
 
     # Plot downloads (dashed lines)
     line3 = ax2.plot(dates, pickle_downloads,
@@ -924,24 +963,48 @@ def plot_pickle_downloads(data: pd.DataFrame, show_labels: bool = True):
     if show_labels:
         # Remove the model count labels and keep only download labels
         for i, (value1, value2) in enumerate(zip(pickle_downloads, pickle_no_safe_downloads)):
-            ax2.annotate(f'{value1/1e6:.1f}M',
-                        (dates[i], value1),
-                        xytext=(0, 10),
-                        textcoords='offset points',
-                        ha='center', va='bottom',
-                        fontsize=16, color='#2ecc71')
+            # Calculate vertical spacing based on the values
+            spacing = (max(value1, value2) - min(value1, value2)) / max(value1, value2)
             
-            ax2.annotate(f'{value2/1e6:.1f}M',
-                        (dates[i], value2),
-                        xytext=(0, -10),
-                        textcoords='offset points',
-                        ha='center', va='top',
-                        fontsize=16, color='#e74c3c')
+            # Adjust vertical offsets based on proximity
+            if spacing < 0.5:  # If values are within 10% of each other
+                # Spread out the labels more vertically
+                ax2.annotate(f'{value1/1e6:.1f}M',
+                            (dates[i], value1),
+                            xytext=(-5, 20),
+                            textcoords='offset points',
+                            ha='center', va='bottom',
+                            fontsize=12, color='#2ecc71')
+                
+                ax2.annotate(f'{value2/1e6:.1f}M',
+                            (dates[i], value2),
+                            xytext=(0, 10),
+                            textcoords='offset points',
+                            ha='center', va='top',
+                            fontsize=12, color='#e74c3c')
+            else:
+                # Use standard positioning when values are sufficiently different
+                ax2.annotate(f'{value1/1e6:.1f}M',
+                            (dates[i], value1),
+                            xytext=(0, 10),
+                            textcoords='offset points',
+                            ha='center', va='bottom',
+                            fontsize=12, color='#2ecc71')
+                
+                ax2.annotate(f'{value2/1e6:.1f}M',
+                            (dates[i], value2),
+                            xytext=(0, -12),
+                            textcoords='offset points',
+                            ha='center', va='top',
+                            fontsize=12, color='#e74c3c')
 
     # Customize axes
     ax1.set_xlabel('Date', fontsize=20)
     ax1.set_ylabel('Number of Models', fontsize=20)
-    ax2.set_ylabel('Number of Downloads', fontsize=20)
+    ax2.set_ylabel('Monthly Downloads', fontsize=20)
+
+    # Set y-axis to start at 0
+    ax1.set_ylim(bottom=0)  # Ensure left y-axis starts at 0
 
     # Format y-axis with comma separator for thousands
     ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: format(int(x), ',')))
@@ -1078,67 +1141,76 @@ def plot_format_distribution(data: pd.DataFrame, show_labels: bool = True):
                 dpi=300, bbox_inches='tight')
     plt.close()
 
-def analyze_august_2024_data(data: pd.DataFrame):
-    """Analyze August 2024 data for model and download percentages."""
+def analyze_march_2025_data(data: pd.DataFrame):
+    """Analyze March 2025 data for model and download percentages."""
     # Filter for August 2024 data
-    aug_data = data[data['date'] == datetime(2024, 8, 1)]
+    mar_data = data[data['date'] == datetime(2025, 3, 17)]
     
-    if aug_data.empty:
-        logger.error("No data found for August 2024")
+    if mar_data.empty:
+        logger.error("No data found for March 2025")
         return
     
     # Calculate total models and downloads
-    total_models = len(aug_data)
-    total_downloads = aug_data['downloads'].sum()
+    total_models = len(mar_data)
+    total_downloads = mar_data['downloads'].sum()
     
     # Define formats
     pickle_formats = {'pkl', 'pickle', 'joblib', 'dill', 'pt', 'pth', 'bin'}
     
     # Create masks for each category
-    pickle_only_mask = aug_data['extensions'].apply(
+    pickle_only_mask = mar_data['extensions'].apply(
         lambda exts: any(ext in pickle_formats for ext in exts) 
         and 'safetensors' not in exts
         and 'gguf' not in exts
     )
     
-    safetensors_only_mask = aug_data['extensions'].apply(
+    safetensors_only_mask = mar_data['extensions'].apply(
         lambda exts: 'safetensors' in exts 
         and not any(ext in pickle_formats for ext in exts)
         and 'gguf' not in exts
     )
     
-    both_pickle_safe_mask = aug_data['extensions'].apply(
+    both_pickle_safe_mask = mar_data['extensions'].apply(
         lambda exts: 'safetensors' in exts 
         and any(ext in pickle_formats for ext in exts)
         and 'gguf' not in exts
     )
     
-    gguf_mask = aug_data['extensions'].apply(
+    gguf_mask = mar_data['extensions'].apply(
         lambda exts: 'gguf' in exts
+    )
+    
+    # Add new mask for all models with pickle (regardless of safetensors)
+    has_pickle_mask = mar_data['extensions'].apply(
+        lambda exts: any(ext in pickle_formats for ext in exts)
     )
     
     # Calculate counts and percentages for each category
     categories = {
         'Pickle only': {
             'models': sum(pickle_only_mask),
-            'downloads': aug_data[pickle_only_mask]['downloads'].sum()
+            'downloads': mar_data[pickle_only_mask]['downloads'].sum()
         },
         'SafeTensors only': {
             'models': sum(safetensors_only_mask),
-            'downloads': aug_data[safetensors_only_mask]['downloads'].sum()
+            'downloads': mar_data[safetensors_only_mask]['downloads'].sum()
         },
         'Both Pickle & SafeTensors': {
             'models': sum(both_pickle_safe_mask),
-            'downloads': aug_data[both_pickle_safe_mask]['downloads'].sum()
+            'downloads': mar_data[both_pickle_safe_mask]['downloads'].sum()
         },
         'GGUF': {
             'models': sum(gguf_mask),
-            'downloads': aug_data[gguf_mask]['downloads'].sum()
+            'downloads': mar_data[gguf_mask]['downloads'].sum()
+        },
+        'Has Pickle (Total)': {
+            'models': sum(has_pickle_mask),
+            'downloads': mar_data[has_pickle_mask]['downloads'].sum()
         }
     }
     
     # Calculate percentages and log results
-    logger.info("\nAugust 2024 Analysis:")
+    logger.info("\nMarch 2025 Analysis:")
     logger.info(f"Total models: {total_models:,}")
     logger.info(f"Total downloads: {total_downloads:,}")
     
@@ -1284,35 +1356,35 @@ def main() -> None:
         count = (models_added_safetensors_df['date_safetensors_first_seen'] <= date).sum()
         cumulative_models_added_safetensors.append(count)
 
-    # Plot Extensions Usage
+    # # Plot Extensions Usage
     plot_extensions_usage(extensions_usage)
 
-    # Plot .safetensors Usage
-    plot_safetensors_usage(safetensors_usage)
+    # # Plot .safetensors Usage
+    # plot_safetensors_usage(safetensors_usage)
 
-    # Plot Models Adding .safetensors Over Time
-    plot_models_added_safetensors(dates, cumulative_models_added_safetensors)
+    # # Plot Models Adding .safetensors Over Time
+    # plot_models_added_safetensors(dates, cumulative_models_added_safetensors)
 
-    # Plot Pickle-based formats proportion
-    plot_pickle_safetensors_proportion(full_data)
+    # # Plot Pickle-based formats proportion
+    # plot_pickle_safetensors_proportion(full_data)
 
-    # Plot absolute counts
-    plot_pickle_safetensors_counts(full_data)
+    # # Plot absolute counts
+    # plot_pickle_safetensors_counts(full_data)
 
     # Generate both versions of the plots
     plot_pickle_downloads(full_data, show_labels=True)
     plot_pickle_downloads(full_data, show_labels=False)
-    plot_format_distribution(full_data, show_labels=True)
+    # plot_format_distribution(full_data, show_labels=True)
     plot_format_distribution(full_data, show_labels=False)
 
     # Log full list of unknown extensions across all data
-    logger.info(f"All unknown extensions across datasets: {all_unknown_extensions}")
+    # logger.info(f"All unknown extensions across datasets: {all_unknown_extensions}")
 
     # Compute and save extension proportions
     compute_extension_proportions(full_data, relevant_extensions)
 
     # Add this after loading the data:
-    august_stats = analyze_august_2024_data(full_data)
+    march_stats = analyze_march_2025_data(full_data)
 
 if __name__ == "__main__":
     main()

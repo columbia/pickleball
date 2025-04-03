@@ -4551,5 +4551,3 @@ OpenVINO/whisper-tiny-fp16-ov, 1350
 OpenVINO/Phi-3.5-mini-instruct-int8-ov, 2097
 RWKV/v6-Finch-7B-World3-HF, 83519
 Tele-AI/TeleChat2-3B, 3861
-
-Total models: 4553

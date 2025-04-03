@@ -1,0 +1,25 @@
+--- a/pickle-venv/lib/python3.11/site-packages/sentence_transformers/SentenceTransformer.py	2025-02-24 03:25:21.489349903 +0000
++++ b/pickle-venv/lib/python3.11/site-packages/sentence_transformers/SentenceTransformer.py	2025-02-24 03:25:57.261862093 +0000
+@@ -17,6 +17,7 @@ from contextlib import contextmanager
+ from multiprocessing import Queue
+ from pathlib import Path
+ from typing import Any, Callable, Iterable, Iterator, Literal, overload
++from pklballcheck import _pklball_accessed_attrs
+ 
+ import numpy as np
+ import torch
+@@ -368,6 +369,14 @@ class SentenceTransformer(nn.Sequential,
+         # Pass the model to the model card data for later use in generating a model card upon saving this model
+         self.model_card_data.register_model(self)
+ 
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+     @overload
+     def encode(
+         self,

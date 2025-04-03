@@ -1,0 +1,26 @@
+--- a/pickle-venv/lib/python3.11/site-packages/FlagEmbedding/inference/embedder/encoder_only/base.py	2025-02-24 01:16:10.773539088 +0000
++++ b/pickle-venv/lib/python3.11/site-packages/FlagEmbedding/inference/embedder/encoder_only/base.py	2025-02-24 01:17:02.886298403 +0000
+@@ -6,6 +6,8 @@ import numpy as np
+ from transformers import AutoModel, AutoTokenizer
+
+ from FlagEmbedding.abc.inference import AbsEmbedder
++from pklballcheck import _pklball_accessed_attrs
++
+
+
+ class BaseEmbedder(AbsEmbedder):
+@@ -82,6 +84,14 @@ class BaseEmbedder(AbsEmbedder):
+             cache_dir=cache_dir
+         )
+
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+     def encode_queries(
+         self,
+         queries: Union[List[str], str],

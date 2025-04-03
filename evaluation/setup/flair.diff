@@ -1,0 +1,57 @@
+diff --git a/flair/embeddings/base.py b/flair/embeddings/base.py
+index 154f2600..3b585e77 100644
+--- a/flair/embeddings/base.py
++++ b/flair/embeddings/base.py
+@@ -188,7 +188,7 @@ class DocumentEmbeddings(Embeddings[Sentence]):
+         return "sentence-level"
+ 
+ 
+-class TokenEmbeddings(Embeddings[Sentence]):
++class TokenEmbeddings(Embeddings):
+     """Abstract base class for all token-level embeddings. Ever new type of word embedding must implement these methods."""
+ 
+     @property
+diff --git a/flair/models/sequence_tagger_model.py b/flair/models/sequence_tagger_model.py
+index 16f20a0d..fd824f1a 100644
+--- a/flair/models/sequence_tagger_model.py
++++ b/flair/models/sequence_tagger_model.py
+@@ -21,7 +21,7 @@ from flair.training_utils import store_embeddings
+ log = logging.getLogger("flair")
+ 
+ 
+-class SequenceTagger(flair.nn.Classifier[Sentence]):
++class SequenceTagger(flair.nn.model.Classifier):
+     def __init__(
+         self,
+         embeddings: TokenEmbeddings,
+diff --git a/flair/nn/model.py b/flair/nn/model.py
+index eeb5b7c8..8483a2db 100644
+--- a/flair/nn/model.py
++++ b/flair/nn/model.py
+@@ -25,7 +25,7 @@ from flair.training_utils import EmbeddingStorageMode, Result, store_embeddings
+ log = logging.getLogger("flair")
+ 
+ 
+-class Model(torch.nn.Module, typing.Generic[DT], ABC):
++class Model(torch.nn.Module, ABC):
+     """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
+ 
+     Every new type of model must implement these methods.
+@@ -242,7 +242,7 @@ class ReduceTransformerVocabMixin(ABC):
+         pass
+ 
+ 
+-class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC):
++class Classifier(Model, ReduceTransformerVocabMixin, ABC):
+     """Abstract base class for all Flair models that do classification.
+ 
+     The classifier inherits from flair.nn.Model and adds unified functionality for both, single- and multi-label
+@@ -570,7 +570,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
+         return cast("Classifier", super().load(model_path=model_path))
+ 
+ 
+-class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
++class DefaultClassifier(Classifier, ABC):
+     """Default base class for all Flair models that do classification.
+ 
+     It inherits from flair.nn.Classifier and thus from flair.nn.Model. All features shared by all classifiers are

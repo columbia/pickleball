@@ -1,0 +1,7 @@
+Based on:
+set(['builtinseval', 'nt.system', 'numpy.load','_pickle.loads','builtinsexec', 'os.system', 'os.popen', 'runpy._run_code', 'builtinsset',  'builtinscompile', '_pydev_bundle._pydev_execfile.execfile', 'commands.run', 'posix.system', 'webbrowser.open'])
+
+We still miss three cases out of 83.
+Yash2998db/totally_safe_model/totally_safe_model/python_model.pkl (IPython, could be added)
+zhuzhuzai/harmless_model_for_research/harmless_model_for_research/pytorch/jit_model/traced_model.pt.opcode.json (torch.jit, interesting! more investigation)
+MustEr/rager_legacy/rager_legacy/psgs_w100.tsv.pkl.opcode.json (fickling failed but modelscan succeeded...)

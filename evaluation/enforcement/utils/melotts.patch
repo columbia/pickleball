@@ -1,0 +1,25 @@
+--- a/melotts/MeloTTS/melo/api.py	2025-02-24 02:59:24.615101540 +0000
++++ b/melotts/MeloTTS/melo/api.py	2025-02-24 02:59:46.583419319 +0000
+@@ -9,6 +9,7 @@ import numpy as np
+ import torch.nn as nn
+ from tqdm import tqdm
+ import torch
++from pklballcheck import _pklball_accessed_attrs
+ 
+ from . import utils
+ from . import commons
+@@ -62,6 +63,14 @@ class TTS(nn.Module):
+         language = language.split('_')[0]
+         self.language = 'ZH_MIX_EN' if language == 'ZH' else language # we support a ZH_MIX_EN model
+ 
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+     @staticmethod
+     def audio_numpy_concat(segment_data_list, sr, speed=1.):
+         audio_segments = []

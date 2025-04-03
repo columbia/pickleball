@@ -1,0 +1,10 @@
+{
+    "collections.py:<module>.defaultdict": {
+        "globals": [
+            "collections.defaultdict"
+        ],
+        "reduces": [
+            "collections.defaultdict"
+        ]
+    }
+}

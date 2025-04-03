@@ -1,0 +1,6 @@
+{
+    "torch/nn.py:<module>.Module": {
+        "globals": [],
+        "reduces": []
+    }
+}

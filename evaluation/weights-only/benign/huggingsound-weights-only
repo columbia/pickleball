@@ -1,0 +1,20 @@
+Attempted models: 17
+Successful loads: 17
+Failed loads: 0
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-spanish/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-persian/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-italian/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-greek/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-english/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-chinese-zh-cn/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-japanese/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-finnish/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-arabic/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-dutch/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-xls-r-1b-portuguese/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-russian/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-german/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-portuguese/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-polish/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-hungarian/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/huggingsound/SpeechRecognitionModel/jonatasgrosman-wav2vec2-large-xlsr-53-french/pytorch_model.bin: SUCCESS

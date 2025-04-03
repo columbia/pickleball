@@ -1,0 +1,23 @@
+--- a/pickle-venv/lib/python3.11/site-packages/super_image/models/edsr/modeling_edsr.py	2025-02-24 03:33:52.124677210 +0000
++++ b/pickle-venv/lib/python3.11/site-packages/super_image/models/edsr/modeling_edsr.py	2025-02-24 03:33:55.072719629 +0000
+@@ -1,4 +1,5 @@
+ import torch.nn as nn
++from pklballcheck import _pklball_accessed_attrs
+ 
+ from .configuration_edsr import EdsrConfig
+ from ...modeling_utils import (
+@@ -75,6 +76,14 @@ class EdsrModel(PreTrainedModel):
+             ]
+             self.tail = nn.Sequential(*m_tail)
+ 
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+     def forward(self, x):
+         x = self.head(x)
+ 

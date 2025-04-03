@@ -1,0 +1,1 @@
+{"super_image/models/edsr/modeling_edsr.py:<module>.EdsrModel": {"globals": ["collections.OrderedDict", "torch.FloatStorage", "torch._utils._rebuild_tensor_v2"], "reduces": ["collections.OrderedDict", "torch._utils._rebuild_tensor_v2"]}}

@@ -40,6 +40,7 @@ from functools import partial
 
 # from hashlib import sha256
 from itertools import islice
+from pathlib import Path
 from struct import pack, unpack
 from sys import maxsize
 from types import FunctionType
@@ -70,11 +71,15 @@ except ImportError:
 # Path containing the PickleBall policies (configurable)
 POLICY_PATH = "/root/policies"
 
+PLACEHOLDER_FILE_PATH = Path("/root/.loader_used")
 
-class FakeCallable:
+stub_objects_created = set()
+
+
+class StubObject:
 
     def __new__(cls, *args, **kwargs):
-        # If we already instantiated a FakeCallable for this, just return it,
+        # If we already instantiated a StubObject for this, just return it,
         # else create a new one
         if not isinstance(cls, type):
             return cls
@@ -84,15 +89,14 @@ class FakeCallable:
     def __init__(self, orig_name):
         print(f"Creating fake callable for {orig_name}")
         self.orig_name = orig_name
+        stub_objects_created.add(orig_name)
 
     # Called unconditionally to implement attribute accesses for instances of
-    # the class. If the class also defines __getattr__(), the latter will not
-    # be called unless __getattribute__() either calls it explicitly or raises
-    # an AttributeError. This method should return the (computed) attribute
-    # value or raise an AttributeError exception
+    # the class.
     def __getattr__(self, attrname):
 
-        raise Exception(f"Tried to access {attrname} attribute of {self.orig_name}")
+        raise Exception(
+            f"Tried to access {attrname} attribute of {self.orig_name}")
 
     def __call__(self, *args):
 
@@ -100,8 +104,10 @@ class FakeCallable:
 
     # TODO: Probably remove this
     # def __repr__(self):
-    #     return f"FakeCallable for {self.orig_name}"
+    #     return f"StubObject for {self.orig_name}"
 
+
+disallowed_attrs = ["__name__", "__module__"]
 
 # Shortcut for use in isinstance testing
 bytes_types = (bytes, bytearray)
@@ -517,7 +523,8 @@ class _Pickler:
         if protocol < 0:
             protocol = HIGHEST_PROTOCOL
         elif not 0 <= protocol <= HIGHEST_PROTOCOL:
-            raise ValueError("pickle protocol must be <= %d" % HIGHEST_PROTOCOL)
+            raise ValueError("pickle protocol must be <= %d" %
+                             HIGHEST_PROTOCOL)
         if buffer_callback is not None and protocol < 5:
             raise ValueError("buffer_callback needs protocol >= 5")
         self._buffer_callback = buffer_callback
@@ -724,7 +731,8 @@ class _Pickler:
                 )
             if obj is not None and cls is not obj.__class__:
                 raise PicklingError(
-                    "args[0] from {} args has the wrong class".format(func_name)
+                    "args[0] from {} args has the wrong class".format(
+                        func_name)
                 )
             if self.proto >= 4:
                 save(cls)
@@ -765,9 +773,11 @@ class _Pickler:
             # Python 2.2).
             cls = args[0]
             if not hasattr(cls, "__new__"):
-                raise PicklingError("args[0] from __newobj__ args has no __new__")
+                raise PicklingError(
+                    "args[0] from __newobj__ args has no __new__")
             if obj is not None and cls is not obj.__class__:
-                raise PicklingError("args[0] from __newobj__ args has the wrong class")
+                raise PicklingError(
+                    "args[0] from __newobj__ args has the wrong class")
             args = args[1:]
             save(cls)
             save(args)
@@ -880,7 +890,8 @@ class _Pickler:
             if not obj:  # bytes object is empty
                 self.save_reduce(bytes, (), obj=obj)
             else:
-                self.save_reduce(codecs.encode, (str(obj, "latin1"), "latin1"), obj=obj)
+                self.save_reduce(
+                    codecs.encode, (str(obj, "latin1"), "latin1"), obj=obj)
             return
         n = len(obj)
         if n <= 0xFF:
@@ -1165,7 +1176,8 @@ class _Pickler:
             obj2, parent = _getattribute(module, name)
         except (ImportError, KeyError, AttributeError):
             raise PicklingError(
-                "Can't pickle %r: it's not found as %s.%s" % (obj, module_name, name)
+                "Can't pickle %r: it's not found as %s.%s" % (
+                    obj, module_name, name)
             ) from None
         else:
             if obj2 is not obj:
@@ -1286,15 +1298,6 @@ class _Unpickler:
         'bytes' to read these 8-bit string instances as bytes objects.
         """
 
-        if isinstance(file, io.BufferedReader):
-            contents = file.peek()
-        elif isinstance(file, io.BytesIO):
-            contents = file.getbuffer()
-        else:
-            raise Exception("Uknown file type: ", file)
-
-        # filehash = sha256(contents).hexdigest()
-
         policy_path = os.path.join(POLICY_PATH, "policy.json")
 
         self.allowed_globals = []
@@ -1304,18 +1307,18 @@ class _Unpickler:
         reduces_list = []
         if os.path.isfile(policy_path):
             try:
-                print(f'Loading policy file: {policy_path}')
-                with open(policy_path, "r", encoding='utf-8') as f:
+                print(f"Loading policy file: {policy_path}")
+                with open(policy_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     model_keys = list(data.keys())
                     assert len(model_keys) == 1
                     model_name = model_keys[0]
-                    globals_list = data.get(model_name, {}).get('globals', [])
-                    reduces_list = data.get(model_name, {}).get('reduces', [])
+                    globals_list = data.get(model_name, {}).get("globals", [])
+                    reduces_list = data.get(model_name, {}).get("reduces", [])
             except FileNotFoundError:
-                print(f'Policy file {policy_path} not found')
+                print(f"Policy file {policy_path} not found")
             except json.JSONDecodeError:
-                print(f'Error decoding JSON in file {policy_path}')
+                print(f"Error decoding JSON in file {policy_path}")
             finally:
                 self.allowed_globals = globals_list
                 self.allowed_reduces = reduces_list
@@ -1332,12 +1335,14 @@ class _Unpickler:
         self.proto = 0
         self.fix_imports = fix_imports
 
-    # def load(self, globals, reduces):
     def load(self):
         """Read a pickled object representation from the open file.
 
         Return the reconstituted object hierarchy specified in the file.
         """
+
+        # Placeholder file to make sure the PickleBall loader was used
+        PLACEHOLDER_FILE_PATH.touch()
 
         # Check whether Unpickler was initialized correctly. This is
         # only needed to mimic the behavior of _pickle.Unpickler.dump().
@@ -1365,6 +1370,9 @@ class _Unpickler:
                 assert isinstance(key, bytes_types)
                 dispatch[key[0]](self)
         except _Stop as stopinst:
+            print(f"Total stub object created: {len(stub_objects_created)}")
+            if len(stub_objects_created) > 0:
+                print("\n".join(stub_objects_created))
             return stopinst.value
 
     # Return a list of items pushed in the stack after last MARK instruction.
@@ -1399,7 +1407,8 @@ class _Unpickler:
         try:
             pid = self.readline()[:-1].decode("ascii")
         except UnicodeDecodeError:
-            raise UnpicklingError("persistent IDs in protocol 0 must be ASCII strings")
+            raise UnpicklingError(
+                "persistent IDs in protocol 0 must be ASCII strings")
         self.append(self.persistent_load(pid))
 
     dispatch[PERSID[0]] = load_persid
@@ -1708,7 +1717,7 @@ class _Unpickler:
     #     if full_path in self.allowed_globals:
     #         klass = self.find_class_non_recursive(module, name)
     #     else:
-    #         klass = FakeCallable(full_path)
+    #         klass = StubObject(full_path)
     #     self._instantiate(klass, self.pop_mark())
 
     def load_inst(self):
@@ -1729,8 +1738,8 @@ class _Unpickler:
 
     dispatch[OBJ[0]] = load_obj
 
-    # XXX: No need to do anything for NEWOBJ/NEWOBJ_EX since the globals will
-    # be checked when they are put on the stack
+    # XXX: No need to do anything for NEWOBJ/NEWOBJ_EX since the globals (classes)
+    # will be checked when they are put on the stack
     def load_newobj(self):
         args = self.stack.pop()
         cls = self.stack.pop()
@@ -1762,9 +1771,9 @@ class _Unpickler:
         full_path = f"{module}.{name}"
 
         if full_path in self.allowed_globals:
-            self.append(self.find_class_non_recursive(module, name))
+            self.append(self.find_class(module, name))
         else:
-            self.append(FakeCallable(full_path))
+            self.append(StubObject(full_path))
 
     dispatch[GLOBAL[0]] = load_global
 
@@ -1783,10 +1792,9 @@ class _Unpickler:
 
         full_path = f"{module}.{name}"
         if full_path in self.allowed_globals:
-            # self.append(allowed_globals[full_path])
-            self.append(self.find_class_non_recursive(module, name))
+            self.append(self.find_class(module, name))
         else:
-            self.append(FakeCallable(full_path))
+            self.append(StubObject(full_path))
 
     dispatch[STACK_GLOBAL[0]] = load_stack_global
 
@@ -1808,25 +1816,34 @@ class _Unpickler:
 
     dispatch[EXT4[0]] = load_ext4
 
-    # FIXME look into this too
+    # def get_extension(self, code):
+    #     nil = []
+    #     obj = _extension_cache.get(code, nil)
+    #     if obj is not nil:
+    #         self.append(obj)
+    #         return
+    #     key = _inverted_registry.get(code)
+    #     if not key:
+    #         if code <= 0:  # note that 0 is forbidden
+    #             # Corrupt or hostile pickle.
+    #             raise UnpicklingError("EXT specifies code <= 0")
+    #         raise ValueError("unregistered extension code %d" % code)
+    #     obj = self.find_class(*key)
+    #     _extension_cache[code] = obj
+    #     self.append(obj)
+
     def get_extension(self, code):
-        nil = []
-        obj = _extension_cache.get(code, nil)
-        if obj is not nil:
-            self.append(obj)
-            return
-        key = _inverted_registry.get(code)
-        if not key:
-            if code <= 0:  # note that 0 is forbidden
-                # Corrupt or hostile pickle.
-                raise UnpicklingError("EXT specifies code <= 0")
-            raise ValueError("unregistered extension code %d" % code)
-        obj = self.find_class(*key)
-        _extension_cache[code] = obj
-        self.append(obj)
+        raise Exception(
+            f"Extensions not supported! Tried to call with code {code}")
 
     def find_class_non_recursive(self, module, name):
         # print(f"Getting attribute {name} from module {sys.modules[module]}")
+        if "." in name:
+            callable_name = name.split(".")[-1]
+            module = module + "." + \
+                ".".join(name.split(".")[:-1]) + "." + callable_name
+            name = callable_name
+        __import__(module, level=0)
         return getattr(sys.modules[module], name)
 
     def find_class(self, module, name):
@@ -1849,7 +1866,7 @@ class _Unpickler:
         func = stack[-1]
         func_fullname = func.__module__ + "." + func.__name__
         if func_fullname not in self.allowed_reduces:
-            func = FakeCallable(func_fullname)
+            func = StubObject(func_fullname)
         stack[-1] = func(*args)
 
     dispatch[REDUCE[0]] = load_reduce
@@ -1994,6 +2011,11 @@ class _Unpickler:
         inst = stack[-1]
         setstate = getattr(inst, "__setstate__", None)
         if setstate is not None:
+            for attr in disallowed_attrs:
+                if attr in state.keys():
+                    raise Exception(
+                        f"BUILD attempted to set attribute {attr} of {inst}"
+                    )
             setstate(state)
             return
         slotstate = None
@@ -2003,12 +2025,18 @@ class _Unpickler:
             inst_dict = inst.__dict__
             intern = sys.intern
             for k, v in state.items():
+                if k in disallowed_attrs:
+                    raise Exception(
+                        f"BUILD attempted to set attribute {k} of {inst}")
                 if type(k) is str:
                     inst_dict[intern(k)] = v
                 else:
                     inst_dict[k] = v
         if slotstate:
             for k, v in slotstate.items():
+                if k in disallowed_attrs:
+                    raise Exception(
+                        f"BUILD attempted to set attribute {k} of {inst}")
                 setattr(inst, k, v)
 
     dispatch[BUILD[0]] = load_build
@@ -2076,21 +2104,21 @@ def _loads(s, /, *, fix_imports=True, encoding="ASCII", errors="strict", buffers
 
 
 # Use the faster _pickle if possible
-# try:
-#     from _pickle import (
-#         PickleError,
-#         PicklingError,
-#         UnpicklingError,
-#         Pickler,
-#         Unpickler,
-#         dump,
-#         dumps,
-#         load,
-#         loads
-#     )
-# except ImportError:
-Pickler, Unpickler = _Pickler, _Unpickler
-dump, dumps, load, loads = _dump, _dumps, _load, _loads
+try:
+    from _pickle import (
+        PickleError,
+        Pickler,
+        PicklingError,
+        UnpicklingError,
+        dump,
+        dumps,
+    )
+
+    # Use PickleBall's loading functions
+    load, loads, Unpickler = _load, _loads, _Unpickler
+except ImportError:
+    Pickler, Unpickler = _Pickler, _Unpickler
+    dump, dumps, load, loads = _dump, _dumps, _load, _loads
 
 
 # Doctest
@@ -2103,13 +2131,15 @@ def _test():
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="display contents of the pickle files")
+    parser = argparse.ArgumentParser(
+        description="display contents of the pickle files")
     parser.add_argument(
         "pickle_file", type=argparse.FileType("br"), nargs="*", help="the pickle file"
     )
     parser.add_argument("--globals", required=True)
     parser.add_argument("--reduces", required=True)
-    parser.add_argument("-t", "--test", action="store_true", help="run self-test suite")
+    parser.add_argument("-t", "--test", action="store_true",
+                        help="run self-test suite")
     parser.add_argument(
         "-v", action="store_true", help="run verbosely; only affects self-test run"
     )
@@ -2123,5 +2153,5 @@ if __name__ == "__main__":
             import pprint
 
             for f in args.pickle_file:
-                obj = load(f, args.globals, args.reduces)
+                obj = load(f)
                 pprint.pprint(obj)

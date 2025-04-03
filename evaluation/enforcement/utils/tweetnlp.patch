@@ -1,0 +1,24 @@
+--- a/pickle-venv/lib/python3.9/site-packages/tweetnlp/text_classification/model.py	2025-02-24 03:46:33.699636357 +0000
++++ b/pickle-venv/lib/python3.9/site-packages/tweetnlp/text_classification/model.py	2025-02-24 03:46:59.328005261 +0000
+@@ -2,6 +2,7 @@
+ import logging
+ import os
+ from typing import List, Dict
++from pklballcheck import _pklball_accessed_attrs
+ 
+ import torch
+ 
+@@ -89,6 +90,13 @@ class Classifier:
+         self.model.eval()
+         self.preprocess = get_preprocessor()
+ 
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++
+     def predict(self,
+                 text: str or List,
+                 batch_size: int = None,

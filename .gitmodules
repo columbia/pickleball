@@ -1,42 +1,51 @@
 [submodule "evaluation/libraries/flair/flair"]
-	path = evaluation/libraries/flair/flair
+	path = evaluation/libraries-bak/flair/flair
 	url = https://github.com/flairNLP/flair.git
 [submodule "evaluation/libraries/pytorch/pytorch"]
-	path = evaluation/libraries/pytorch/pytorch
+	path = evaluation/libraries-bak/pytorch/pytorch
 	url = https://github.com/pytorch/pytorch.git
 [submodule "evaluation/libraries/pyannote-audio/pyannote-audio"]
-	path = evaluation/libraries/pyannote-audio/pyannote-audio
+	path = evaluation/libraries-bak/pyannote-audio/pyannote-audio
 	url = https://github.com/pyannote/pyannote-audio.git
 [submodule "evaluation/libraries/fastai/fastai"]
-	path = evaluation/libraries/fastai/fastai
+	path = evaluation/libraries-bak/fastai/fastai
 	url = https://github.com/fastai/fastai.git
 [submodule "evaluation/libraries/sentence-transformers"]
-	path = evaluation/libraries/sentence-transformers/sentence-transformers
+	path = evaluation/libraries-bak/sentence-transformers/sentence-transformers
 	url = https://github.com/UKPLab/sentence-transformers.git
 [submodule "evaluation/libraries/super-image/super-image"]
-	path = evaluation/libraries/super-image/super-image
+	path = evaluation/libraries-bak/super-image/super-image
 	url = https://github.com/eugenesiow/super-image.git
 [submodule "evaluation/libraries/melotts/MeloTTS"]
-	path = evaluation/libraries/melotts/MeloTTS
+	path = evaluation/libraries-bak/melotts/MeloTTS
 	url = https://github.com/myshell-ai/MeloTTS.git
 [submodule "evaluation/libraries/parrot/Parrot_Paraphraser"]
-	path = evaluation/libraries/parrot/Parrot_Paraphraser
+	path = evaluation/libraries-bak/parrot/Parrot_Paraphraser
 	url = https://github.com/PrithivirajDamodaran/Parrot_Paraphraser.git
 [submodule "evaluation/libraries/tner/tner"]
-	path = evaluation/libraries/tner/tner
+	path = evaluation/libraries-bak/tner/tner
 	url = https://github.com/asahi417/tner.git
 [submodule "evaluation/libraries/faster-whisper/faster-whisper"]
-	path = evaluation/libraries/faster-whisper/faster-whisper
+	path = evaluation/libraries-bak/faster-whisper/faster-whisper
 	url = https://github.com/SYSTRAN/faster-whisper.git
 [submodule "evaluation/libraries/tweetnlp/tweetnlp"]
-	path = evaluation/libraries/tweetnlp/tweetnlp
+	path = evaluation/libraries-bak/tweetnlp/tweetnlp
 	url = https://github.com/cardiffnlp/tweetnlp.git
 [submodule "evaluation/libraries/flagembedding/FlagEmbedding"]
-	path = evaluation/libraries/flagembedding/FlagEmbedding
+	path = evaluation/libraries-bak/flagembedding/FlagEmbedding
 	url = https://github.com/FlagOpen/FlagEmbedding.git
 [submodule "evaluation/libraries/gliner/GLiNER"]
-	path = evaluation/libraries/gliner/GLiNER
+	path = evaluation/libraries-bak/gliner/GLiNER
 	url = https://github.com/urchade/GLiNER.git
 [submodule "evaluation/libraries/conch/CONCH"]
-	path = evaluation/libraries/conch/CONCH
+	path = evaluation/libraries-bak/conch/CONCH
 	url = https://github.com/mahmoodlab/CONCH.git
+[submodule "evaluation/libraries/languagebind/LanguageBind"]
+	path = evaluation/libraries-bak/languagebind/LanguageBind
+	url = https://github.com/PKU-YuanGroup/LanguageBind.git
+[submodule "evaluation/libraries/huggingsound/huggingsound"]
+	path = evaluation/libraries-bak/huggingsound/huggingsound
+	url = https://github.com/jonatasgrosman/huggingsound.git
+[submodule "evaluation/libraries/pysentimiento/pysentimiento"]
+	path = evaluation/libraries-bak/pysentimiento/pysentimiento
+	url = https://github.com/pysentimiento/pysentimiento.git

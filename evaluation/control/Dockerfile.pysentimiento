@@ -1,0 +1,5 @@
+FROM control-load:latest
+
+# TODO: pin version
+RUN pip3 install pysentimiento
+RUN pip3 install transformers==4.46.1

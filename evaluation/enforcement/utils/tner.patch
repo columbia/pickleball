@@ -1,0 +1,25 @@
+--- a/pickle-venv/lib/python3.9/site-packages/tner/ner_model.py	2025-02-24 03:39:25.409471117 +0000
++++ b/pickle-venv/lib/python3.9/site-packages/tner/ner_model.py	2025-02-24 03:38:34.108732882 +0000
+@@ -5,6 +5,7 @@ import os
+ from typing import List, Dict
+ from tqdm import tqdm
+ from packaging.version import parse
++from pklballcheck import _pklball_accessed_attrs
+ 
+ import torch
+ 
+@@ -108,6 +109,14 @@ class TransformersNER:
+         else:
+             self.tokenizer = NERTokenizer(self.model_name, id2label=self.id2label, use_auth_token=use_auth_token)
+ 
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+     def encode_to_loss(self, encode: Dict):
+         """ map encoded feature to loss value for model fine-tuning
+ 

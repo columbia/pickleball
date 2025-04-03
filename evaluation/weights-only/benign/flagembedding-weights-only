@@ -1,0 +1,17 @@
+Attempted models: 14
+Successful loads: 14
+Failed loads: 0
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-reranker-large/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-large-zh/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-base-zh-v1.5/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-base-en/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-large-en-v1.5/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-reranker-base/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-large-zh-v1.5/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-small-zh/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-large-en/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-small-en-v1.5/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-small-en/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-base-en-v1.5/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-llm-embedder/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/flagembedding/FlagModel/BAAI-bge-small-zh-v1.5/pytorch_model.bin: SUCCESS

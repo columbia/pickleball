@@ -1,3 +1,9 @@
+"""
+Given a csv of repositories that we have already traced, and a list of new
+repositories that we may or may not have traced, return the lists of
+repositories that have already been traced and those that have not.
+"""
+
 import argparse
 import csv
 from typing import List, Dict
@@ -11,17 +17,18 @@ def read_new_csv(csv_file, take_lines=1665) -> Dict[str, str]:
     new_models = {}
     with open(csv_file, 'r') as fd:
         analyzed_lines = csv.reader(fd, delimiter=',', quoting=csv.QUOTE_NONE)
-        n_lines = 0
-        for row in analyzed_lines:
-            n_lines += 1
-            if n_lines == 1:
-                # skip header
-                continue
-            if n_lines > take_lines:
-                break
-            new_models[row[1]] = row[-3]
 
-    return new_models
+        # Transform CVS into a list of tuples: (repo,#downloads)
+        entries = [(row[0], int(row[1])) for row in analyzed_lines]
+
+    # Order list of tuples by #downloads
+    entries.sort(key=lambda row: row[1], reverse=True)
+
+    # Return top n entries
+    entries = entries[:take_lines]
+
+    # Format into expected dictionary format
+    return {key: value for (key, value) in entries}
 
 
 # Get list of models already downloaded and traced

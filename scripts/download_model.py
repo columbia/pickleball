@@ -406,7 +406,7 @@ def main():
 
         try:
             repositories = [get_model_info(repository) for repository in repositories_list]
-        except huggingface_hub.utils._errors.RepositoryNotFoundError as err:
+        except huggingface_hub.errors.RepositoryNotFoundError as err:
             logging.error(err)
             return
 

@@ -32,7 +32,7 @@
     ],
     "reduces": [
       "torch.Size",
-      "builtinsset",
+      "__builtin__.set",
       "torch._utils._rebuild_parameter",
       "torch._utils._rebuild_tensor_v2",
       "collections.OrderedDict"

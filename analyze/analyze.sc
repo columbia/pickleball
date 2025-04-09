@@ -292,6 +292,11 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
           allowedReduces ++= reduces
         case _ =>
       }
+
+      /** still need to check if the cached class is inherited from other classes */
+      println(s"- sub classes: ${subClasses(targetClass).toList.mkString(",")}")
+      subClasses(targetClass).foreach(queue.enqueue)
+
     } else if (targetTypeDecls.isEmpty) {
       /* Candidate class is neither in the CPG nor in the policy cache because:
        * 1. Candidate class might be a mangled name
@@ -370,6 +375,10 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
          */
         val (cachedAncestors, newAncestors) = ancestors.partition(ancestor => cachedPolicies.contains(ancestor))
         cachedAncestors.map { ancestor =>
+          /* This is a repeat of how a cached ancestor is handled, from above.
+           * This should be handled in one place
+           * TODO: Refactor
+           */
           println(s"- found parent class \"${ancestor}\" in type cache")
           val classPolicy: Option[ClassPolicy] = cachedPolicies.get(ancestor)
 
@@ -384,6 +393,10 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
               allowedReduces ++= reduces
             case _ =>
           }
+
+          /** still need to check if the cached class is inherited from other classes */
+          println(s"- sub classes: ${subClasses(ancestor).toList.mkString(",")}")
+          subClasses(ancestor).foreach(queue.enqueue)
         }
 
         val ancestorAttributes: List[String] = newAncestors.flatMap(attributeTypes).toList

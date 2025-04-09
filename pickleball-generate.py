@@ -49,17 +49,29 @@ def create_cpg(
 
     if use_cpg:
         joern_utility = joern_path / Path('joern-parse')
+        language_switch = "--language"
+        language_option = "PYTHONSRC"
+        frontend_switch = "--frontend-args"
     else:
         joern_utility = joern_path / Path('joern-cli/target/universal/stage/pysrc2cpg')
+        language_switch = ""
+        language_option = ""
+        frontend_switch = ""
+
 
     cmd = [
         str(joern_utility),
+        language_switch, language_option,
         f'-J-Xmx{system_mem}k',
         str(library_path),
         '-o', str(out_path),
+        frontend_switch
     ]
     if ignore_paths:
         cmd.append(f'--ignore-paths={ignore_paths}')
+
+    # Remove any empty arguments from the command string
+    cmd = list(filter(lambda x : x, cmd))
 
     print(f'Creating CPG:\n'
           f'{" ".join(cmd)}')

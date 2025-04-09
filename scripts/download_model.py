@@ -2,9 +2,16 @@
 Script for downloading PyTorch models from HuggingFace, and generating a
 fickling trace of each model.
 
-Can be run on specifically identified repositories (--repository <namespace/repo>), or
-as a batch process over the n most downloaded HuggingFace repositories with
-PyTorch models (--batch n).
+Can be run on specifically identified repositories (--repository
+<namespace/repo>), a list of repositories (--repositories-list <file>) or as a
+batch process over the n most downloaded HuggingFace repositories with PyTorch
+models (--batch n).
+
+To run this script, you must first authenticate with the Hugging Face API:
+    `$ huggingface-cli login`
+
+    (see: https://huggingface.co/docs/huggingface_hub/quick-start#authentication)
+
 """
 
 import argparse
@@ -43,7 +50,7 @@ class DummyFile(object):
     def __init__(self, filename=None):
         self.filename = filename
         if filename:
-            self.file = open(filename, 'a') 
+            self.file = open(filename, 'a')
         else:
             self.file = None
 
@@ -57,7 +64,7 @@ class DummyFile(object):
 
     def close(self):
         if self.file:
-            self.file.close() 
+            self.file.close()
 
 
 # Used to prevent cluttering stdout when generating fickling trace. See comment
@@ -74,7 +81,7 @@ def nostdout(opcode_filename=None):
 
 def canonical_model_name(model_repo: str) -> str:
     """HuggingFace repositories are identified in the form of
-    'namespace/repository'. 
+    'namespace/repository'.
     For saving the repository contents, convert the '/'
     in the name to a '-' in the output directory name to avoid creating
     subdirectories.
@@ -399,7 +406,7 @@ def main():
 
         try:
             repositories = [get_model_info(repository) for repository in repositories_list]
-        except huggingface_hub.utils._errors.RepositoryNotFoundError as err:
+        except huggingface_hub.errors.RepositoryNotFoundError as err:
             logging.error(err)
             return
 

@@ -54,12 +54,6 @@ library_path = "MeloTTS/melo"
 model_class = "api.py:<module>.TTS"
 use_cpg = false
 
-[libraries.parrot]
-
-library_path = "Parrot_Paraphraser/parrot"
-model_class = "parrot.py:<module>.Parrot"
-use_cpg = true
-
 [libraries.pyannote]
 
 library_path = "pyannote-audio"
@@ -73,24 +67,11 @@ library_path = "pysentimiento"
 model_class = "pysentimiento/analyzer.py:<module>.BaseAnalyzer"
 use_cpg = false
 
-[libraries.sentencetransformers]
-
-library_path = "sentence-transformers/sentence_transformers"
-model_class = "SentenceTransformer.py:<module>.SentenceTransformer"
-use_cpg = true
-#use_cpg = false
-
 [libraries.superimage]
 
 library_path = "super-image/src"
 model_class = "super_image/models/edsr/modeling_edsr.py:<module>.EdsrModel"
 use_cpg = false
-
-[libraries.tner]
-
-library_path = "tner/tner"
-model_class = "ner_model.py:<module>.TransformersNER"
-use_cpg = true
 
 [libraries.tweetnlp]
 
@@ -109,3 +90,22 @@ use_cpg = false
 library_path = "yolov11/ultralytics"
 model_class = "engine/model.py:<module>.Model"
 use_cpg = false
+
+[libraries.parrot]
+
+library_path = "Parrot_Paraphraser/parrot"
+model_class = "parrot.py:<module>.Parrot"
+use_cpg = true
+
+[libraries.sentencetransformers]
+
+library_path = "sentence-transformers/sentence_transformers"
+model_class = "SentenceTransformer.py:<module>.SentenceTransformer"
+use_cpg = true
+#use_cpg = false
+
+[libraries.tner]
+
+library_path = "tner/tner"
+model_class = "ner_model.py:<module>.TransformersNER"
+use_cpg = true

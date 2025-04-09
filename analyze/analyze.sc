@@ -22,7 +22,7 @@ def attributeTypes(className: String): Iterator[String] = {
     member =>
       (member.typeFullName +: member.dynamicTypeHintFullName)
         .filterNot(_.matches("object|ANY"))
-        .filterNot(isPrimitiveType(_))
+        //.filterNot(isPrimitiveType(_))
         /*  Constructors assigned to attributes may result in types of
          *  Class.__init__ or Class.__init__.<returnValue>. When these are
          *  seen, we can strip the suffix and just add the class name to the
@@ -41,8 +41,11 @@ def attributeTypes(className: String): Iterator[String] = {
   }
 }
 
-def subClasses(parentClass: String): Iterator[String] = {
+def subClasses(inputParentClass: String): Iterator[String] = {
   /* Identify all type declarations that inherit from the parentClass */
+
+  val parentClass = stripPrefix("__builtin.", inputParentClass)
+
   cpg.typeDecl
     .filter(_.inheritsFromTypeFullName.contains(parentClass))
     .fullName
@@ -50,12 +53,15 @@ def subClasses(parentClass: String): Iterator[String] = {
     .filterNot(x => x.contains("<body>") || x.contains("<fakeNew>") || x.contains("<meta"))
 }
 
-def superClasses(className: String): Seq[String] = {
+def superClasses(inputClassName: String): Seq[String] = {
  /**
  * Sometimes type information is in both the inheritsFromTypeFullName and the
  * baseType fields (or one, and not the other). We try searching for both.
  */
-  val parents = (cpg.typeDecl
+
+val className = stripPrefix("__builtin.", inputClassName)
+
+val parents = (cpg.typeDecl
     .fullName(className)
     .baseType.typeDeclFullName
     .filterNot(_.matches("object|ANY"))
@@ -297,7 +303,7 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
       println(s"- sub classes: ${subClasses(targetClass).toList.mkString(",")}")
       subClasses(targetClass).foreach(queue.enqueue)
 
-    } else if (targetTypeDecls.isEmpty) {
+    } else if (targetTypeDecls.isEmpty && !targetClass.startsWith("__builtin.")) {
       /* Candidate class is neither in the CPG nor in the policy cache because:
        * 1. Candidate class might be a mangled name
        *      => unmangle name and add new name to queue
@@ -306,6 +312,7 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
        *         (might result in imprecision)
        * 3. Candidate class is in an external library
        *      => TODO: fetch library for analysis
+       * 4. Candidate class is a builtin type and therefore has no typedecl - (proceed to analysis below)
        */
 
       println(s"- !! unable to find typeDecl for class ${targetClass} !!")
@@ -416,8 +423,10 @@ def getPrefix(input: String): String = {
   if (index == -1) input else input.substring(0, index)
 }
 
-def stripCollectionPrefix(input: String): String = {
-  if (input.startsWith(CollectionPrefix)) input.substring(CollectionPrefix.length) else input
+def stripCollectionPrefix(input: String): String = stripPrefix(CollectionPrefix, input)
+
+def stripPrefix(prefix: String, input: String): String = {
+  if (input.startsWith(prefix)) input.substring(prefix.length) else input
 }
 
 def canonicalizeName(baseModule: String, callableName: String): String = {
@@ -451,6 +460,8 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
     stripCollectionPrefix(callableName)
     .replaceAllLiterally("/", ".")
     .replaceAllLiterally(PyModuleSuffix, "."))))
+    /* If canonicalized name begins with __builtin, replace with __builtin__. */
+    .replaceAll("__builtin.", "__builtin__.")
 
   return canonicalizedName
 }
@@ -517,4 +528,5 @@ def readCache(cachePath: String): PolicyMap = {
   println()
   println(s"Writing output to file: ${outputFile}")
   os.write.over(outputFile, ujson.write(jsonString))
+
 }

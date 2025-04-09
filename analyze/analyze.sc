@@ -447,6 +447,8 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
     stripCollectionPrefix(callableName)
     .replaceAllLiterally("/", ".")
     .replaceAllLiterally(PyModuleSuffix, "."))))
+    /* If canonicalized name begins with __builtin, replace with __builtin__. */
+    .replaceAll("__builtin.", "__builtin__.")
 
   return canonicalizedName
 }

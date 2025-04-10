@@ -1,0 +1,10 @@
+{
+    "__builtin.set": {
+        "globals": [
+            "__builtin.set"
+        ],
+        "reduces": [
+            "__builtin.set"
+        ]
+    }
+}

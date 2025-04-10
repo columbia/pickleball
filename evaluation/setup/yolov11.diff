@@ -1,0 +1,296 @@
+diff --git a/ultralytics/engine/model.py b/ultralytics/engine/model.py
+index 4ff1c039..486af480 100644
+--- a/ultralytics/engine/model.py
++++ b/ultralytics/engine/model.py
+@@ -24,6 +24,8 @@ from ultralytics.utils import (
+     emojis,
+     yaml_load,
+ )
++from ultralytics.engine.predictor import BasePredictor
++from ultralytics.engine.trainer import BaseTrainer
+ 
+ 
+ class Model(torch.nn.Module):
+@@ -78,6 +80,18 @@ class Model(torch.nn.Module):
+         >>> metrics = model.val()
+         >>> model.export(format="onnx")
+     """
++    callbacks: dict
++    predictor: BasePredictor
++    model: torch.nn.Module
++    trainer: BaseTrainer
++    ckpt: dict
++    cfg: str
++    ckpt_path: str
++    overrides: dict
++    metrics: dict
++    session: HUBTrainingSession
++    task: str
++    model_name: str
+ 
+     def __init__(
+         self,
+diff --git a/ultralytics/engine/predictor.py b/ultralytics/engine/predictor.py
+index a095825d..59c326eb 100644
+--- a/ultralytics/engine/predictor.py
++++ b/ultralytics/engine/predictor.py
+@@ -50,6 +50,8 @@ from ultralytics.utils.checks import check_imgsz, check_imshow
+ from ultralytics.utils.files import increment_path
+ from ultralytics.utils.torch_utils import select_device, smart_inference_mode
+ 
++from types import SimpleNamespace
++
+ STREAM_WARNING = """
+ WARNING ⚠️ inference results will accumulate in RAM unless `stream=True` is passed, causing potential out-of-memory
+ errors for large sources or long-running streams and videos. See https://docs.ultralytics.com/modes/predict/ for help.
+@@ -104,6 +106,24 @@ class BasePredictor:
+         run_callbacks: Execute registered callbacks for an event.
+         add_callback: Register a new callback function.
+     """
++    args: SimpleNamespace
++    save_dir: Path
++    done_warmup: bool
++    model: torch.nn.Module
++    data: dict
++    device: torch.device
++    dataset: torch.utils.data.Dataset
++    vid_writer: dict
++    plotted_img: numpy.ndarray
++    source_type: SimpleNamespace
++    seen: int
++    windows: list
++    batch: tuple
++    results: list
++    transforms: callable
++    callbacks: dict
++    txt_path: Path
++    _lock: threading.Lock
+ 
+     def __init__(self, cfg=DEFAULT_CFG, overrides=None, _callbacks=None):
+         """
+diff --git a/ultralytics/engine/trainer.py b/ultralytics/engine/trainer.py
+index 25c551d7..4ef7c97c 100644
+--- a/ultralytics/engine/trainer.py
++++ b/ultralytics/engine/trainer.py
+@@ -55,6 +55,10 @@ from ultralytics.utils.torch_utils import (
+     unset_deterministic,
+ )
+ 
++from types import SimpleNamespace
++from collections import defaultdict
++from ultralytics.engine.validator import BaseValidator
++
+ 
+ class BaseTrainer:
+     """
+@@ -93,6 +97,37 @@ class BaseTrainer:
+         plots (dict): Dictionary of plots.
+     """
+ 
++    args: SimpleNamespace
++    validator: BaseValidator
++    model: torch.nn.Module
++    callbacks: defaultdict
++    save_dir: Path
++    wdir: Path
++    last: Path
++    best: Path
++    save_period: int
++    batch_size: int
++    epochs: int
++    start_epoch: int
++    device: torch.device
++    amp: bool
++    scaler: amp.GradScaler
++    data: str
++    trainset: torch.utils.data.Dataset
++    testset: torch.utils.data.Dataset
++    ema: torch.nn.Module
++    resume: bool
++    lf: torch.nn.Module
++    scheduler: torch.optim.lr_scheduler._LRScheduler
++    best_fitness: float
++    fitness: float
++    loss: float
++    tloss: float
++    loss_names: list
++    csv: Path
++    metrics: dict
++    plots: dict
++
+     def __init__(self, cfg=DEFAULT_CFG, overrides=None, _callbacks=None):
+         """
+         Initialize the BaseTrainer class.
+diff --git a/ultralytics/engine/validator.py b/ultralytics/engine/validator.py
+index d266dd79..3ffc5118 100644
+--- a/ultralytics/engine/validator.py
++++ b/ultralytics/engine/validator.py
+@@ -38,6 +38,8 @@ from ultralytics.utils.checks import check_imgsz
+ from ultralytics.utils.ops import Profile
+ from ultralytics.utils.torch_utils import de_parallel, select_device, smart_inference_mode
+ 
++from types import SimpleNamespace
++from tqdm import tqdm
+ 
+ class BaseValidator:
+     """
+@@ -91,6 +93,25 @@ class BaseValidator:
+         eval_json: Evaluate and return JSON format of prediction statistics.
+     """
+ 
++    args: SimpleNamespace
++    dataloader: torch.utils.data.dataloader.DataLoader
++    pbar: tqdm
++    model: torch.nn.Module
++    data: dict
++    device: torch.device
++    batch_i: int
++    training: bool
++    names: dict
++    seen: int
++    stats: dict
++    nc: int
++    iouv: torch.Tensor
++    jdict: list
++    speed: dict
++    save_dir: Path
++    plots: dict
++    callbacks: dict
++
+     def __init__(self, dataloader=None, save_dir=None, pbar=None, args=None, _callbacks=None):
+         """
+         Initialize a BaseValidator instance.
+diff --git a/ultralytics/models/sam/modules/blocks.py b/ultralytics/models/sam/modules/blocks.py
+index 7dab134c..9f609efb 100644
+--- a/ultralytics/models/sam/modules/blocks.py
++++ b/ultralytics/models/sam/modules/blocks.py
+@@ -73,6 +73,7 @@ class MaskDownSampler(nn.Module):
+         >>> print(output.shape)
+         torch.Size([1, 256, 16, 16])
+     """
++    encoder: torch.nn.Sequential
+ 
+     def __init__(
+         self,
+@@ -226,6 +227,7 @@ class Fuser(nn.Module):
+         >>> print(output.shape)
+         torch.Size([1, 256, 32, 32])
+     """
++    proj: torch.nn.Identity
+ 
+     def __init__(self, layer, num_layers, dim=None, input_projection=False):
+         """
+@@ -611,6 +613,9 @@ class MultiScaleBlock(nn.Module):
+         torch.Size([1, 28, 28, 512])
+     """
+ 
++    pool: torch.nn.MaxPool2d
++    act_layer: torch.nn.GELU
++
+     def __init__(
+         self,
+         dim: int,
+diff --git a/ultralytics/models/sam/modules/encoders.py b/ultralytics/models/sam/modules/encoders.py
+index b4e2b687..aac03f61 100644
+--- a/ultralytics/models/sam/modules/encoders.py
++++ b/ultralytics/models/sam/modules/encoders.py
+@@ -185,6 +185,12 @@ class PromptEncoder(nn.Module):
+         torch.Size([1, 7, 256]) torch.Size([1, 256, 64, 64])
+     """
+ 
++    pe_layer: PositionEmbeddingRandom
++    point_embeddings: torch.nn.ModuleList
++    not_a_point_embed: torch.nn.Embedding
++    mask_downscaling: torch.nn.Sequential
++    no_mask_embed: torch.nn.Embedding
++
+     def __init__(
+         self,
+         embed_dim: int,
+@@ -381,6 +387,12 @@ class MemoryEncoder(nn.Module):
+         torch.Size([1, 256, 64, 64]) torch.Size([1, 128, 64, 64])
+     """
+ 
++    mask_downsampler: MaskDownSampler
++    pix_feat_proj: torch.nn.Conv2d
++    fuser: Fuser
++    out_proj: torch.nn.Identity
++    out_proj: torch.nn.Conv2d
++
+     def __init__(
+         self,
+         out_dim,
+diff --git a/ultralytics/models/sam/modules/tiny_encoder.py b/ultralytics/models/sam/modules/tiny_encoder.py
+index e5a3a63d..86ba2387 100644
+--- a/ultralytics/models/sam/modules/tiny_encoder.py
++++ b/ultralytics/models/sam/modules/tiny_encoder.py
+@@ -49,6 +49,9 @@ class Conv2d_BN(torch.nn.Sequential):
+         >>> print(output.shape)
+     """
+ 
++    c: torch.nn.Conv2d
++    bd: torch.nn.BatchNorm2d
++
+     def __init__(self, a, b, ks=1, stride=1, pad=0, dilation=1, groups=1, bn_weight_init=1):
+         """Initializes a sequential container with 2D convolution followed by batch normalization."""
+         super().__init__()
+@@ -81,6 +84,8 @@ class PatchEmbed(nn.Module):
+         >>> print(output.shape)
+     """
+ 
++    seq: torch.nn.Sequential
++
+     def __init__(self, in_chans, embed_dim, resolution, activation):
+         """Initializes patch embedding with convolutional layers for image-to-patch conversion and projection."""
+         super().__init__()
+@@ -129,6 +134,14 @@ class MBConv(nn.Module):
+         torch.Size([1, 64, 56, 56])
+     """
+ 
++    conv1: Conv2d_BN
++    act1: torch.nn.Module
++    conv2: Conv2d_BN
++    act2: torch.nn.Module
++    conv3: Conv2d_BN
++    act3: torch.nn.Module
++    drop_path: torch.nn.Module
++
+     def __init__(self, in_chans, out_chans, expand_ratio, activation, drop_path):
+         """Initializes the MBConv layer with specified input/output channels, expansion ratio, and activation."""
+         super().__init__()
+@@ -189,6 +202,11 @@ class PatchMerging(nn.Module):
+         >>> print(output.shape)
+     """
+ 
++    act: torch.nn.Module
++    conv1: Conv2d_BN
++    conv2: Conv2d_BN
++    conv3: Conv2d_BN
++
+     def __init__(self, input_resolution, dim, out_dim, activation):
+         """Initializes the PatchMerging module for merging and projecting neighboring patches in feature maps."""
+         super().__init__()
+@@ -242,6 +260,7 @@ class ConvLayer(nn.Module):
+         >>> output = conv_layer(input_tensor)
+         >>> print(output.shape)
+     """
++    blocks: torch.nn.ModuleList
+ 
+     def __init__(
+         self,
+diff --git a/ultralytics/nn/modules/block.py b/ultralytics/nn/modules/block.py
+index de88a7e1..b1449a40 100644
+--- a/ultralytics/nn/modules/block.py
++++ b/ultralytics/nn/modules/block.py
+@@ -78,6 +78,11 @@ class DFL(nn.Module):
+ class Proto(nn.Module):
+     """YOLOv8 mask Proto module for segmentation models."""
+ 
++    cv1: Conv
++    upsample: torch.nn.Upsample
++    cv2: Conv
++    cv3: Conv
++
+     def __init__(self, c1, c_=256, c2=32):
+         """
+         Initialize the YOLOv8 mask Proto module with specified number of protos and masks.

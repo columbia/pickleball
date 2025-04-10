@@ -32,6 +32,17 @@ val commonImportMappings: Map[String, String] = Map(
   "torch.nn.Upsample" -> "torch.nn.modules.upsampling.Upsample"
 )
 
+/**
+ * Joern struggles to distinguish between class constructors and function call
+ * return types - all are marked in the AST similarly (and Joern does not have
+ * type decl access for standard library functions.)
+ *
+ * We provide some known container constructors that Joern misses.
+ */
+val knownConstructors: Set[String] = Set(
+  "collections.py:<module>.defaultdict.<returnValue>",
+)
+
 type ClassPolicy = Map[String, Set[String]]
 type PolicyMap = Map[String, ClassPolicy]
 
@@ -59,6 +70,7 @@ def attributeTypes(className: String): Iterator[String] = {
             case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
             case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
             //case s if s.endsWith(".<returnValue>") => s.stripSuffix(".<returnValue>")
+            case s if knownConstructors.contains(s) => s.stripSuffix("<returnValue>")
             case s if s.endsWith("<metaClassAdapter>") => s.stripSuffix("<metaClassAdapter>")
             case _ => memberType
           }

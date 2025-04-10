@@ -25,7 +25,6 @@ def load_model(model_path, test=IMG_PATH) -> bool:
         return False
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        print(type(model))
         #collect_attr_stats(model)
         return True
 

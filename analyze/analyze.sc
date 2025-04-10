@@ -13,6 +13,24 @@ val PyModuleSuffix = ".py:<module>."
 val ModuleSuffix = ":<module>."
 val CollectionPrefix ="__collection."
 
+/**
+ * Some PyTorch imports use aliased module names. PickleBall will identify
+ * the aliased name, because that is how they are referenced in the analyzed
+ * source code, but pickle programs use the fully qualified names.
+ *
+ * We provide a map of some alias names to FQNs for common imports.
+ */
+val commonImportMappings: Map[String, String] = Map(
+  "torch.nn.Conv2d" -> "torch.nn.modules.conv.Conv2d",
+  "torch.nn.BatchNorm2d" -> "torch.nn.modules.batchnorm.BatchNorm2d",
+  "torch.nn.SiLU" -> "torch.nn.modules.activation.SiLU",
+  "torch.nn.ModuleList" -> "torch.nn.modules.container.ModuleList",
+  "torch.nn.Sequential" -> "torch.nn.modules.container.Sequential",
+  "torch.nn.MaxPool2d" -> "torch.nn.modules.pooling.MaxPool2d",
+  "torch.nn.Identity" -> "torch.nn.modules.linear.Identity",
+  "torch.nn.Upsample" -> "torch.nn.modules.upsampling.Upsample"
+)
+
 type ClassPolicy = Map[String, Set[String]]
 type PolicyMap = Map[String, ClassPolicy]
 
@@ -30,13 +48,14 @@ def attributeTypes(className: String): Iterator[String] = {
          * */
         .map { memberType =>
           memberType match {
-        //    case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
-        //    case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
+            case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
+            case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
             case s if s.endsWith(".<returnValue>") => s.stripSuffix(".<returnValue>")
             case s if s.endsWith("<metaClassAdapter>") => s.stripSuffix("<metaClassAdapter>")
             case _ => memberType
           }
         }
+        .map { memberType => removeMemberWrapper(memberType) }
         .distinct
   }
 }
@@ -414,8 +433,24 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
     }
   }
 
-  (allowedGlobals.map(canonicalizeName(getPrefix(modelClass), _)),
-   allowedReduces.map(canonicalizeName(getPrefix(modelClass), _)))
+  // Testing hack
+  // TODO: Remove
+  //allowedGlobals += "torch.nn.modules.upsampling.Upsample"
+
+  /** If any callables are in the known mapped imports, insert the mappings
+   * as well.
+   */
+  def enrichWithKnownAliases(input: mutable.Set[String]): mutable.Set[String] = {
+    input ++ input.flatMap(commonImportMappings.get)
+  }
+
+  /** Python3 uses both __builtin__ and builtins - add any __builtin__ with a
+   * builtins version
+   */
+  // TODO
+
+  (enrichWithKnownAliases(allowedGlobals.map(canonicalizeName(getPrefix(modelClass), _))),
+   enrichWithKnownAliases(allowedReduces.map(canonicalizeName(getPrefix(modelClass), _))))
 }
 
 def getPrefix(input: String): String = {
@@ -424,6 +459,11 @@ def getPrefix(input: String): String = {
 }
 
 def stripCollectionPrefix(input: String): String = stripPrefix(CollectionPrefix, input)
+
+def removeMemberWrapper(input: String): String = {
+  val memberPattern = """<member>\(([^)]+)\)""".r
+  memberPattern.replaceAllIn(input, m => m.group(1))
+}
 
 def stripPrefix(prefix: String, input: String): String = {
   if (input.startsWith(prefix)) input.substring(prefix.length) else input

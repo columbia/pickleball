@@ -45,4 +45,4 @@ clone_and_checkout https://github.com/eugenesiow/super-image.git super-image 504
 clone_and_checkout https://github.com/asahi417/tner.git tner 7730a62
 clone_and_checkout https://github.com/cardiffnlp/tweetnlp.git tweetnlp 68b08c8
 clone_and_checkout https://github.com/fcakyon/yolov5-pip.git yolov5 40a1887
-clone_and_checkout https://github.com/ultralytics/ultralytics.git yolov11 b18007e
+clone_and_checkout https://github.com/ultralytics/ultralytics.git yolov11 b18007e yolov11.diff

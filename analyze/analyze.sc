@@ -12,6 +12,7 @@ import java.io.File
 val PyModuleSuffix = ".py:<module>."
 val ModuleSuffix = ":<module>."
 val CollectionPrefix ="__collection."
+val JoernBuiltinPrefix = "__builtin."
 
 /**
  * Some PyTorch imports use aliased module names. PickleBall will identify
@@ -47,15 +48,23 @@ def attributeTypes(className: String): Iterator[String] = {
          *  analysis Queue.
          * */
         .map { memberType =>
+          println(s"MemberType: $memberType")
           memberType match {
+            /* Permit and simplify members that end with __init__ and __init.<returnValue>
+             * as they are class constructors. (Also <metaClassAdapter> wrapper.)
+             * Do not permit members that just end with <returnValue> because these are
+             * methods, not types. Eventually, better type recovery would turn these into
+             * the recovered class types.
+             */
             case s if s.endsWith(".__init__.<returnValue>") => s.stripSuffix(".__init__.<returnValue>")
             case s if s.endsWith(".__init__") => s.stripSuffix(".__init__")
-            case s if s.endsWith(".<returnValue>") => s.stripSuffix(".<returnValue>")
+            //case s if s.endsWith(".<returnValue>") => s.stripSuffix(".<returnValue>")
             case s if s.endsWith("<metaClassAdapter>") => s.stripSuffix("<metaClassAdapter>")
             case _ => memberType
           }
         }
         .map { memberType => removeMemberWrapper(memberType) }
+        .filterNot(_.endsWith(".<returnValue>"))
         .distinct
   }
 }
@@ -63,7 +72,7 @@ def attributeTypes(className: String): Iterator[String] = {
 def subClasses(inputParentClass: String): Iterator[String] = {
   /* Identify all type declarations that inherit from the parentClass */
 
-  val parentClass = stripPrefix("__builtin.", inputParentClass)
+  val parentClass = stripPrefix(JoernBuiltinPrefix, inputParentClass)
 
   cpg.typeDecl
     .filter(_.inheritsFromTypeFullName.contains(parentClass))
@@ -78,7 +87,7 @@ def superClasses(inputClassName: String): Seq[String] = {
  * baseType fields (or one, and not the other). We try searching for both.
  */
 
-val className = stripPrefix("__builtin.", inputClassName)
+val className = stripPrefix(JoernBuiltinPrefix, inputClassName)
 
 val parents = (cpg.typeDecl
     .fullName(className)
@@ -254,7 +263,7 @@ def reduces(classFullName: String): Iterator[ReduceCallable] = {
   }
 }
 
-def isPrimitiveType(className: String) : Boolean = className.startsWith("__builtin.")
+def isPrimitiveType(className: String) : Boolean = className.startsWith(JoernBuiltinPrefix)
 
 class UniqueQueue[T] extends mutable.Queue[T] {
 
@@ -322,7 +331,7 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
       println(s"- sub classes: ${subClasses(targetClass).toList.mkString(",")}")
       subClasses(targetClass).foreach(queue.enqueue)
 
-    } else if (targetTypeDecls.isEmpty && !targetClass.startsWith("__builtin.")) {
+    } else if (targetTypeDecls.isEmpty && !targetClass.startsWith(JoernBuiltinPrefix)) {
       /* Candidate class is neither in the CPG nor in the policy cache because:
        * 1. Candidate class might be a mangled name
        *      => unmangle name and add new name to queue
@@ -433,10 +442,6 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
     }
   }
 
-  // Testing hack
-  // TODO: Remove
-  //allowedGlobals += "torch.nn.modules.upsampling.Upsample"
-
   /** If any callables are in the known mapped imports, insert the mappings
    * as well.
    */
@@ -447,10 +452,20 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
   /** Python3 uses both __builtin__ and builtins - add any __builtin__ with a
    * builtins version
    */
-  // TODO
+  def handleBuiltins(s: mutable.Set[String]): mutable.Set[String] = {
+    s ++ s.collect {
+      case s if s.startsWith("__builtin__.") =>
+        //s.replaceFirstLiterally("__builtin__.", "builtins.")
+        s.replaceFirst(java.util.regex.Pattern.quote("__builtin__."), "builtins.")
+    }
+  }
 
-  (enrichWithKnownAliases(allowedGlobals.map(canonicalizeName(getPrefix(modelClass), _))),
-   enrichWithKnownAliases(allowedReduces.map(canonicalizeName(getPrefix(modelClass), _))))
+  def postProcessCallables: mutable.Set[String] => mutable.Set[String] = {
+    (s: mutable.Set[String]) => enrichWithKnownAliases(handleBuiltins(s))
+  }
+
+  (postProcessCallables(allowedGlobals.map(canonicalizeName(getPrefix(modelClass), _))),
+   postProcessCallables(allowedReduces.map(canonicalizeName(getPrefix(modelClass), _))))
 }
 
 def getPrefix(input: String): String = {
@@ -498,10 +513,10 @@ def canonicalizeName(baseModule: String, callableName: String): String = {
   val canonicalizedName = removeClassSuffix(removeReturnValueSuffix(prependBaseModule(
     baseModule,
     stripCollectionPrefix(callableName)
-    .replaceAllLiterally("/", ".")
-    .replaceAllLiterally(PyModuleSuffix, "."))))
+    .replace("/", ".")
+    .replace(PyModuleSuffix, "."))))
     /* If canonicalized name begins with __builtin, replace with __builtin__. */
-    .replaceAll("__builtin.", "__builtin__.")
+    .replace(JoernBuiltinPrefix, "__builtin__.")
 
   return canonicalizedName
 }

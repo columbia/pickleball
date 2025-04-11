@@ -10,7 +10,7 @@ import argparse
 import csv
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Merge selected rows from two pipe-separated CSV files.")
+    parser = argparse.ArgumentParser(description="Merge selected rows from two pipe-separated CSV files with no headers.")
     parser.add_argument("csv1", help="First input CSV file")
     parser.add_argument("csv2", help="Second input CSV file")
     parser.add_argument("keep_list", help="Text file listing row names to keep (one per line)")
@@ -25,29 +25,24 @@ def load_filtered_rows(csv_path, keep_names):
     filtered_rows = []
     with open(csv_path, newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter='|')
-        header = next(reader)
         for row in reader:
             if row and row[0] in keep_names:
                 filtered_rows.append(row)
-    return header, filtered_rows
+    return filtered_rows
 
 def main():
     args = parse_args()
 
     keep_names = load_keep_list(args.keep_list)
 
-    header1, rows1 = load_filtered_rows(args.csv1, keep_names)
-    header2, rows2 = load_filtered_rows(args.csv2, keep_names)
-
-    if header1 != header2:
-        raise ValueError("CSV headers do not match.")
+    rows1 = load_filtered_rows(args.csv1, keep_names)
+    rows2 = load_filtered_rows(args.csv2, keep_names)
 
     all_rows = rows1 + rows2
-    all_rows.sort(key=lambda row: row[0])  # Sort by first column (row name)
+    all_rows.sort(key=lambda row: row[0])  # Sort by first column
 
     with open(args.output, 'w', newline='') as f:
         writer = csv.writer(f, delimiter='|')
-        writer.writerow(header1)
         writer.writerows(all_rows)
 
     print(f"Merged output written to {args.output}")

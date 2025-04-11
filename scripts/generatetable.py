@@ -75,6 +75,17 @@ def generate_table(results: Dict[str, Library]) -> str:
     latex_table += LATEX_TABLE_FOOTER
     return latex_table
 
+def print_macros(library: Library):
+
+    # Example: \newcommand{conchImportsObserved}{24}
+    # Add double {{}} to escape them in the format string
+    template = "\\newcommand{{\\{libraryname}{mode}{valuetype}}}{{{value}}}"
+
+    print(template.format(name=library.name, mode="Imports", valueType="Observed",
+                    value=library.globals_observed))
+    print(template.format(name=library.name, mode="Imports", valueType="Allowed",
+                    value=library.globals_allowed))
+
 def read_last_line(filepath: pathlib.Path) -> str:
 
     with filepath.open("rb") as f:
@@ -101,6 +112,11 @@ if __name__ == "__main__":
         default=None,
         help="Path to directory containing results from enforcement experiments"
     )
+    parser.add_argument(
+        "--output-macros",
+        action="store_true",
+        help=("Output LaTeX Macro definitions for variable names, rather than"
+        "for a table"))
 
     args = parser.parse_args()
 
@@ -162,4 +178,9 @@ if __name__ == "__main__":
             libraries[library_name].models_loaded = success
 
     # Generate Table with collected values, outputting LaTeX code.
-    print(generate_table(libraries))
+    if args.output_macros:
+        for library in libraries:
+            print_macros(library)
+            print()
+    else:
+        print(generate_table(libraries))

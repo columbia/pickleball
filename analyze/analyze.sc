@@ -59,7 +59,6 @@ def attributeTypes(className: String): Iterator[String] = {
          *  analysis Queue.
          * */
         .map { memberType =>
-          println(s"MemberType: $memberType")
           memberType match {
             /* Permit and simplify members that end with __init__ and __init.<returnValue>
              * as they are class constructors. (Also <metaClassAdapter> wrapper.)

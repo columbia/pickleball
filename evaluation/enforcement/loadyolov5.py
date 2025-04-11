@@ -8,7 +8,7 @@ from pklballcheck import verify_loader_was_used
 #TEST = "I love berlin."
 IMG_PATH = 'https://github.com/ultralytics/yolov5/raw/master/data/images/zidane.jpg'
 
-def load_model(model_path, test=IMG_PATH) -> bool:
+def load_model(model_path, test=IMG_PATH) -> tuple[bool, str]:
 
     try:
         model = yolov5.load(model_path)
@@ -21,12 +21,12 @@ def load_model(model_path, test=IMG_PATH) -> bool:
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         print(type(model))
         #collect_attr_stats(model)
-        return True
+        return True, str(results)
 
 
 if __name__ == "__main__":

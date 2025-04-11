@@ -22,11 +22,11 @@ def load_model(model_path, test=IMG_PATH) -> bool:
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         #collect_attr_stats(model)
-        return True
+        return True, str(results)
 
 
 if __name__ == "__main__":

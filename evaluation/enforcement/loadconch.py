@@ -9,7 +9,7 @@ from pklballcheck import collect_attr_stats, verify_loader_was_used
 DIR = Path(__file__).parent
 
 
-def load_model(model_path, test="") -> bool:
+def load_model(model_path, test="") -> tuple[bool, str]:
     try:
 
         model, preprocess = create_model_from_pretrained(
@@ -25,11 +25,11 @@ def load_model(model_path, test="") -> bool:
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(model)
-        return True
+        return True, image_embs
 
 
 if __name__ == "__main__":
@@ -51,5 +51,6 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path, args.test)
+    is_success, output = load_model(args.model_path, args.test)
+    print(output)
     verify_loader_was_used()

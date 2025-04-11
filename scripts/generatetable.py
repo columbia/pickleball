@@ -35,6 +35,10 @@ LATEX_TABLE_FOOTER = """
 \\end{document}
 """
 
+NAME_MAPPING = {
+    "yolov5": "yolovfive",
+    "yolov11": "yoloveleven",
+}
 
 @dataclass(slots=True)
 class Library(object):
@@ -87,23 +91,29 @@ def print_macros(library: Library):
     # Add double {{}} to escape them in the format string
     template = "\\newcommand{{\\{name}{mode}{valuetype}}}{{{value}}}"
 
-    print(template.format(name=library.name, mode="Imports", valuetype="Observed",
+    # Some library names have invalid characters for LaTeX macros
+    if library.name in NAME_MAPPING.keys():
+        name = NAME_MAPPING[library.name]
+    else:
+        name = library.name
+
+    print(template.format(name=name, mode="Imports", valuetype="Observed",
                     value=library.globals_observed))
-    print(template.format(name=library.name, mode="Imports", valuetype="Allowed",
+    print(template.format(name=name, mode="Imports", valuetype="Allowed",
                     value=library.globals_inferred))
-    print(template.format(name=library.name, mode="Imports", valuetype="Stubbed",
+    print(template.format(name=name, mode="Imports", valuetype="Stubbed",
                     value=library.globals_missed))
-    print(template.format(name=library.name, mode="Invocations", valuetype="Observed",
+    print(template.format(name=name, mode="Invocations", valuetype="Observed",
                     value=library.reduces_observed))
-    print(template.format(name=library.name, mode="Invocations", valuetype="Allowed",
+    print(template.format(name=name, mode="Invocations", valuetype="Allowed",
                     value=library.reduces_inferred))
-    print(template.format(name=library.name, mode="Invocations", valuetype="Stubbed",
+    print(template.format(name=name, mode="Invocations", valuetype="Stubbed",
                     value=library.reduces_missed))
-    print(template.format(name=library.name, mode="Models", valuetype="Total",
+    print(template.format(name=name, mode="Models", valuetype="Total",
                     value=library.models_attempted))
-    print(template.format(name=library.name, mode="Models", valuetype="Loaded",
+    print(template.format(name=name, mode="Models", valuetype="Loaded",
                     value=library.models_loaded))
-    print(template.format(name=library.name, mode="Models", valuetype="Successrate",
+    print(template.format(name=name, mode="Models", valuetype="Successrate",
                     value=f"{library.success_rate() * 100:.1f}\\%"))
 
 def print_summary_macros(libraries: List[Library]):

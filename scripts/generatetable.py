@@ -3,7 +3,7 @@
 import argparse
 import pathlib
 import tomllib
-from typing import Dict, Any
+from typing import Dict, List, Any
 from dataclasses import dataclass
 
 import compare
@@ -48,6 +48,12 @@ class Library(object):
     models_attempted: int = 0
     models_loaded: int = 0
 
+    def success_rate(self):
+        if self.models_attempted != 0:
+            return self.models_loaded / self.models_attempted
+        else:
+            return 0
+
 
 def generate_table(results: Dict[str, Library]) -> str:
 
@@ -79,12 +85,50 @@ def print_macros(library: Library):
 
     # Example: \newcommand{conchImportsObserved}{24}
     # Add double {{}} to escape them in the format string
-    template = "\\newcommand{{\\{libraryname}{mode}{valuetype}}}{{{value}}}"
+    template = "\\newcommand{{\\{name}{mode}{valuetype}}}{{{value}}}"
 
-    print(template.format(name=library.name, mode="Imports", valueType="Observed",
+    print(template.format(name=library.name, mode="Imports", valuetype="Observed",
                     value=library.globals_observed))
-    print(template.format(name=library.name, mode="Imports", valueType="Allowed",
-                    value=library.globals_allowed))
+    print(template.format(name=library.name, mode="Imports", valuetype="Allowed",
+                    value=library.globals_inferred))
+    print(template.format(name=library.name, mode="Imports", valuetype="Stubbed",
+                    value=library.globals_missed))
+    print(template.format(name=library.name, mode="Invocations", valuetype="Observed",
+                    value=library.reduces_observed))
+    print(template.format(name=library.name, mode="Invocations", valuetype="Allowed",
+                    value=library.reduces_inferred))
+    print(template.format(name=library.name, mode="Invocations", valuetype="Stubbed",
+                    value=library.reduces_missed))
+    print(template.format(name=library.name, mode="Models", valuetype="Total",
+                    value=library.models_attempted))
+    print(template.format(name=library.name, mode="Models", valuetype="Loaded",
+                    value=library.models_loaded))
+    print(template.format(name=library.name, mode="Models", valuetype="Successrate",
+                    value=f"{library.success_rate() * 100:.1f}\\%"))
+
+def print_summary_macros(libraries: List[Library]):
+
+    template = "\\newcommand{{\\{name}}}{{{value}}}"
+
+    print(template.format(name="modelsTotal", value=total_models(libraries)))
+    print(template.format(name="modelsTotalPickleballLoaded", value=total_loaded(libraries)))
+    print(template.format(name="modelsTotalSuccessRate", value=f"{total_success_rate(libraries) * 100:.1f}\\%"))
+    print(template.format(name="modelsAvgPickleball", value=f"{avg_success_rate(libraries) * 100:.1f}\\%"))
+
+def total_models(libraries: List[Library]) -> int:
+    return sum(library.models_attempted for library in libraries)
+
+def total_loaded(libraries: List[Library]) -> int:
+    return sum(library.models_loaded for library in libraries)
+
+def total_success_rate(libraries: List[Library]) -> int:
+    if total_models(libraries) != 0:
+        return total_loaded(libraries) / total_models(libraries)
+    else:
+        return 0
+
+def avg_success_rate(libraries: List[Library]) -> int:
+    return sum(library.success_rate() for library in libraries) / len(libraries)
 
 def read_last_line(filepath: pathlib.Path) -> str:
 
@@ -179,8 +223,9 @@ if __name__ == "__main__":
 
     # Generate Table with collected values, outputting LaTeX code.
     if args.output_macros:
-        for library in libraries:
+        for library in libraries.values():
             print_macros(library)
             print()
+        print_summary_macros(list(libraries.values()))
     else:
         print(generate_table(libraries))

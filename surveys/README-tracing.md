@@ -17,6 +17,10 @@ MARCH-PICKLE that are not already in PREV-ANALYZED:
 - Use it as input to the `scripts/download_model.py` script to begin download:
   `python3 scripts/download_model.py --repositories-list missing_models --outdir <path>`
 - Post-process results:
+    `python3 analyze_traces.py <path to traces> > traced.csv`
 
 - Combine results with previous analysis:
-
+    Create list of all repositories to include:
+        `cat missing existing > all`
+    `python3 scripts/merge_trace_csv ...`
+    `python3 process_csv.py <csv>`

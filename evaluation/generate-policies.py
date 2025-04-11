@@ -89,16 +89,25 @@ def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int
     print('-------------------------------------------------------------')
     print(f'Generating CPG and policy for: {librarycfg.name}')
     try:
-        pickleball.create_cpg(
-            librarycfg.library_path,
-            systemcfg.joern_dir,
-            systemmem,
-            out_path=librarycfg.cpg_path,
-            ignore_paths=librarycfg.ignore_paths,
-            use_cpg=librarycfg.cpg_mode
-        )
+        
+        if not librarycfg.cpg_mode:
+            # We only create a CPG if we are using 'AST' mode. Otherwise
+            # we skip to directly invoke Joern with the script.
+            pickleball.create_cpg(
+                librarycfg.library_path,
+                systemcfg.joern_dir,
+                systemmem,
+                out_path=librarycfg.cpg_path,
+                ignore_paths=librarycfg.ignore_paths,
+                use_cpg=librarycfg.cpg_mode
+            )
+        
+        # If we created a CPG in the prior step, use it as input to the script.
+        # Otherwise, pass the path to the library source code.
+        analysis_input = librarycfg.library_path if librarycfg.cpg_mode else librarycfg.cpg_path
+
         pickleball.generate_policy(
-            librarycfg.cpg_path,
+            analysis_input,
             librarycfg.model_class,
             systemmem,
             systemcfg.analyzer_path,

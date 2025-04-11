@@ -10,7 +10,7 @@ from super_image import EdsrModel, ImageLoader
 DIR = Path(__file__).parent
 
 
-def load_model(model_path) -> bool:
+def load_model(model_path) -> tuple[bool, str]:
 
     test_image = DIR / "test-superimage" / "test.png"
     image = Image.open(str(test_image))
@@ -24,7 +24,7 @@ def load_model(model_path) -> bool:
             str(model_dir), scale=2
         )  # scale 2, 3 and 4 models available
         preds = model(inputs)
-        print(preds)
+        # print(preds)
 
         # ImageLoader.save_image(preds, './scaled_2x.png')                        # save the output 2x scaled image to `./scaled_2x.png`
         # ImageLoader.save_compare(inputs, preds, './scaled_2x_compare.png')      # save an output comparing the super-image with a bicubic scaling
@@ -33,11 +33,11 @@ def load_model(model_path) -> bool:
         print(e)
         stack_trace = traceback.format_exc()
         print(stack_trace)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(model)
-        return True
+        return True, preds
 
 
 if __name__ == "__main__":
@@ -60,5 +60,6 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path)
+    is_success, output = load_model(args.model_path)
+    print(output)
 #    verify_loader_was_used()

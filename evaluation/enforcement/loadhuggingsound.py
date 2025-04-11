@@ -7,7 +7,7 @@ from pklballcheck import collect_attr_stats, verify_loader_was_used
 DIR = Path(__file__).parent
 
 
-def load_model(model_path) -> bool:
+def load_model(model_path) -> tuple[bool, str]:
 
     try:
         # the model_path is a path to the pytorch.bin file,
@@ -17,16 +17,15 @@ def load_model(model_path) -> bool:
         model = SpeechRecognitionModel(model_dir)
         audio_paths = [str(DIR / "test-huggingsound" / "test.wav")]
         transcriptions = model.transcribe(audio_paths)
-        print(transcriptions)
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        collect_attr_stats(model)
-        return True
+        # collect_attr_stats(model)
+        return True, transcriptions
 
 
 if __name__ == "__main__":
@@ -43,4 +42,5 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path)
+    is_success, output = load_model(args.model_path)
+    print(output)

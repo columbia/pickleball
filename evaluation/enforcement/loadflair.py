@@ -4,25 +4,32 @@ from flair.data import Sentence
 from flair.models import SequenceTagger
 from pklballcheck import collect_attr_stats, verify_loader_was_used
 
-TEST = "I love berlin."
+TEST = "The experienced professor from Harvard University quickly analyzed the ancient manuscript while drinking coffee in New York last Sunday."
 
-def load_model(model_path, test=TEST) -> bool:
+
+def load_model(model_path, test=TEST) -> tuple[bool, str]:
     try:
         tagger = SequenceTagger.load(model_path)
         sentence = Sentence(test)
 
         tagger.predict(sentence)
 
-        # for entity in sentence.get_spans('np'):
-        #    print(entity)
+        entities = sentence.get_spans()
+        output = "\n".join([str(entity) for entity in entities])
+
+        # If we are running a POS model the spans will be empty and the tags
+        # will be incorporated in the sentence
+        if len(output) == 0:
+            output = sentence
+
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(tagger)
-        return True
+        return True, output
 
 
 if __name__ == "__main__":
@@ -44,5 +51,6 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path, args.test)
+    is_success, output = load_model(args.model_path)
+    print(output)
     verify_loader_was_used()

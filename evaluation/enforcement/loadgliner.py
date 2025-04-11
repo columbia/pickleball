@@ -23,7 +23,7 @@ LABELS = [
 ]
 
 
-def load_model(model_path, text=TEXT, labels=LABELS) -> bool:
+def load_model(model_path, text=TEXT, labels=LABELS) -> tuple[bool, str]:
     try:
         # the model_path is a path to the pytorch.bin file,
         # but the model loading API expects the model directory.
@@ -32,17 +32,18 @@ def load_model(model_path, text=TEXT, labels=LABELS) -> bool:
         model = GLiNER.from_pretrained(model_dir, local_files_only=True)
         entities = model.predict_entities(text, labels)
 
-        for entity in entities:
-            print(entity["text"], "=>", entity["label"])
+        output = "\n".join(
+            [entity["text"] + " => " + entity["label"] for entity in entities]
+        )
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m: {e}")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(model)
-        return True
+        return True, output
 
 
 if __name__ == "__main__":
@@ -55,16 +56,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--test",
         default="The happy man has been eating at the diner",
-        help=(
-            "test input for the model (current string type)"
-        ),
+        help=("test input for the model (current string type)"),
     )
     args = parser.parse_args()
     if not args.model_path:
-        print("ERROR: need to specify model directory (pytorch_model.bin) and (optional) test input")
+        print(
+            "ERROR: need to specify model directory (pytorch_model.bin) and (optional) test input"
+        )
         exit(1)
 
-    load_model(args.model_path, args.test)
+    is_success, output = load_model(args.model_path, args.test)
+    print(output)
     if verify_loader_was_used():
         print("Loader used")
     else:

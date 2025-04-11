@@ -6,7 +6,8 @@ from sentence_transformers import SentenceTransformer
 
 TEST = "The happy man has been eating at the diner"
 
-def load_model(model_path, test=TEST) -> bool:
+
+def load_model(model_path, test=TEST) -> tuple[bool, str]:
 
     model_dir = Path(model_path).parent
     sentences = [test]
@@ -14,16 +15,16 @@ def load_model(model_path, test=TEST) -> bool:
 
         model = SentenceTransformer(str(model_dir), trust_remote_code=True)
         embeddings = model.encode(sentences)
-        print(embeddings)
+        # print(embeddings)
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(model)
-        return True
+        return True, embeddings
 
 
 if __name__ == "__main__":
@@ -45,7 +46,7 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path, args.test)
+    is_success, output = load_model(args.model_path, args.test)
     if verify_loader_was_used():
         print("Loader used")
     else:

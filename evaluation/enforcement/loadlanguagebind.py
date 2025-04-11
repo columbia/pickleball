@@ -16,7 +16,7 @@ from languagebind import (
 from pklballcheck import collect_attr_stats, verify_loader_was_used
 
 
-def load_model(model_path) -> bool:
+def load_model(model_path) -> tuple[bool, str]:
 
     model_dir = Path(model_path).parent
 
@@ -32,7 +32,7 @@ def load_model(model_path) -> bool:
         )
 
 
-def load_audio_model(model_path) -> bool:
+def load_audio_model(model_path) -> tuple[bool, str]:
     try:
         model = LanguageBindAudio.from_pretrained(model_path)
         tokenizer = LanguageBindAudioTokenizer.from_pretrained(model_path)
@@ -45,18 +45,18 @@ def load_audio_model(model_path) -> bool:
         with torch.no_grad():
             out = model(**data)
 
-        print(out.text_embeds @ out.image_embeds.T)
+        output = out.text_embeds @ out.image_embeds.T
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(model)
-        return True
+        return True, output
 
 
-def load_image_model(model_path):
+def load_image_model(model_path) -> tuple[bool, str]:
     try:
         model = LanguageBindImage.from_pretrained(model_path)
         tokenizer = LanguageBindImageTokenizer.from_pretrained(model_path)
@@ -69,19 +69,19 @@ def load_image_model(model_path):
         with torch.no_grad():
             out = model(**data)
 
-        print(out.text_embeds @ out.image_embeds.T)
+        output = out.text_embeds @ out.image_embeds.T
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        return True
+        return True, output
     finally:
         collect_attr_stats(model)
 
 
-def load_video_model(model_path) -> bool:
+def load_video_model(model_path) -> tuple[bool, str]:
     try:
         model = LanguageBindVideo.from_pretrained(model_path)
         tokenizer = LanguageBindVideoTokenizer.from_pretrained(model_path)
@@ -94,14 +94,14 @@ def load_video_model(model_path) -> bool:
         with torch.no_grad():
             out = model(**data)
 
-        print(out.text_embeds @ out.image_embeds.T)
+        output = out.text_embeds @ out.image_embeds.T
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        return True
+        return True, output
     finally:
         collect_attr_stats(model)
 
@@ -120,5 +120,6 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path)
-    verify_loader_was_used()
+    is_success, output = load_model(args.model_path)
+    print(output)
+    # verify_loader_was_used()

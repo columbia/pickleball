@@ -278,19 +278,3 @@ index e5a3a63d..86ba2387 100644
  
      def __init__(
          self,
-diff --git a/ultralytics/nn/modules/block.py b/ultralytics/nn/modules/block.py
-index de88a7e1..b1449a40 100644
---- a/ultralytics/nn/modules/block.py
-+++ b/ultralytics/nn/modules/block.py
-@@ -78,6 +78,11 @@ class DFL(nn.Module):
- class Proto(nn.Module):
-     """YOLOv8 mask Proto module for segmentation models."""
- 
-+    cv1: Conv
-+    upsample: torch.nn.Upsample
-+    cv2: Conv
-+    cv3: Conv
-+
-     def __init__(self, c1, c_=256, c2=32):
-         """
-         Initialize the YOLOv8 mask Proto module with specified number of protos and masks.

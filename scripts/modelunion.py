@@ -37,19 +37,35 @@ def main():
 
     # Add argument to accept a list of file names
     parser.add_argument(
-        'filenames',
+        '--filenames',
         metavar='F',
         type=str,
         nargs='+',
         help='JSON files to be processed')
+    
+    parser.add_argument(
+        '--filenames-list',
+        type=str,
+        help='Path to file with list of model traces to process')
 
     # Parse the arguments
     args = parser.parse_args()
 
     json_objects = []
 
+    filenames = []
+    if args.filenames_list:
+        filenames = []
+        with open(args.filenames_list, 'r') as fd:
+            for line in fd:
+                filenames.append(line.strip())
+    elif args.filenames:
+        filenames = args.filenames
+    else:
+        raise RuntimeError('Must provide either --filenames or --filenames-list')
+
     # Read each file and load it as a JSON object
-    for filename in args.filenames:
+    for filename in filenames:
         with open(filename, 'r', encoding='utf-8') as fd:
             json_data = json.load(fd)
             json_objects.append(json_data)

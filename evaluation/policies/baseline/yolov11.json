@@ -1,5 +1,5 @@
 {
-  "engine/model.py:<module>.Model": {
+  "ultralytics/engine/model.py:<module>.Model": {
     "globals": [
       "torch.nn.modules.pooling.MaxPool2d",
       "ultralytics.nn.modules.conv.DWConv",

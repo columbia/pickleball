@@ -471,8 +471,12 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
     }
   }
 
+  def stripInit(s: mutable.Set[String]): mutable.Set[String] = {
+    s.map (elem => elem.replace("__init__.", ""))
+  }
+
   def postProcessCallables: mutable.Set[String] => mutable.Set[String] = {
-    (s: mutable.Set[String]) => enrichWithKnownAliases(handleBuiltins(s))
+    (s: mutable.Set[String]) => enrichWithKnownAliases(stripInit(handleBuiltins(s)))
   }
 
   (postProcessCallables(allowedGlobals.map(canonicalizeName(getPrefix(modelClass), _))),

@@ -236,7 +236,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/superimage.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "pytorch_model_2x.pt"
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "*.pt"
 
   enforce-tner:
     image: pickleball-enforce-tner

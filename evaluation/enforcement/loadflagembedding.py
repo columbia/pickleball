@@ -5,12 +5,12 @@ from pathlib import Path
 from FlagEmbedding import FlagModel
 from pklballcheck import collect_attr_stats
 
-TEST = "The happy man has been eating at the diner"
+TEST = "The experienced professor from Harvard University quickly analyzed the ancient manuscript while drinking coffee in New York last Sunday."
 sentences_1 = ["样例数据-1", "样例数据-2"]
 sentences_2 = ["样例数据-3", "样例数据-4"]
 
 
-def load_model(model_path, test=TEST) -> bool:
+def load_model(model_path, test=TEST) -> tuple[bool, str]:
     model = None
     try:
         # the model_path is a path to the pytorch.bin file,
@@ -18,13 +18,15 @@ def load_model(model_path, test=TEST) -> bool:
         model_dir = str(Path(model_path).parent)
 
         sentences = [test]
-        #model = FlagModel(model_dir)
-        model = FlagModel(model_dir,
-                  query_instruction_for_retrieval="为这个句子生成表示以用于检索相关文章：")
-                  #use_fp16=True)
+        # model = FlagModel(model_dir)
+        model = FlagModel(
+            model_dir,
+            query_instruction_for_retrieval="为这个句子生成表示以用于检索相关文章：",
+        )
+        # use_fp16=True)
 
         embeddings = model.encode(sentences)
-        print(embeddings)
+        # print(embeddings)
         # scores = embeddings @ embeddings.T
         # print(f"Similarity scores:\n{scores}")
 
@@ -33,11 +35,11 @@ def load_model(model_path, test=TEST) -> bool:
         print(e)
         stack_trace = traceback.format_exc()
         print(stack_trace)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        collect_attr_stats(model)
-        return True
+        # collect_attr_stats(model)
+        return True, embeddings
 
 
 if __name__ == "__main__":
@@ -59,4 +61,5 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path, args.test)
+    is_success, output = load_model(args.model_path, args.test)
+    print(output)

@@ -7,23 +7,22 @@ from pklballcheck import collect_attr_stats, verify_loader_was_used
 TEST = "Can you recommend some upscale restaurants in New York?"
 
 
-def load_model(model_path, test=TEST) -> bool:
+def load_model(model_path, test=TEST) -> tuple[bool, str]:
 
     model_dir = Path(model_path).parent
 
     try:
         parrot = Parrot(model_tag=str(model_dir), use_gpu=False)
         para_phrases = parrot.augment(input_phrase=test)
-        print(para_phrases)
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(parrot)
-        return True
+        return True, para_phrases
 
 
 if __name__ == "__main__":
@@ -45,4 +44,5 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path, args.test)
+    is_success, output = load_model(args.model_path, args.test)
+    print(output)

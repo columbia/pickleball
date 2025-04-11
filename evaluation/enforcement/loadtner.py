@@ -7,25 +7,23 @@ from tner import TransformersNER
 TEST = "The happy man has been eating at the diner"
 
 
-def load_model(model_path, test=TEST) -> bool:
+def load_model(model_path, test=TEST) -> tuple[bool, str]:
 
     model_dir = Path(model_path).parent
     print(f"model_dir: {model_dir}")
     try:
         model = TransformersNER(str(model_dir))
-        print(
-            model.predict(
-                ["Jacob Collier is a Grammy awarded English artist from London"]
-            )
+        output = model.predict(
+            ["Jacob Collier is a Grammy awarded English artist from London"]
         )
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
-        return False
+        return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(model)
-        return True
+        return True, output
 
 
 if __name__ == "__main__":
@@ -47,4 +45,5 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    load_model(args.model_path, args.test)
+    is_success, output = load_model(args.model_path, args.test)
+    print(output)

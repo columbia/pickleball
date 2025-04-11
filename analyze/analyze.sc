@@ -568,7 +568,8 @@ def readCache(cachePath: String): PolicyMap = {
 
 @main def main(inputPath: String, modelClass: String, outputPath: String = "", cache: String = "") = {
 
-  importCpg(inputPath)
+  if (inputPath.endsWith(".cpg")) importCpg(inputPath)
+  else importCode(inputPath=inputPath)
 
   val cachedPolicies: PolicyMap = readCache(cache)
   println(s"${cachedPolicies.mkString(",")}")

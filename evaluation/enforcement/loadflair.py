@@ -1,7 +1,7 @@
 import argparse
 
 import flair.datasets
-from flair.data import Sentence
+from flair.data import MultiCorpus, Sentence
 from flair.models import SequenceTagger
 from pklballcheck import collect_attr_stats, verify_loader_was_used
 
@@ -10,10 +10,22 @@ corpus_map = {
     "flair-ner-english-fast": flair.datasets.NER_ENGLISH_PERSON,
     "flair-ner-english-large": flair.datasets.NER_ENGLISH_PERSON,
     "flair-chunk-english-fast": flair.datasets.NER_ENGLISH_PERSON,
+    "flair-ner-english-ontonotes": flair.datasets.NER_ENGLISH_PERSON,
     "flair-ner-english-ontonotes-large": flair.datasets.NER_ENGLISH_PERSON,
     "flair-ner-english-ontonotes-fast": flair.datasets.NER_ENGLISH_PERSON,
     "flair-ner-spanish-large": flair.datasets.UP_SPANISH,
     "flair-ner-dutch-large": flair.datasets.UD_DUTCH,
+    "flair-ner-french": flair.datasets.UD_FRENCH,
+    "flair-ner-german": flair.datasets.UD_GERMAN,
+    "flair-ner-german-large": flair.datasets.UD_GERMAN,
+    "megantosh-flair-arabic-multi-ner": flair.datasets.UD_ARABIC,
+    "flair-upos-english": flair.datasets.NER_ENGLISH_PERSON,
+    "flair-pos-english": flair.datasets.NER_ENGLISH_PERSON,
+    "flair-pos-english-fast": flair.datasets.NER_ENGLISH_PERSON,
+    "flair-upos-english-fast": flair.datasets.NER_ENGLISH_PERSON,
+    "flair-ner-multi": MultiCorpus(
+        [flair.datasets.UD_ENGLISH, flair.datasets.UD_GERMAN, flair.datasets.UD_DUTCH]
+    ),
 }
 
 

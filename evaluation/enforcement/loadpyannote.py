@@ -2,16 +2,20 @@ import argparse
 import os
 from pathlib import Path
 
-from pklballcheck import collect_attr_stats, verify_loader_was_used
 from pyannote.audio import Inference, Model
 from pyannote.core import Segment
 
+try:
+    from pklballcheck import collect_attr_stats, verify_loader_was_used
+except:
+    pass
+
 DIR = Path(__file__).parent
 TEST_FILE = DIR / Path("test-pyannote") / Path("test.wav")
-VALIDATION_DIR = DIR / Path("aishell-4/wav")
+VALIDATION_DIR = Path("/datasets/aishell-4/wav")
 
 
-def validate_model(model_path):
+def validate_model(model_path) -> str:
 
     validation_files = os.listdir(VALIDATION_DIR)
 
@@ -20,15 +24,20 @@ def validate_model(model_path):
 
         inference = Inference(model, step=2.5)
 
+        all_output = ""
         for file in validation_files:
             output = inference(str(VALIDATION_DIR / file))
+            print(file)
             print(output.data)
+            all_output = file + "\n" + output.data + "\n"
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
+        return ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
+        return all_output
 
 
 def load_model(model_path) -> tuple[bool, str]:
@@ -46,7 +55,6 @@ def load_model(model_path) -> tuple[bool, str]:
         return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        # collect_attr_stats(model)
         return True, output.data
 
 

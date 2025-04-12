@@ -75,7 +75,6 @@ def attributeTypes(className: String): Iterator[String] = {
           }
         }
         .map { memberType => removeMemberWrapper(memberType) }
-        .filterNot(_.endsWith(".<returnValue>"))
         .distinct
   }
 }
@@ -475,8 +474,19 @@ def inferTypeFootprint(modelClass: String, cachedPolicies: PolicyMap): (mutable.
     s.map (elem => elem.replace("__init__.", ""))
   }
 
+  /* Remove callables that end with .<returnValue>, indicating that they're
+   * the return of a function invocation that we don't know the type of.
+   */
+  def removeFunctionCalls(s: mutable.Set[String]): mutable.Set[String] = {
+    s.filterNot(_.endsWith(".<returnValue>"))
+  }
+
   def postProcessCallables: mutable.Set[String] => mutable.Set[String] = {
-    (s: mutable.Set[String]) => enrichWithKnownAliases(stripInit(handleBuiltins(s)))
+    (s: mutable.Set[String]) =>
+      enrichWithKnownAliases(
+      removeFunctionCalls(
+      stripInit(
+      handleBuiltins(s))))
   }
 
   (postProcessCallables(allowedGlobals.map(canonicalizeName(getPrefix(modelClass), _))),

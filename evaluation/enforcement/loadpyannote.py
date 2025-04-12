@@ -25,7 +25,7 @@ def load_model(model_path) -> tuple[bool, str]:
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         # collect_attr_stats(model)
-        return True, output
+        return True, output.data
 
 
 if __name__ == "__main__":

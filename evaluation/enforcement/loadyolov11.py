@@ -5,30 +5,37 @@ from pathlib import Path
 import ultralytics
 
 # from pklballcheck import collect_attr_stats, verify_loader_was_used
-from pklballcheck import verify_loader_was_used
+try:
+    from pklballcheck import verify_loader_was_used
+except:
+    pass
 
 # IMG_PATH = 'https://github.com/ultralytics/yolov5/raw/master/data/images/zidane.jpg'
 DIR = Path(__file__).parent
 IMG_PATH = DIR / Path("test-yolov11") / Path("zidane.jpg")
-VALIDATION_DIR = DIR / Path("test2017")
+VALIDATION_DIR = Path("/datasets/test2017")
 
 
-def validate_model(model_path):
+def validate_model(model_path) -> str:
 
     validation_files = os.listdir(VALIDATION_DIR)
 
     try:
         model = ultralytics.YOLO(model_path)
 
+        all_output = ""
         for file in validation_files:
             results = model.predict(VALIDATION_DIR / file, save=False)
-            print(results)
+            all_output += results
+            # print(results)
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
         print(e)
+        return ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
+        return all_output
 
 
 def load_model(model_path, test=IMG_PATH) -> tuple[bool, str]:
@@ -70,7 +77,8 @@ if __name__ == "__main__":
         exit(1)
 
     if args.validate:
-        validate_model(args.model_path)
+        output = validate_model(args.model_path)
+        print(output)
     else:
         is_success, output = load_model(args.model_path)
         print(output)

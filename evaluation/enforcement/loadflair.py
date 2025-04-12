@@ -3,7 +3,11 @@ import argparse
 import flair.datasets
 from flair.data import MultiCorpus, Sentence
 from flair.models import SequenceTagger
-from pklballcheck import collect_attr_stats, verify_loader_was_used
+
+try:
+    from pklballcheck import collect_attr_stats, verify_loader_was_used
+except:
+    pass
 
 corpus_map = {
     "flair-ner-english": flair.datasets.NER_ENGLISH_PERSON,
@@ -25,9 +29,9 @@ corpus_map = {
     "flair-upos-english-fast": flair.datasets.NER_ENGLISH_PERSON,
     "flair-ner-multi": MultiCorpus(
         [
-            flair.datasets.NER_ENGLISH_PERSON,
-            flair.datasets.NER_GERMAN_GERMEVAL,
-            flair.datasets.UD_DUTCH,
+            flair.datasets.NER_ENGLISH_PERSON(),
+            flair.datasets.NER_GERMAN_GERMEVAL(),
+            flair.datasets.UD_DUTCH(),
         ]
     ),
 }
@@ -36,7 +40,7 @@ corpus_map = {
 TEST = "The experienced professor from Harvard University quickly analyzed the ancient manuscript while drinking coffee in New York last Sunday."
 
 
-def validate_model(model_path):
+def validate_model(model_path) -> str:
 
     model_name = model_path.split("/")[-2]
     corpus = corpus_map[model_name]()
@@ -45,6 +49,7 @@ def validate_model(model_path):
     print(f"Total sentences: {len(sentences)}")
     try:
         model = SequenceTagger.load(model_path)
+        all_output = ""
         for sentence in sentences:
 
             model.predict(sentence)
@@ -57,13 +62,16 @@ def validate_model(model_path):
             if len(output) == 0:
                 output = sentence
 
-            print(output)
+            # print(output)
+            all_output += str(output)
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_name}\033[0m")
         print(e)
+        return ""
     else:
         print(f"\033[92mSUCCEEDED in {model_name}\033[0m")
+        return all_output
 
 
 def load_model(model_path, test=TEST) -> tuple[bool, str]:
@@ -112,7 +120,8 @@ if __name__ == "__main__":
         exit(1)
 
     if args.validate:
-        validate_model(args.model_path)
+        output = validate_model(args.model_path)
+        print(output)
     else:
         is_success, output = load_model(args.model_path)
         print(output)

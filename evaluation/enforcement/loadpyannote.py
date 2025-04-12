@@ -27,8 +27,8 @@ def validate_model(model_path) -> str:
         all_output = ""
         for file in validation_files:
             output = inference(str(VALIDATION_DIR / file))
-            print(file)
-            print(output.data)
+            # print(file)
+            # print(output.data)
             all_output = file + "\n" + output.data + "\n"
 
     except Exception as e:

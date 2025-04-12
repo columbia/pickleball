@@ -96,7 +96,7 @@ if __name__ == "__main__":
         exit(1)
 
     if args.validate:
-        validate_model()
+        validate_model(args.model_path)
     else:
         is_success, output = load_model(args.model_path)
         print(output)

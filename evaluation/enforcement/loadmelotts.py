@@ -3,7 +3,7 @@ from pathlib import Path
 
 from melo.api import TTS
 
-# from pklballcheck import collect_attr_stats, verify_loader_was_used
+from pklballcheck import collect_attr_stats #, verify_loader_was_used
 
 # https://github.com/myshell-ai/MeloTTS/blob/5b538481e24e0d578955be32a95d88fcbde26dc8/melo/download_utils.py#L33C1-L33C19
 LANG_MAP = {

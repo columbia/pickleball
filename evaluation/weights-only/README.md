@@ -2,19 +2,28 @@
 
 ## Benign model loading
 
-The weights only unpickler is expected to load all benign models in our 
-dataset.
-
-For each set of library models, determine how many are loaded with
-`scripts/load_weights_only.py`.
+In the project root directory, execute: 
 
 ```
-python3 scripts/load_weights_only.py /path/to/models/library/ --out evaluation/weights-only/benign/library-weights/only
+$ docker compose run weightsonly-load-all
 ```
 
-This produces a summary file that indicates the number of models attempted, successfully loaded, and failed.
+This will execute all of the model loaders, but force the weights only 
+unpickler to be used.
 
+They will attempt to load all benign models in our dataset.
+
+The results files will be placed in `evaluation/weights-only/results-benign`.
+
+Use the table generating script to display the results (ignore the columns about
+PickleBall policy generation and focus only on the model load percentages).
+
+```
+$ python3 scripts/generatetable.py evaluation/manifest.toml evaluation/weights-only/benign-results
+```
 
 ## Malicious model loading
 
-TODO
+Manual.
+
+TODO: Automate

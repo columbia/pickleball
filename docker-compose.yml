@@ -360,7 +360,7 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch/CoCa --library conch --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch/CoCa --library conch --disable-verify --output-dir /pickleball/evaluation/control/results
 
   control-load-flagembedding:
     image: control-load-flagembedding
@@ -373,7 +373,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding/FlagModel --library flagembedding --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding/FlagModel --library flagembedding --disable-verify --output-dir /pickleball/evaluation/control/results
+  
 
   control-load-flair:
     image: control-load-flair
@@ -386,7 +387,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-gliner:
     image: control-load-gliner
@@ -399,9 +401,9 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner --disable-verify --output-dir /pickleball/evaluation/control/results
 
-  # TODO: Determine why this is fetching models remotely
+
   control-load-huggingsound:
     image: control-load-huggingsound
     build:
@@ -413,7 +415,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-languagebind:
     image: control-load-languagebind
@@ -426,7 +429,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-melotts:
     image: control-load-melotts
@@ -439,7 +443,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo/TTS --library melotts --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo/TTS --library melotts --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-parrot:
     image: control-load-parrot
@@ -452,7 +457,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-pyannote:
     image: control-load-pyannote
@@ -465,7 +471,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-pysentimiento:
     image: control-load-pysentimiento
@@ -478,7 +485,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-sentencetransformers:
     image: control-load-sentencetransformers
@@ -491,7 +499,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns "pytorch_model.bin" --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns "pytorch_model.bin" --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-superimage:
     image: control-load-superimage
@@ -504,7 +513,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "pytorch_model_2x.pt" --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "*.pt" --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-tner:
     image: control-load-tner
@@ -517,7 +527,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-tweetnlp:
     image: control-load-tweetnlp
@@ -530,7 +541,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp --disable-verify
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp --disable-verify --output-dir /pickleball/evaluation/control/results
+
 
   control-load-yolov5:
     image: control-load-yolov5
@@ -543,7 +555,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov5/ --library yolov5 --disable-verify --allowed-patterns "*.pt"
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov5/ --library yolov5 --disable-verify --allowed-patterns "*.pt" --output-dir /pickleball/evaluation/control/results
+
 
   control-load-yolov11:
     image: control-load-yolov11
@@ -556,7 +569,8 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11/ --library yolov11 --disable-verify --allowed-patterns "*.pt"
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11/ --library yolov11 --disable-verify --allowed-patterns "*.pt" --output-dir /pickleball/evaluation/control/results
+
 
 
   check-vulnerable-all:
@@ -804,3 +818,261 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "cd /pickleball && python3 evaluation/enforcement/loadyolov11.py --model-path /models/malicious/synthetic/yolov11/ariakang-YOLOv11n-face-detection-backdoor/model.pt"
+
+  weightsonly-load-all:
+    image: control-load
+    command: ["echo", "All model load tests completed"]
+    depends_on:
+      weightsonly-load-conch:
+        condition: service_completed_successfully
+      weightsonly-load-flagembedding:
+        condition: service_completed_successfully
+      weightsonly-load-flair:
+        condition: service_completed_successfully
+      weightsonly-load-gliner:
+        condition: service_completed_successfully
+      weightsonly-load-huggingsound:
+        condition: service_completed_successfully
+      weightsonly-load-languagebind:
+        condition: service_completed_successfully
+      weightsonly-load-melotts:
+        condition: service_completed_successfully
+      weightsonly-load-parrot:
+        condition: service_completed_successfully
+      weightsonly-load-pyannote:
+        condition: service_completed_successfully
+      weightsonly-load-pysentimiento:
+        condition: service_completed_successfully
+      weightsonly-load-sentencetransformers:
+        condition: service_completed_successfully
+      weightsonly-load-superimage:
+        condition: service_completed_successfully
+      weightsonly-load-tner:
+        condition: service_completed_successfully
+      weightsonly-load-tweetnlp:
+        condition: service_completed_successfully
+      weightsonly-load-yolov5:
+        condition: service_completed_successfully
+      weightsonly-load-yolov11:
+        condition: service_completed_successfully
+
+  weightsonly-load-conch:
+    image: weightsonly-load-conch
+    build:
+      context: ./evaluation/
+      dockerfile: ./control/Dockerfile.conch
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch/CoCa --library conch --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+      
+  weightsonly-load-flagembedding:
+    image: weightsonly-load-flagembedding
+    build:
+      context: ./evaluation/
+      dockerfile: ./control/Dockerfile.flagembedding
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding/FlagModel --library flagembedding --disable-verify --output-dir /pickleball/weights-only/results-benign"
+  
+
+  weightsonly-load-flair:
+    image: weightsonly-load-flair
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.flair
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+  weightsonly-load-gliner:
+    image: weightsonly-load-gliner
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.gliner
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-huggingsound:
+    image: weightsonly-load-huggingsound
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.huggingsound
+    depends_on:
+      - control-load-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-languagebind:
+    image: weightsonly-load-languagebind
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.languagebind
+    depends_on:
+      - control-load-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-melotts:
+    image: weightsonly-load-melotts
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.melotts
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo/TTS --library melotts --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+  weightsonly-load-parrot:
+    image: weightsonly-load-parrot
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.parrot
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-pyannote:
+    image: weightsonly-load-pyannote
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.pyannote
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --disable-verify --output-dir /pickleball/evaluation/weights-onlyresults-benign"
+
+
+  weightsonly-load-pysentimiento:
+    image: weightsonly-load-pysentimiento
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.pysentimiento
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-sentencetransformers:
+    image: weightsonly-load-sentencetransformers
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.sentencetransformers
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns \"pytorch_model.bin\" --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-superimage:
+    image: weightsonly-load-superimage
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.superimage
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns \"*.pt\" --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-tner:
+    image: weightsonly-load-tner
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.tner
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-tweetnlp:
+    image: weightsonly-load-tweetnlp
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.tweetnlp
+    depends_on:
+      - control-load-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-yolov5:
+    image: weightsonly-load-yolov5
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.yolov5
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov5/ --library yolov5 --disable-verify --allowed-patterns \"*.pt\" --output-dir /pickleball/evaluation/weights-only/results-benign"
+
+
+  weightsonly-load-yolov11:
+    image: weightsonly-load-yolov11
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.yolov11
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11/ --library yolov11 --disable-verify --allowed-patterns \"*.pt\" --output-dir /pickleball/evaluation/weights-only/results-benign"
+

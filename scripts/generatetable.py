@@ -116,14 +116,36 @@ def print_macros(library: Library):
     print(template.format(name=name, mode="Models", valuetype="Successrate",
                     value=f"{library.success_rate() * 100:.1f}\\%"))
 
+def print_wou_macros(library: Library):
+
+    template = "\\newcommand{{\\{name}{mode}}}{{{value}}}"
+    
+    # Some library names have invalid characters for LaTeX macros
+    if library.name in NAME_MAPPING.keys():
+        name = NAME_MAPPING[library.name]
+    else:
+        name = library.name
+
+    print(template.format(name=name, mode="ModelsWOU", value=library.models_loaded))
+    print(template.format(name=name, mode="WOUSuccessrate", value=f"{library.success_rate() * 100:.1f}\\%"))
+
+
 def print_summary_macros(libraries: List[Library]):
 
     template = "\\newcommand{{\\{name}}}{{{value}}}"
 
     print(template.format(name="modelsTotal", value=total_models(libraries)))
     print(template.format(name="modelsTotalPickleballLoaded", value=total_loaded(libraries)))
-    print(template.format(name="modelsTotalSuccessRate", value=f"{total_success_rate(libraries) * 100:.1f}\\%"))
+    print(template.format(name="modelsTotalSuccessrate", value=f"{total_success_rate(libraries) * 100:.1f}\\%"))
     print(template.format(name="modelsAvgPickleball", value=f"{avg_success_rate(libraries) * 100:.1f}\\%"))
+
+def print_wou_summary_macros(libraries: List[Library]):
+
+    template = "\\newcommand{{\\{name}}}{{{value}}}"
+    print(template.format(name="modelsTotalWOULoaded", value=total_loaded(libraries)))
+    print(template.format(name="modelsTotalWOUSuccessrate", value=f"{total_success_rate(libraries) * 100:.1f}\\%"))
+    print(template.format(name="modelsAvgWOU", value=f"{avg_success_rate(libraries) * 100:.1f}\\%"))
+
 
 def total_models(libraries: List[Library]) -> int:
     return sum(library.models_attempted for library in libraries)
@@ -161,15 +183,20 @@ if __name__ == "__main__":
         type=pathlib.Path,
         help="Path to manifest file")
     parser.add_argument(
-        "--enforcement-results",
+        "enforcementresults",
         type=pathlib.Path,
         default=None,
         help="Path to directory containing results from enforcement experiments"
     )
     parser.add_argument(
-        "--output-macros",
+        "--macros",
         action="store_true",
         help=("Output LaTeX Macro definitions for variable names, rather than"
+        "for a table"))
+    parser.add_argument(
+        "--weights-only",
+        action="store_true",
+        help=("Output LaTeX Macro definitions for weights-only variable names, rather than"
         "for a table"))
 
     args = parser.parse_args()
@@ -209,10 +236,10 @@ if __name__ == "__main__":
 
         libraries[library_name] = library
 
-    if args.enforcement_results:
+    if args.enforcementresults:
         # Read the values from the enforcement results and add them to the
         # results dictionary
-        result_files = [f for f in args.enforcement_results.iterdir() if f.is_file()]
+        result_files = [f for f in args.enforcementresults.iterdir() if f.is_file()]
 
         for result_file in result_files:
             if result_file.suffix != ".log":
@@ -232,10 +259,15 @@ if __name__ == "__main__":
             libraries[library_name].models_loaded = success
 
     # Generate Table with collected values, outputting LaTeX code.
-    if args.output_macros:
+    if args.macros:
         for library in libraries.values():
             print_macros(library)
             print()
         print_summary_macros(list(libraries.values()))
+    elif args.weights_only:
+        for library in libraries.values():
+            print_wou_macros(library)
+        print()
+        print_wou_summary_macros(list(libraries.values()))
     else:
         print(generate_table(libraries))

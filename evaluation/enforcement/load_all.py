@@ -81,6 +81,11 @@ if __name__ == "__main__":
         ),
         action="store_true",
     )
+    parser.add_argument(
+        "--output-dir",
+        help=("Path to write output log file, relative to this file path"),
+        type=Path,
+    )
 
     args = parser.parse_args()
     if not args.all_model_path or not args.library:
@@ -100,7 +105,10 @@ if __name__ == "__main__":
         print(f"ERROR: Module {module_name} not found.")
         exit(1)
 
-    LOG = DIR / "results" / f"{LIBRARY}.log"
+    if not args.output_dir:
+        LOG = DIR / "results" / f"{LIBRARY}.log"
+    else:
+        LOG = args.output_dir / f"{LIBRARY}.log"
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)

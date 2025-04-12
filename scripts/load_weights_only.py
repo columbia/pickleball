@@ -16,7 +16,7 @@ def main():
         'modelsdir',
         metavar='F',
         type=Path,
-        help='models to trace and generate policy for'
+        help='models to load'
     )
     parser.add_argument(
         '--out',

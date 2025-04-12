@@ -1,7 +1,0 @@
-Attempted models: 4
-Successful loads: 4
-Failed loads: 0
-/proj/rcs-ssd/phli/pickleball/no-malicious/tner/TransformersNER/tner-deberta-v3-large-ontonotes5/pytorch_model.bin: SUCCESS
-/proj/rcs-ssd/phli/pickleball/no-malicious/tner/TransformersNER/tner-roberta-large-tweetner7-all/pytorch_model.bin: SUCCESS
-/proj/rcs-ssd/phli/pickleball/no-malicious/tner/TransformersNER/tner-roberta-large-wnut2017/pytorch_model.bin: SUCCESS
-/proj/rcs-ssd/phli/pickleball/no-malicious/tner/TransformersNER/tner-roberta-large-ontonotes5/pytorch_model.bin: SUCCESS

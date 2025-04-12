@@ -24,7 +24,11 @@ corpus_map = {
     "flair-pos-english-fast": flair.datasets.NER_ENGLISH_PERSON,
     "flair-upos-english-fast": flair.datasets.NER_ENGLISH_PERSON,
     "flair-ner-multi": MultiCorpus(
-        [flair.datasets.UD_ENGLISH, flair.datasets.UD_GERMAN, flair.datasets.UD_DUTCH]
+        [
+            flair.datasets.NER_ENGLISH_PERSON,
+            flair.datasets.NER_GERMAN_GERMEVAL,
+            flair.datasets.UD_DUTCH,
+        ]
     ),
 }
 

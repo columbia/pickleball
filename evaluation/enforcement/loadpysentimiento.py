@@ -13,7 +13,7 @@ def load_model(model_path, test="") -> tuple[bool, str]:
         analyzer = create_analyzer(model_name=str(model_dir), lang="es")
         res = analyzer.predict("Qué gran jugador es Messi")
 
-        # print(res)
+        #print(res)
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")
@@ -22,7 +22,7 @@ def load_model(model_path, test="") -> tuple[bool, str]:
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
         collect_attr_stats(analyzer)
-        return True, res
+        return True, str(res)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,6 @@
 FROM control-load:latest
 
 RUN pip3 install flair
+
+COPY ./utils/flair_data.patch /root/flair_data.patch
+RUN cd /root && patch -p1 < /root/flair_data.patch

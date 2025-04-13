@@ -12,7 +12,7 @@ except:
 
 DIR = Path(__file__).parent
 TEST_FILE = DIR / Path("test-pyannote") / Path("test.wav")
-VALIDATION_DIR = Path("/datasets/aishell-4/wav")
+VALIDATION_DIR = Path("/datasets/pyannote/test/wav")
 
 
 def validate_model(model_path) -> str:

@@ -11,41 +11,56 @@ except:
 
 NUM_VALIDATE_SENTENCES = 1000
 
-corpus_map = {
-    "flair-ner-english": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-ner-english-fast": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-ner-english-large": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-chunk-english-fast": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-ner-english-ontonotes": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-ner-english-ontonotes-large": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-ner-english-ontonotes-fast": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-ner-spanish-large": flair.datasets.UP_SPANISH,
-    "flair-ner-dutch-large": flair.datasets.UD_DUTCH,
-    "flair-ner-french": flair.datasets.UD_FRENCH,
-    "flair-ner-german": flair.datasets.UD_GERMAN,
-    "flair-ner-german-large": flair.datasets.UD_GERMAN,
-    "megantosh-flair-arabic-multi-ner": flair.datasets.UD_ARABIC,
-    "flair-upos-english": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-pos-english": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-pos-english-fast": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-upos-english-fast": flair.datasets.NER_ENGLISH_PERSON,
-    "flair-ner-multi": MultiCorpus(
-        [
-            flair.datasets.NER_ENGLISH_PERSON(),
-            flair.datasets.NER_GERMAN_GERMEVAL(),
-            flair.datasets.UD_DUTCH(),
-        ]
-    ),
-}
-
 
 TEST = "The experienced professor from Harvard University quickly analyzed the ancient manuscript while drinking coffee in New York last Sunday."
 
 
 def validate_model(model_path) -> str:
 
+    ner_english_corpus = flair.datasets.NER_ENGLISH_PERSON()
+    ner_german_corpus = flair.datasets.NER_GERMAN_GERMEVAL()
+    up_spanish_corpus = flair.datasets.UP_SPANISH()
+    ud_dutch_corpus = flair.datasets.UD_DUTCH()
+    ud_french_corpus = flair.datasets.UD_FRENCH()
+    ud_german_corpus = flair.datasets.UD_GERMAN()
+    ud_arabic_corpus = flair.datasets.UD_ARABIC()
+
+    corpus_map = {
+        "flair-ner-english": ner_english_corpus,
+        "flair-ner-english-fast": ner_english_corpus,
+        "flair-ner-english-large": ner_english_corpus,
+        "flair-chunk-english-fast": ner_english_corpus,
+        "flair-ner-english-ontonotes": ner_english_corpus,
+        "flair-ner-english-ontonotes-large": ner_english_corpus,
+        "flair-ner-english-ontonotes-fast": ner_english_corpus,
+        "flair-ner-spanish-large": up_spanish_corpus,
+        "flair-ner-dutch-large": ud_dutch_corpus,
+        "flair-ner-french": ud_french_corpus,
+        "flair-ner-german": ud_german_corpus,
+        "flair-ner-german-large": ud_german_corpus,
+        "megantosh-flair-arabic-multi-ner": ud_arabic_corpus,
+        "flair-upos-english": ner_english_corpus,
+        "flair-pos-english": ner_english_corpus,
+        "flair-pos-english-fast": ner_english_corpus,
+        "flair-upos-english-fast": ner_english_corpus,
+        "flair-ner-multi": MultiCorpus(
+            [
+                ner_english_corpus,
+                ner_german_corpus,
+                ud_dutch_corpus,
+            ]
+        ),
+        "flair-upos-multi": MultiCorpus(
+            [
+                ner_english_corpus,
+                ner_german_corpus,
+                ud_dutch_corpus,
+            ]
+        ),
+    }
+
     model_name = model_path.split("/")[-2]
-    corpus = corpus_map[model_name]()
+    corpus = corpus_map[model_name]
 
     sentences = corpus.get_all_sentences()
     print(f"Total sentences: {len(sentences)}")

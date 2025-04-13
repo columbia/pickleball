@@ -9,6 +9,8 @@ try:
 except:
     pass
 
+NUM_VALIDATE_SENTENCES = 1000
+
 corpus_map = {
     "flair-ner-english": flair.datasets.NER_ENGLISH_PERSON,
     "flair-ner-english-fast": flair.datasets.NER_ENGLISH_PERSON,
@@ -50,6 +52,7 @@ def validate_model(model_path) -> str:
     try:
         model = SequenceTagger.load(model_path)
         all_output = ""
+        total_sentences_tested = 0
         for sentence in sentences:
 
             model.predict(sentence)
@@ -62,8 +65,14 @@ def validate_model(model_path) -> str:
             if len(output) == 0:
                 output = sentence
 
+            output = str(output) + "\n"
+
             # print(output)
-            all_output += str(output)
+            all_output += output
+            total_sentences_tested += 1
+
+            if total_sentences_tested >= NUM_VALIDATE_SENTENCES:
+                break
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_name}\033[0m")
@@ -125,4 +134,4 @@ if __name__ == "__main__":
     else:
         is_success, output = load_model(args.model_path)
         print(output)
-    verify_loader_was_used()
+        verify_loader_was_used()

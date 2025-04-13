@@ -790,7 +790,6 @@ services:
       - .:/pickleball
     command: /bin/sh -c "cd /pickleball && python3 evaluation/enforcement/loadtweetnlp.py --model-path /models/malicious/synthetic/tweetnlp/twitter-xlm-roberta-base-sentiment-multilingual/pytorch_model.bin"
 
-<<<<<<< HEAD
   check-vulnerable-yolov5:
     image: control-load-yolov5
     build:

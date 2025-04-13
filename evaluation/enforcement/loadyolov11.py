@@ -24,9 +24,10 @@ def validate_model(model_path) -> str:
         model = ultralytics.YOLO(model_path)
 
         all_output = ""
-        for file in validation_files:
+        for file in validation_files[:1000]:
             results = model.predict(VALIDATION_DIR / file, save=False)
-            all_output += results
+            output = "\n".join([str(x.boxes) for x in results])
+            all_output += "\n".join(output)
             # print(results)
 
     except Exception as e:

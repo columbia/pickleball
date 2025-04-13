@@ -13,7 +13,7 @@ except:
 # IMG_PATH = 'https://github.com/ultralytics/yolov5/raw/master/data/images/zidane.jpg'
 DIR = Path(__file__).parent
 IMG_PATH = DIR / Path("test-yolov11") / Path("zidane.jpg")
-VALIDATION_DIR = Path("/datasets/test2017")
+VALIDATION_DIR = Path("/datasets/yolo/test2017")
 
 
 def validate_model(model_path) -> str:

@@ -4,6 +4,7 @@ import argparse
 import glob
 import importlib
 import logging
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
@@ -148,7 +149,10 @@ if __name__ == "__main__":
             logging.info(f"{model_path} OUTPUT:")
             logging.info(output)
         else:
+            start_time = time.time()
             is_success, output = loading_module.load_model(model_path)
+            end_time = time.time()
+            logging.info(f"TIME,{end_time - start_time}")
             if len(output) == 0:
                 logging.warn(f"WARNING: Empty output for {model_path}")
             loader_used = verify_loader_was_used() or args.disable_verify

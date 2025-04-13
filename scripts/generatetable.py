@@ -136,8 +136,12 @@ def print_summary_macros(libraries: List[Library]):
 
     print(template.format(name="modelsTotal", value=total_models(libraries)))
     print(template.format(name="modelsTotalPickleballLoaded", value=total_loaded(libraries)))
+
     print(template.format(name="modelsTotalSuccessRate", value=f"{total_success_rate(libraries) * 100:.1f}\\%"))
     print(template.format(name="modelsAvgPickleball", value=f"{avg_success_rate(libraries) * 100:.1f}\\%"))
+
+    print(template.format(name="modelsTotalPickleballFailed", value=(total_models(libraries)-total_loaded(libraries))))
+    print(template.format(name="modelsTotalFailureRate", value=f"{(1-total_success_rate(libraries)) * 100:.1f}\\%"))
 
 def print_wou_summary_macros(libraries: List[Library]):
 
@@ -145,6 +149,9 @@ def print_wou_summary_macros(libraries: List[Library]):
     print(template.format(name="modelsTotalWOULoaded", value=total_loaded(libraries)))
     print(template.format(name="modelsTotalWOUSuccessrate", value=f"{total_success_rate(libraries) * 100:.1f}\\%"))
     print(template.format(name="modelsAvgWOU", value=f"{avg_success_rate(libraries) * 100:.1f}\\%"))
+
+    print(template.format(name="modelsTotalWOUFailed", value=(total_models(libraries)-total_loaded(libraries))))
+    print(template.format(name="modelsTotalWOUFalureRate", value=f"{(1-total_success_rate(libraries)) * 100:.1f}\\%"))
 
 
 def total_models(libraries: List[Library]) -> int:
@@ -242,6 +249,7 @@ if __name__ == "__main__":
         result_files = [f for f in args.enforcementresults.iterdir() if f.is_file()]
 
         for result_file in result_files:
+            print(f'analyzing: {result_file}')
             if result_file.suffix != ".log":
                 continue
             library_name = result_file.stem

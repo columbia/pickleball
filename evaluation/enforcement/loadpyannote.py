@@ -29,7 +29,7 @@ def validate_model(model_path) -> str:
             output = inference(str(VALIDATION_DIR / file))
             # print(file)
             # print(output.data)
-            all_output = file + "\n" + output.data + "\n"
+            all_output = file + "\n" + str(output.data) + "\n"
 
     except Exception as e:
         print(f"\033[91mFAILED in {model_path}\033[0m")

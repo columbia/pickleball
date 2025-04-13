@@ -63,6 +63,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("--library", help="name of library to evaluate")
     parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Run model with a big dataset for validation",
+    )
+    parser.add_argument(
         "--allowed-patterns",
         nargs="*",
         help=(
@@ -138,18 +143,25 @@ if __name__ == "__main__":
     successes = 0
     for model_path in model_paths:
         logging.debug(f"loading model: {model_path}")
-        is_success, output = loading_module.load_model(model_path)
-        if len(output) == 0:
-            logging.warn(f"WARNING: Empty output for {model_path}")
-        loader_used = verify_loader_was_used() or args.disable_verify
-        if is_success and loader_used:
-            logging.info(f"{model_path} SUCCESS")
+        if args.validate:
+            output = loading_module.validate_model(model_path)
             logging.info(f"{model_path} OUTPUT:")
             logging.info(output)
-            successes += 1
         else:
-            if not loader_used:
-                logging.error(f"ERROR: pickleball loader was not used for {model_path}")
-            logging.info(f"{model_path} FAILURE")
+            is_success, output = loading_module.load_model(model_path)
+            if len(output) == 0:
+                logging.warn(f"WARNING: Empty output for {model_path}")
+            loader_used = verify_loader_was_used() or args.disable_verify
+            if is_success and loader_used:
+                logging.info(f"{model_path} SUCCESS")
+                logging.info(f"{model_path} OUTPUT:")
+                logging.info(output)
+                successes += 1
+            else:
+                if not loader_used:
+                    logging.error(
+                        f"ERROR: pickleball loader was not used for {model_path}"
+                    )
+                logging.info(f"{model_path} FAILURE")
 
-    logging.info(f"{successes}:{len(model_paths)}")
+        logging.info(f"{successes}:{len(model_paths)}")

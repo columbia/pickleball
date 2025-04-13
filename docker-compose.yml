@@ -1,5 +1,4 @@
 services:
-
   pickleball-generate:
     image: pickleball-generate
     build:
@@ -310,7 +309,6 @@ services:
     build:
       context: evaluation/control
       dockerfile: Dockerfile.deb11
-
 
   control-load-all:
     image: control-load
@@ -649,7 +647,6 @@ services:
       - .:/pickleball
     command: /bin/sh -c "cd /pickleball && python3 evaluation/enforcement/loadflair.py --model-path /models/malicious/synthetic/flair/chunk-english-fast-backdoor/pytorch_model.bin"
 
-
   check-vulnerable-gliner:
     image: control-load-gliner
     build:
@@ -793,6 +790,7 @@ services:
       - .:/pickleball
     command: /bin/sh -c "cd /pickleball && python3 evaluation/enforcement/loadtweetnlp.py --model-path /models/malicious/synthetic/tweetnlp/twitter-xlm-roberta-base-sentiment-multilingual/pytorch_model.bin"
 
+<<<<<<< HEAD
   check-vulnerable-yolov5:
     image: control-load-yolov5
     build:
@@ -1076,3 +1074,113 @@ services:
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11/ --library yolov11 --disable-verify --allowed-patterns \"*.pt\" --output-dir /pickleball/evaluation/weights-only/results-benign"
 
+  control-validate-all:
+    image: control-load
+    command: ["echo", "All control model validation tests completed"]
+    depends_on:
+      control-validate-flair:
+        condition: service_completed_successfully
+      control-validate-pyannote:
+        condition: service_completed_successfully
+      control-validate-yolov11:
+        condition: service_completed_successfully
+
+  control-validate-flair:
+    image: control-load-flair
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.flair
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+
+      - ${DATASETS}:/datasets
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair --disable-verify --validate
+
+  control-validate-pyannote:
+    image: control-load-pyannote
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.pyannote
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ${DATASETS}:/datasets
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --disable-verify --validate
+
+  control-validate-yolov11:
+    image: control-load-yolov11
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.yolov11
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+
+      - ${DATASETS}:/datasets
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11/ --library yolov11 --disable-verify --allowed-patterns "*.pt" --validate
+
+  pickleball-validate-all:
+    image: pickleball-enforce
+    command: ["echo", "All pickleball model validation tests completed"]
+    depends_on:
+      pickleball-validate-flair:
+        condition: service_completed_successfully
+      pickleball-validate-pyannote:
+        condition: service_completed_successfully
+      pickleball-validate-yolov11:
+        condition: service_completed_successfully
+
+  pickleball-validate-flair:
+    image: pickleball-enforce-flair
+    build:
+      context: ./evaluation/enforcement/
+      dockerfile: Dockerfile.flair
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/flair.json:/root/policies/policy.json
+      - ${DATASETS}:/datasets
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair --validate
+
+  pickleball-validate-pyannote:
+    image: pickleball-enforce-pyannote
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.pyannote
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/pyannote.json:/root/policies/policy.json
+      - ${DATASETS}:/datasets
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --validate
+
+  pickleball-validate-yolov11:
+    image: pickleball-enforce-yolov11
+    build:
+      context: evaluation
+      dockerfile: enforcement/Dockerfile.yolov11
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/yolov11.json:/root/policies/policy.json
+      - ${DATASETS}:/datasets
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11 --validate

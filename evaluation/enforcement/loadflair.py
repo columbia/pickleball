@@ -36,6 +36,13 @@ corpus_map = {
             flair.datasets.UD_DUTCH(),
         ]
     ),
+    "flair-upos-multi": MultiCorpus(
+        [
+            flair.datasets.NER_ENGLISH_PERSON(),
+            flair.datasets.NER_GERMAN_GERMEVAL(),
+            flair.datasets.UD_DUTCH(),
+        ]
+    )
 }
 
 

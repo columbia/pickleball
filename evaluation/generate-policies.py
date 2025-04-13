@@ -5,10 +5,15 @@ import importlib
 import pathlib
 import os
 import sys
+import time
 import tomllib
+from datetime import datetime
 
 from dataclasses import dataclass
 from typing import Tuple, List, Dict
+
+now = datetime.now()
+timestamp = now.strftime("%Y-%m-%d-%H:%M:%S")
 
 # This is hacky - because the module name is 'pickleball-generate' (with a dash)
 # and in a parent directory.
@@ -32,6 +37,7 @@ class SystemConfig(object):
     policies_dir: pathlib.Path
     joern_dir: pathlib.Path
     analyzer_path: pathlib.Path
+    timelog: pathlib.Path
 
 @dataclass
 class LibraryConfig(object):
@@ -60,7 +66,8 @@ def parse_manifest(manifest: pathlib.Path) -> Tuple[SystemConfig, List[LibraryCo
 
     systemcfg = SystemConfig(mem=mem, libraries_dir=libraries_dir,
                         cache_dir=cache_dir, policies_dir=policies_dir,
-                        joern_dir=joern_dir, analyzer_path=analyzer_path)
+                        joern_dir=joern_dir, analyzer_path=analyzer_path,
+                        timelog=None)
 
     def parse_library_config(library_name: str, library_setting: Dict[str, str],
                             systemcfg: SystemConfig):
@@ -83,6 +90,11 @@ def parse_manifest(manifest: pathlib.Path) -> Tuple[SystemConfig, List[LibraryCo
 
     return systemcfg, librarycfgs
 
+def write_time_log(libraryname, logfile, time):
+
+    with logfile.open("a") as file:
+        file.write(f"{libraryname},{time}\n") 
+
 def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int) -> None:
 
     # TODO: Timing
@@ -90,6 +102,7 @@ def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int
     print(f'Generating CPG and policy for: {librarycfg.name}')
     try:
 
+        start = time.time()
         pickleball.create_cpg(
             librarycfg.library_path,
             systemcfg.joern_dir,
@@ -109,6 +122,11 @@ def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int
             librarycfg.policy_path,
             log_path=librarycfg.log_path
         )
+        end = time.time()
+        
+        print(f'TIME: {end - start}')
+        write_time_log(librarycfg.name, systemcfg.timelog, end - start)
+
     except pickleball.JoernRuntimeError as err:
         print(err)
         if librarycfg.cpg_mode:
@@ -164,5 +182,7 @@ if __name__ == '__main__':
     else:
         systemmem = pickleball.gb_to_kb(systemcfg.mem)
 
+    systemcfg.timelog = systemcfg.policies_dir / pathlib.Path(f'.{timestamp}.timelog')
+    systemcfg.timelog.write_text("library,time\n")
     for librarycfg in evaluation_libraries:
         generate_policy(librarycfg, systemcfg, systemmem)

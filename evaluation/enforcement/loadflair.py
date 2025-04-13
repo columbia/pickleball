@@ -119,7 +119,7 @@ def load_model(model_path, test=TEST) -> tuple[bool, str]:
         return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        collect_attr_stats(tagger)
+        #collect_attr_stats(tagger)
         return True, output
 
 

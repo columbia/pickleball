@@ -124,7 +124,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner
 
-  # TODO: Determine why this is fetching models remotely
   enforce-huggingsound:
     image: pickleball-enforce-huggingsound
     build:
@@ -1186,4 +1185,133 @@ services:
       - ${DATASETS}:/datasets
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11 --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
+
+  #
+  # Ablation - Enforce policies without lazy loading
+  # (only need to run on libraries with stub modules)
+  #
+  strict-all:
+    image: ablation-strict-enforce
+    command: ["echo", "All model load tests completed"]
+    depends_on:
+      strict-flair:
+        condition: service_completed_successfully
+      strict-pyannote:
+        condition: service_completed_successfully
+      strict-yolov11:
+        condition: service_completed_successfully
+
+  strict-flair:
+    image: strict-enforce-flair
+    build:
+      context: evaluation
+      dockerfile: ablation/Dockerfile.flair
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/flair.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/ --library flair --output-dir /pickleball/evaluation/ablation/results-strict
+
+  strict-pyannote:
+    image: strict-enforce-pyannote
+    build:
+      context: evaluation
+      dockerfile: ablation/Dockerfile.pyannote
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/pyannote.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --output-dir /pickleball/evaluation/ablation/results-strict
+
+  strict-yolov11:
+    image: strict-enforce-yolov11
+    build:
+      context: evaluation
+      dockerfile: enforcement/Dockerfile.yolov11
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/yolov11.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11 --output-dir /pickleball/evaluation/ablation/results-strict
+
+  #
+  # Evaluate WOUp policy enforced with PickleBall lazy enforcement
+  #
+  lazy-wou-all:
+    image: pickleball-enforce
+    command: ["echo", "All model load tests completed"]
+    depends_on:
+      lazy-wou-flair:
+        condition: service_completed_successfully
+      lazy-wou-pyannote:
+        condition: service_completed_successfully
+      lazy-wou-yolov5:
+        condition: service_completed_successfully
+      lazy-wou-yolov11:
+        condition: service_completed_successfully
+
+  lazy-wou-flair:
+    image: pickleball-enforce-flair
+    build:
+      context: ./evaluation/enforcement/
+      dockerfile: Dockerfile.flair
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/ablation/policies/flair.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/ --library flair --output-dir /pickleball/evaluation/ablation/results-lazy-wou/
+
+  lazy-wou-pyannote:
+    image: pickleball-enforce-pyannote
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.pyannote
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/ablation/policies/pyannote.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --output-dir /pickleball/evaluation/ablation/results-lazy-wou/
+
+  lazy-wou-yolov5:
+    image: pickleball-enforce-yolov5
+    build:
+      context: evaluation
+      dockerfile: enforcement/Dockerfile.yolov5
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/ablation/policies/yolov5.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov5 --library yolov5 --output-dir /pickleball/evaluation/ablation/results-lazy-wou/
+
+  lazy-wou-yolov11:
+    image: pickleball-enforce-yolov11
+    build:
+      context: evaluation
+      dockerfile: enforcement/Dockerfile.yolov11
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/ablation/policies/yolov11.json:/root/policies/policy.json
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11 --output-dir /pickleball/evaluation/ablation/results-lazy-wou/
 

@@ -152,13 +152,13 @@ if __name__ == "__main__":
             start_time = time.time()
             is_success, output = loading_module.load_model(model_path)
             end_time = time.time()
-            logging.info(f"TIME,{end_time - start_time}")
             if len(output) == 0:
                 logging.warn(f"WARNING: Empty output for {model_path}")
             loader_used = verify_loader_was_used() or args.disable_verify
             if is_success and loader_used:
                 logging.info(f"{model_path} SUCCESS")
                 logging.info(f"{model_path} OUTPUT:")
+                logging.info(f"{model_path},TIME,{end_time - start_time}")
                 logging.info(output)
                 successes += 1
             else:

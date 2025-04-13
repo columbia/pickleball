@@ -136,7 +136,7 @@ def print_summary_macros(libraries: List[Library]):
 
     print(template.format(name="modelsTotal", value=total_models(libraries)))
     print(template.format(name="modelsTotalPickleballLoaded", value=total_loaded(libraries)))
-    print(template.format(name="modelsTotalSuccessrate", value=f"{total_success_rate(libraries) * 100:.1f}\\%"))
+    print(template.format(name="modelsTotalSuccessRate", value=f"{total_success_rate(libraries) * 100:.1f}\\%"))
     print(template.format(name="modelsAvgPickleball", value=f"{avg_success_rate(libraries) * 100:.1f}\\%"))
 
 def print_wou_summary_macros(libraries: List[Library]):

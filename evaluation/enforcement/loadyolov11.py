@@ -28,7 +28,7 @@ def validate_model(model_path) -> str:
         for file in validation_files[:1000]:
             results = model.predict(VALIDATION_DIR / file, save=False)
             output = "\n".join([str(x.boxes) for x in results])
-            all_output += "\n".join(output)
+            all_output += output
             # print(results)
 
     except Exception as e:

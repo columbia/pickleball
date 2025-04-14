@@ -1,0 +1,4 @@
+FROM pickleball-enforce-pyannote
+
+COPY ablation/enforce-strict.py /usr/lib/python3.11/pickle.py
+COPY ablation/pklballcheck.py /usr/lib/python3.11/pklballcheck.py

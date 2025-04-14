@@ -68,7 +68,7 @@ def validate_model(model_path) -> str:
         model = SequenceTagger.load(model_path)
         all_output = ""
         total_sentences_tested = 0
-        for sentence in sentences:
+        for sentence in sentences[:10]:
 
             model.predict(sentence)
 

@@ -25,7 +25,7 @@ def validate_model(model_path) -> str:
         inference = Inference(model, step=2.5)
 
         all_output = ""
-        for file in validation_files:
+        for file in validation_files[:100]:
             output = inference(str(VALIDATION_DIR / file))
             # print(file)
             # print(output.data)

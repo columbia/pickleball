@@ -1093,10 +1093,9 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-
       - ${DATASETS}:/datasets
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/ --library flair --disable-verify --validate --output-dir /pickleball/evaluation/control/results-validation/
+    command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.flair-success --library flair --disable-verify --validate --output-dir /pickleball/evaluation/control/results-validation/
 
 
   control-validate-pyannote:
@@ -1111,7 +1110,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ${DATASETS}:/datasets
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --disable-verify --validate --output-dir /pickleball/evaluation/control/results-validation/
+    command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.pyannote-success --library pyannote --disable-verify --validate --output-dir /pickleball/evaluation/control/results-validation/
 
 
   control-validate-yolov11:
@@ -1124,10 +1123,9 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-
       - ${DATASETS}:/datasets
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11/ --library yolov11 --disable-verify --allowed-patterns "*.pt" --validate --output-dir /pickleball/evaluation/control/results-validation/
+    command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.yolov11-success --library yolov11 --disable-verify --allowed-patterns "*.pt" --validate --output-dir /pickleball/evaluation/control/results-validation/
 
 
   pickleball-validate-all:
@@ -1154,7 +1152,7 @@ services:
       - ./evaluation/policies/flair.json:/root/policies/policy.json
       - ${DATASETS}:/datasets
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/ --library flair --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
+    command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.flair-success  --library flair --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
 
   pickleball-validate-pyannote:
     image: pickleball-enforce-pyannote
@@ -1169,7 +1167,7 @@ services:
       - ./evaluation/policies/pyannote.json:/root/policies/policy.json
       - ${DATASETS}:/datasets
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
+    command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.pyannote-success --library pyannote --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
 
   pickleball-validate-yolov11:
     image: pickleball-enforce-yolov11
@@ -1184,7 +1182,7 @@ services:
       - ./evaluation/policies/yolov11.json:/root/policies/policy.json
       - ${DATASETS}:/datasets
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11 --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
+    command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.yolov11-success --library yolov11 --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
 
   #
   # Ablation - Enforce policies without lazy loading

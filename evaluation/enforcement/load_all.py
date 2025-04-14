@@ -5,6 +5,8 @@ import glob
 import importlib
 import logging
 import time
+import resource
+
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
@@ -69,6 +71,11 @@ if __name__ == "__main__":
         help="Run model with a big dataset for validation",
     )
     parser.add_argument(
+        "--models-file",
+        type=Path,
+        help="File containing model paths to load"
+    )
+    parser.add_argument(
         "--allowed-patterns",
         nargs="*",
         help=(
@@ -94,7 +101,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    if not args.all_model_path or not args.library:
+    if not (args.all_model_path or args.models_file) or not args.library:
         print("ERROR: need to specify model path and library")
         exit(1)
 
@@ -136,9 +143,14 @@ if __name__ == "__main__":
     logging.info(f"models: {args.all_model_path}")
     logging.info(f"load function: {module_name}.load_model")
 
-    model_paths = get_model_paths(
-        args.all_model_path, model_patterns=args.allowed_patterns
-    )
+    if args.models_file:
+        model_paths = args.models_file.read_text().splitlines()
+    elif args.all_model_path:
+        model_paths = get_model_paths(
+            args.all_model_path, model_patterns=args.allowed_patterns
+        )
+    else:
+        raise RuntimeError('Must provide either models-file or all-model-path')
     logging.info(f"# models: {len(model_paths)}")
 
     successes = 0
@@ -149,16 +161,18 @@ if __name__ == "__main__":
             logging.info(f"{model_path} OUTPUT:")
             logging.info(output)
         else:
-            start_time = time.time()
+            #start_time_real = time.time()
+            start_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
             is_success, output = loading_module.load_model(model_path)
-            end_time = time.time()
+            end_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+            #end_time_real = time.time()
             if len(output) == 0:
                 logging.warn(f"WARNING: Empty output for {model_path}")
             loader_used = verify_loader_was_used() or args.disable_verify
             if is_success and loader_used:
                 logging.info(f"{model_path} SUCCESS")
                 logging.info(f"{model_path} OUTPUT:")
-                logging.info(f"{model_path},TIME,{end_time - start_time}")
+                logging.info(f"{model_path},TIME,{end_time_user - start_time_user}")
                 logging.info(output)
                 successes += 1
             else:

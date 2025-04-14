@@ -5,3 +5,6 @@ RUN pip3 install tweetnlp
 
 COPY ./enforcement/utils/tweetnlp.patch /root/tweetnlp.patch
 RUN cd /root && patch -p1 < /root/tweetnlp.patch
+
+COPY ./enforcement/utils/modeling_utils_deb11.patch /root/modeling_utils.patch
+RUN cd /root && patch -p1 < /root/modeling_utils.patch

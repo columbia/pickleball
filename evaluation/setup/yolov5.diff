@@ -1,14 +1,416 @@
+diff --git a/yolov5/models/common.py b/yolov5/models/common.py
+index e997d29..d4761f2 100644
+--- a/yolov5/models/common.py
++++ b/yolov5/models/common.py
+@@ -43,15 +43,15 @@ def autopad(k, p=None, d=1):  # kernel, padding, dilation
+     return p
+ 
+ 
+-class Conv(nn.Module):
++class Conv(torch.nn.Module):
+     # Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)
+-    default_act = nn.SiLU()  # default activation
++    default_act = torch.nn.SiLU()  # default activation
+ 
+     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+         super().__init__()
+-        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
+-        self.bn = nn.BatchNorm2d(c2)
+-        self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
++        self.conv = torch.nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
++        self.bn = torch.nn.BatchNorm2d(c2)
++        self.act = self.default_act if act is True else act if isinstance(act, torch.nn.Module) else torch.nn.Identity()
+ 
+     def forward(self, x):
+         return self.act(self.bn(self.conv(x)))
+@@ -66,22 +66,22 @@ class DWConv(Conv):
+         super().__init__(c1, c2, k, s, g=math.gcd(c1, c2), d=d, act=act)
+ 
+ 
+-class DWConvTranspose2d(nn.ConvTranspose2d):
++class DWConvTranspose2d(torch.nn.ConvTranspose2d):
+     # Depth-wise transpose convolution
+     def __init__(self, c1, c2, k=1, s=1, p1=0, p2=0):  # ch_in, ch_out, kernel, stride, padding, padding_out
+         super().__init__(c1, c2, k, s, p1, p2, groups=math.gcd(c1, c2))
+ 
+ 
+-class TransformerLayer(nn.Module):
++class TransformerLayer(torch.nn.Module):
+     # Transformer layer https://arxiv.org/abs/2010.11929 (LayerNorm layers removed for better performance)
+     def __init__(self, c, num_heads):
+         super().__init__()
+-        self.q = nn.Linear(c, c, bias=False)
+-        self.k = nn.Linear(c, c, bias=False)
+-        self.v = nn.Linear(c, c, bias=False)
+-        self.ma = nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
+-        self.fc1 = nn.Linear(c, c, bias=False)
+-        self.fc2 = nn.Linear(c, c, bias=False)
++        self.q = torch.nn.Linear(c, c, bias=False)
++        self.k = torch.nn.Linear(c, c, bias=False)
++        self.v = torch.nn.Linear(c, c, bias=False)
++        self.ma = torch.nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
++        self.fc1 = torch.nn.Linear(c, c, bias=False)
++        self.fc2 = torch.nn.Linear(c, c, bias=False)
+ 
+     def forward(self, x):
+         x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x
+@@ -89,15 +89,15 @@ class TransformerLayer(nn.Module):
+         return x
+ 
+ 
+-class TransformerBlock(nn.Module):
++class TransformerBlock(torch.nn.Module):
+     # Vision Transformer https://arxiv.org/abs/2010.11929
+     def __init__(self, c1, c2, num_heads, num_layers):
+         super().__init__()
+         self.conv = None
+         if c1 != c2:
+             self.conv = Conv(c1, c2)
+-        self.linear = nn.Linear(c2, c2)  # learnable position embedding
+-        self.tr = nn.Sequential(*(TransformerLayer(c2, num_heads) for _ in range(num_layers)))
++        self.linear = torch.nn.Linear(c2, c2)  # learnable position embedding
++        self.tr = torch.nn.Sequential(*(TransformerLayer(c2, num_heads) for _ in range(num_layers)))
+         self.c2 = c2
+ 
+     def forward(self, x):
+@@ -108,7 +108,7 @@ class TransformerBlock(nn.Module):
+         return self.tr(p + self.linear(p)).permute(1, 2, 0).reshape(b, self.c2, w, h)
+ 
+ 
+-class Bottleneck(nn.Module):
++class Bottleneck(torch.nn.Module):
+     # Standard bottleneck
+     def __init__(self, c1, c2, shortcut=True, g=1, e=0.5):  # ch_in, ch_out, shortcut, groups, expansion
+         super().__init__()
+@@ -121,18 +121,18 @@ class Bottleneck(nn.Module):
+         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+ 
+ 
+-class BottleneckCSP(nn.Module):
++class BottleneckCSP(torch.nn.Module):
+     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
+     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):  # ch_in, ch_out, number, shortcut, groups, expansion
+         super().__init__()
+         c_ = int(c2 * e)  # hidden channels
+         self.cv1 = Conv(c1, c_, 1, 1)
+-        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
+-        self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
++        self.cv2 = torch.nn.Conv2d(c1, c_, 1, 1, bias=False)
++        self.cv3 = torch.nn.Conv2d(c_, c_, 1, 1, bias=False)
+         self.cv4 = Conv(2 * c_, c2, 1, 1)
+-        self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
+-        self.act = nn.SiLU()
+-        self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
++        self.bn = torch.nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
++        self.act = torch.nn.SiLU()
++        self.m = torch.nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
+ 
+     def forward(self, x):
+         y1 = self.cv3(self.m(self.cv1(x)))
+@@ -140,7 +140,7 @@ class BottleneckCSP(nn.Module):
+         return self.cv4(self.act(self.bn(torch.cat((y1, y2), 1))))
+ 
+ 
+-class CrossConv(nn.Module):
++class CrossConv(torch.nn.Module):
+     # Cross Convolution Downsample
+     def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, shortcut=False):
+         # ch_in, ch_out, kernel, stride, groups, expansion, shortcut
+@@ -154,7 +154,7 @@ class CrossConv(nn.Module):
+         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+ 
+ 
+-class C3(nn.Module):
++class C3(torch.nn.Module):
+     # CSP Bottleneck with 3 convolutions
+     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):  # ch_in, ch_out, number, shortcut, groups, expansion
+         super().__init__()
+@@ -162,7 +162,7 @@ class C3(nn.Module):
+         self.cv1 = Conv(c1, c_, 1, 1)
+         self.cv2 = Conv(c1, c_, 1, 1)
+         self.cv3 = Conv(2 * c_, c2, 1)  # optional act=FReLU(c2)
+-        self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
++        self.m = torch.nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
+ 
+     def forward(self, x):
+         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), 1))
+@@ -173,7 +173,7 @@ class C3x(C3):
+     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+         super().__init__(c1, c2, n, shortcut, g, e)
+         c_ = int(c2 * e)
+-        self.m = nn.Sequential(*(CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)))
++        self.m = torch.nn.Sequential(*(CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)))
+ 
+ 
+ class C3TR(C3):
+@@ -197,17 +197,17 @@ class C3Ghost(C3):
+     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+         super().__init__(c1, c2, n, shortcut, g, e)
+         c_ = int(c2 * e)  # hidden channels
+-        self.m = nn.Sequential(*(GhostBottleneck(c_, c_) for _ in range(n)))
++        self.m = torch.nn.Sequential(*(GhostBottleneck(c_, c_) for _ in range(n)))
+ 
+ 
+-class SPP(nn.Module):
++class SPP(torch.nn.Module):
+     # Spatial Pyramid Pooling (SPP) layer https://arxiv.org/abs/1406.4729
+     def __init__(self, c1, c2, k=(5, 9, 13)):
+         super().__init__()
+         c_ = c1 // 2  # hidden channels
+         self.cv1 = Conv(c1, c_, 1, 1)
+         self.cv2 = Conv(c_ * (len(k) + 1), c2, 1, 1)
+-        self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k])
++        self.m = torch.nn.ModuleList([torch.nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k])
+ 
+     def forward(self, x):
+         x = self.cv1(x)
+@@ -216,14 +216,14 @@ class SPP(nn.Module):
+             return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
+ 
+ 
+-class SPPF(nn.Module):
++class SPPF(torch.nn.Module):
+     # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
+     def __init__(self, c1, c2, k=5):  # equivalent to SPP(k=(5, 9, 13))
+         super().__init__()
+         c_ = c1 // 2  # hidden channels
+         self.cv1 = Conv(c1, c_, 1, 1)
+         self.cv2 = Conv(c_ * 4, c2, 1, 1)
+-        self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
++        self.m = torch.nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
+ 
+     def forward(self, x):
+         x = self.cv1(x)
+@@ -234,7 +234,7 @@ class SPPF(nn.Module):
+             return self.cv2(torch.cat((x, y1, y2, self.m(y2)), 1))
+ 
+ 
+-class Focus(nn.Module):
++class Focus(torch.nn.Module):
+     # Focus wh information into c-space
+     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True):  # ch_in, ch_out, kernel, stride, padding, groups
+         super().__init__()
+@@ -246,7 +246,7 @@ class Focus(nn.Module):
+         # return self.conv(self.contract(x))
+ 
+ 
+-class GhostConv(nn.Module):
++class GhostConv(torch.nn.Module):
+     # Ghost Convolution https://github.com/huawei-noah/ghostnet
+     def __init__(self, c1, c2, k=1, s=1, g=1, act=True):  # ch_in, ch_out, kernel, stride, groups
+         super().__init__()
+@@ -259,23 +259,23 @@ class GhostConv(nn.Module):
+         return torch.cat((y, self.cv2(y)), 1)
+ 
+ 
+-class GhostBottleneck(nn.Module):
++class GhostBottleneck(torch.nn.Module):
+     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
+     def __init__(self, c1, c2, k=3, s=1):  # ch_in, ch_out, kernel, stride
+         super().__init__()
+         c_ = c2 // 2
+-        self.conv = nn.Sequential(
++        self.conv = torch.nn.Sequential(
+             GhostConv(c1, c_, 1, 1),  # pw
+-            DWConv(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
++            DWConv(c_, c_, k, s, act=False) if s == 2 else torch.nn.Identity(),  # dw
+             GhostConv(c_, c2, 1, 1, act=False))  # pw-linear
+-        self.shortcut = nn.Sequential(DWConv(c1, c1, k, s, act=False), Conv(c1, c2, 1, 1,
+-                                                                            act=False)) if s == 2 else nn.Identity()
++        self.shortcut = torch.nn.Sequential(DWConv(c1, c1, k, s, act=False), Conv(c1, c2, 1, 1,
++                                                                            act=False)) if s == 2 else torch.nn.Identity()
+ 
+     def forward(self, x):
+         return self.conv(x) + self.shortcut(x)
+ 
+ 
+-class Contract(nn.Module):
++class Contract(torch.nn.Module):
+     # Contract width-height into channels, i.e. x(1,64,80,80) to x(1,256,40,40)
+     def __init__(self, gain=2):
+         super().__init__()
+@@ -289,7 +289,7 @@ class Contract(nn.Module):
+         return x.view(b, c * s * s, h // s, w // s)  # x(1,256,40,40)
+ 
+ 
+-class Expand(nn.Module):
++class Expand(torch.nn.Module):
+     # Expand channels into width-height, i.e. x(1,64,80,80) to x(1,16,160,160)
+     def __init__(self, gain=2):
+         super().__init__()
+@@ -303,7 +303,7 @@ class Expand(nn.Module):
+         return x.view(b, c // s ** 2, h * s, w * s)  # x(1,16,160,160)
+ 
+ 
+-class Concat(nn.Module):
++class Concat(torch.nn.Module):
+     # Concatenate a list of tensors along dimension
+     def __init__(self, dimension=1):
+         super().__init__()
+@@ -313,7 +313,7 @@ class Concat(nn.Module):
+         return torch.cat(x, self.d)
+ 
+ 
+-class DetectMultiBackend(nn.Module):
++class DetectMultiBackend(torch.nn.Module):
+     # YOLOv5 MultiBackend class for python inference on various backends
+     def __init__(self, weights='yolov5s.pt', device=torch.device('cpu'), dnn=False, data=None, fp16=False, fuse=True, hf_token=None, revision=None):
+         # Usage:
+@@ -367,7 +367,7 @@ class DetectMultiBackend(nn.Module):
+         elif dnn:  # ONNX OpenCV DNN
+             LOGGER.info(f'Loading {w} for ONNX OpenCV DNN inference...')
+             check_requirements('opencv-python>=4.5.4')
+-            net = cv2.dnn.readNetFromONNX(w)
++            net = cv2.dtorch.nn.readNetFromONNX(w)
+         elif onnx:  # ONNX Runtime
+             LOGGER.info(f'Loading {w} for ONNX Runtime inference...')
+             check_requirements(('onnx', 'onnxruntime-gpu' if cuda else 'onnxruntime'))
+@@ -627,7 +627,7 @@ class DetectMultiBackend(nn.Module):
+         return None, None
+ 
+ 
+-class AutoShape(nn.Module):
++class AutoShape(torch.nn.Module):
+     # YOLOv5 input-robust model wrapper for passing cv2/np/PIL/torch inputs. Includes preprocessing, inference and NMS
+     conf = 0.25  # NMS confidence threshold
+     iou = 0.45  # NMS IoU threshold
+@@ -842,12 +842,12 @@ class Detections:
+         return f'YOLOv5 {self.__class__} instance\n' + self.__str__()
+ 
+ 
+-class Proto(nn.Module):
++class Proto(torch.nn.Module):
+     # YOLOv5 mask Proto module for segmentation models
+     def __init__(self, c1, c_=256, c2=32):  # ch_in, number of protos, number of masks
+         super().__init__()
+         self.cv1 = Conv(c1, c_, k=3)
+-        self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
++        self.upsample = torch.nn.Upsample(scale_factor=2, mode='nearest')
+         self.cv2 = Conv(c_, c_, k=3)
+         self.cv3 = Conv(c_, c2)
+ 
+@@ -855,7 +855,7 @@ class Proto(nn.Module):
+         return self.cv3(self.cv2(self.upsample(self.cv1(x))))
+ 
+ 
+-class Classify(nn.Module):
++class Classify(torch.nn.Module):
+     # YOLOv5 classification head, i.e. x(b,c1,20,20) to x(b,c2)
+     def __init__(self,
+                  c1,
+@@ -868,9 +868,9 @@ class Classify(nn.Module):
+         super().__init__()
+         c_ = 1280  # efficientnet_b0 size
+         self.conv = Conv(c1, c_, k, s, autopad(k, p), g)
+-        self.pool = nn.AdaptiveAvgPool2d(1)  # to x(b,c_,1,1)
+-        self.drop = nn.Dropout(p=dropout_p, inplace=True)
+-        self.linear = nn.Linear(c_, c2)  # to x(b,c2)
++        self.pool = torch.nn.AdaptiveAvgPool2d(1)  # to x(b,c_,1,1)
++        self.drop = torch.nn.Dropout(p=dropout_p, inplace=True)
++        self.linear = torch.nn.Linear(c_, c2)  # to x(b,c2)
+ 
+     def forward(self, x):
+         if isinstance(x, list):
 diff --git a/yolov5/models/yolo.py b/yolov5/models/yolo.py
-index cf4ac8c..600faa8 100644
+index cf4ac8c..a85ca0a 100644
 --- a/yolov5/models/yolo.py
 +++ b/yolov5/models/yolo.py
-@@ -21,6 +21,9 @@ if str(ROOT) not in sys.path:
+@@ -21,6 +21,8 @@ if str(ROOT) not in sys.path:
  if platform.system() != 'Windows':
      ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
  
 +import torch
-+import torch.nn
 +
  from yolov5.models.common import *
  from yolov5.models.experimental import *
  from yolov5.utils.autoanchor import check_anchor_order
+@@ -35,7 +37,7 @@ except ImportError:
+     thop = None
+ 
+ 
+-class Detect(nn.Module):
++class Detect(torch.nn.Module):
+     # YOLOv5 Detect head for detection models
+     stride = None  # strides computed during build
+     dynamic = False  # force grid reconstruction
+@@ -50,7 +52,7 @@ class Detect(nn.Module):
+         self.grid = [torch.empty(0) for _ in range(self.nl)]  # init grid
+         self.anchor_grid = [torch.empty(0) for _ in range(self.nl)]  # init anchor grid
+         self.register_buffer('anchors', torch.tensor(anchors).float().view(self.nl, -1, 2))  # shape(nl,na,2)
+-        self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
++        self.m = torch.nn.ModuleList(torch.nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
+         self.inplace = inplace  # use inplace ops (e.g. slice assignment)
+ 
+     def forward(self, x):
+@@ -96,7 +98,7 @@ class Segment(Detect):
+         self.nm = nm  # number of masks
+         self.npr = npr  # number of protos
+         self.no = 5 + nc + self.nm  # number of outputs per anchor
+-        self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
++        self.m = torch.nn.ModuleList(torch.nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
+         self.proto = Proto(ch[0], self.npr, self.nm)  # protos
+         self.detect = Detect.forward
+ 
+@@ -106,7 +108,7 @@ class Segment(Detect):
+         return (x, p) if self.training else (x[0], p) if self.export else (x[0], p, x[1])
+ 
+ 
+-class BaseModel(nn.Module):
++class BaseModel(torch.nn.Module):
+     # YOLOv5 base model
+     def forward(self, x, profile=False, visualize=False):
+         return self._forward_once(x, profile, visualize)  # single-scale inference, train
+@@ -258,7 +260,7 @@ class DetectionModel(BaseModel):
+             b = mi.bias.view(m.na, -1)  # conv.bias(255) to (3,85)
+             b.data[:, 4] += math.log(8 / (640 / s) ** 2)  # obj (8 objects per 640 image)
+             b.data[:, 5:5 + m.nc] += math.log(0.6 / (m.nc - 0.99999)) if cf is None else torch.log(cf / cf.sum())  # cls
+-            mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
++            mi.bias = torch.torch.nn.Parameter(b.view(-1), requires_grad=True)
+ 
+ 
+ Model = DetectionModel  # retain YOLOv5 'Model' class for backwards compatibility
+@@ -301,7 +303,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
+     LOGGER.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
+     anchors, nc, gd, gw, act = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple'], d.get('activation')
+     if act:
+-        Conv.default_act = eval(act)  # redefine default activation, i.e. Conv.default_act = nn.SiLU()
++        Conv.default_act = eval(act)  # redefine default activation, i.e. Conv.default_act = torch.nn.SiLU()
+         LOGGER.info(f"{colorstr('activation:')} {act}")  # print
+     na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
+     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
+@@ -316,7 +318,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
+         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
+         if m in {
+                 Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
+-                BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, nn.ConvTranspose2d, DWConvTranspose2d, C3x}:
++                BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, torch.nn.ConvTranspose2d, DWConvTranspose2d, C3x}:
+             c1, c2 = ch[f], args[0]
+             if c2 != no:  # if not output
+                 c2 = make_divisible(c2 * gw, 8)
+@@ -325,7 +327,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
+             if m in {BottleneckCSP, C3, C3TR, C3Ghost, C3x}:
+                 args.insert(2, n)  # number of repeats
+                 n = 1
+-        elif m is nn.BatchNorm2d:
++        elif m is torch.nn.BatchNorm2d:
+             args = [ch[f]]
+         elif m is Concat:
+             c2 = sum(ch[x] for x in f)
+@@ -343,7 +345,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
+         else:
+             c2 = ch[f]
+ 
+-        m_ = nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
++        m_ = torch.nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
+         t = str(m)[8:-2].replace('__main__.', '')  # module type
+         np = sum(x.numel() for x in m_.parameters())  # number params
+         m_.i, m_.f, m_.type, m_.np = i, f, t, np  # attach index, 'from' index, type, number params
+@@ -353,7 +355,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
+         if i == 0:
+             ch = []
+         ch.append(c2)
+-    return nn.Sequential(*layers), sorted(save)
++    return torch.nn.Sequential(*layers), sorted(save)
+ 
+ 
+ if __name__ == '__main__':

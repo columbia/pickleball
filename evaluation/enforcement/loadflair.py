@@ -14,50 +14,50 @@ NUM_VALIDATE_SENTENCES = 1000
 
 TEST = "The experienced professor from Harvard University quickly analyzed the ancient manuscript while drinking coffee in New York last Sunday."
 
+ner_english_corpus = flair.datasets.NER_ENGLISH_PERSON()
+ner_german_corpus = flair.datasets.NER_GERMAN_GERMEVAL()
+up_spanish_corpus = flair.datasets.UP_SPANISH()
+ud_dutch_corpus = flair.datasets.UD_DUTCH()
+ud_french_corpus = flair.datasets.UD_FRENCH()
+ud_german_corpus = flair.datasets.UD_GERMAN()
+ud_arabic_corpus = flair.datasets.UD_ARABIC()
+
+corpus_map = {
+    "flair-ner-english": ner_english_corpus,
+    "flair-ner-english-fast": ner_english_corpus,
+    "flair-ner-english-large": ner_english_corpus,
+    "flair-chunk-english-fast": ner_english_corpus,
+    "flair-ner-english-ontonotes": ner_english_corpus,
+    "flair-ner-english-ontonotes-large": ner_english_corpus,
+    "flair-ner-english-ontonotes-fast": ner_english_corpus,
+    "flair-ner-spanish-large": up_spanish_corpus,
+    "flair-ner-dutch-large": ud_dutch_corpus,
+    "flair-ner-french": ud_french_corpus,
+    "flair-ner-german": ud_german_corpus,
+    "flair-ner-german-large": ud_german_corpus,
+    "megantosh-flair-arabic-multi-ner": ud_arabic_corpus,
+    "flair-upos-english": ner_english_corpus,
+    "flair-pos-english": ner_english_corpus,
+    "flair-pos-english-fast": ner_english_corpus,
+    "flair-upos-english-fast": ner_english_corpus,
+    "flair-ner-multi": MultiCorpus(
+        [
+            ner_english_corpus,
+            ner_german_corpus,
+            ud_dutch_corpus,
+        ]
+    ),
+    "flair-upos-multi": MultiCorpus(
+        [
+            ner_english_corpus,
+            ner_german_corpus,
+            ud_dutch_corpus,
+        ]
+    ),
+}
+
 
 def validate_model(model_path) -> str:
-
-    ner_english_corpus = flair.datasets.NER_ENGLISH_PERSON()
-    ner_german_corpus = flair.datasets.NER_GERMAN_GERMEVAL()
-    up_spanish_corpus = flair.datasets.UP_SPANISH()
-    ud_dutch_corpus = flair.datasets.UD_DUTCH()
-    ud_french_corpus = flair.datasets.UD_FRENCH()
-    ud_german_corpus = flair.datasets.UD_GERMAN()
-    ud_arabic_corpus = flair.datasets.UD_ARABIC()
-
-    corpus_map = {
-        "flair-ner-english": ner_english_corpus,
-        "flair-ner-english-fast": ner_english_corpus,
-        "flair-ner-english-large": ner_english_corpus,
-        "flair-chunk-english-fast": ner_english_corpus,
-        "flair-ner-english-ontonotes": ner_english_corpus,
-        "flair-ner-english-ontonotes-large": ner_english_corpus,
-        "flair-ner-english-ontonotes-fast": ner_english_corpus,
-        "flair-ner-spanish-large": up_spanish_corpus,
-        "flair-ner-dutch-large": ud_dutch_corpus,
-        "flair-ner-french": ud_french_corpus,
-        "flair-ner-german": ud_german_corpus,
-        "flair-ner-german-large": ud_german_corpus,
-        "megantosh-flair-arabic-multi-ner": ud_arabic_corpus,
-        "flair-upos-english": ner_english_corpus,
-        "flair-pos-english": ner_english_corpus,
-        "flair-pos-english-fast": ner_english_corpus,
-        "flair-upos-english-fast": ner_english_corpus,
-        "flair-ner-multi": MultiCorpus(
-            [
-                ner_english_corpus,
-                ner_german_corpus,
-                ud_dutch_corpus,
-            ]
-        ),
-        "flair-upos-multi": MultiCorpus(
-            [
-                ner_english_corpus,
-                ner_german_corpus,
-                ud_dutch_corpus,
-            ]
-        ),
-    }
 
     model_name = model_path.split("/")[-2]
     corpus = corpus_map[model_name]
@@ -119,7 +119,7 @@ def load_model(model_path, test=TEST) -> tuple[bool, str]:
         return False, ""
     else:
         print(f"\033[92mSUCCEEDED in {model_path}\033[0m")
-        #collect_attr_stats(tagger)
+        # collect_attr_stats(tagger)
         return True, output
 
 

@@ -19,6 +19,7 @@ VALIDATION_DIR = Path("/datasets/yolo/test2017")
 def validate_model(model_path) -> str:
 
     validation_files = os.listdir(VALIDATION_DIR)
+    validation_files.sort()
 
     try:
         model = ultralytics.YOLO(model_path)

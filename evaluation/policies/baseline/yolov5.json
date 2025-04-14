@@ -1,5 +1,5 @@
 {
-  "models/yolo.py:<module>.BaseModel": {
+  "yolov5/models/yolo.py:<module>.BaseModel": {
     "globals": [
       "yolov5.models.yolo.DetectionModel",
       "models.common.SPPF",

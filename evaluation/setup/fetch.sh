@@ -44,5 +44,5 @@ clone_and_checkout https://github.com/UKPLab/sentence-transformers.git sentence-
 clone_and_checkout https://github.com/eugenesiow/super-image.git super-image 50439ea
 clone_and_checkout https://github.com/asahi417/tner.git tner 7730a62
 clone_and_checkout https://github.com/cardiffnlp/tweetnlp.git tweetnlp 68b08c8
-clone_and_checkout https://github.com/fcakyon/yolov5-pip.git yolov5 40a1887
+clone_and_checkout https://github.com/fcakyon/yolov5-pip.git yolov5 40a1887 yolov5.diff
 clone_and_checkout https://github.com/ultralytics/ultralytics.git yolov11 b18007e yolov11.diff

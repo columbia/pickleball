@@ -1,0 +1,17 @@
+--- a/usr/lib/python3.11/pickle.py	2025-04-15 03:51:32.336610601 +0000
++++ b/usr/lib/python3.11/pickle.py	2025-04-15 03:51:26.704526430 +0000
+@@ -1779,12 +1779,11 @@ try:
+         PicklingError,
+         UnpicklingError,
+         Pickler,
+-        Unpickler,
+         dump,
+         dumps,
+-        load,
+-        loads
+     )
++    load, loads, Unpickler = _load, _loads, _Unpickler
++
+ except ImportError:
+     Pickler, Unpickler = _Pickler, _Unpickler
+     dump, dumps, load, loads = _dump, _dumps, _load, _loads

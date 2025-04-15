@@ -16,5 +16,8 @@ COPY pklballcheck.py /usr/lib/python3.11/pklballcheck.py
 RUN pip3 install torch==2.5.0+cpu torchvision==0.20.0 torchaudio==2.5.0 --index-url https://download.pytorch.org/whl/cpu
 RUN pip3 install transformers==4.46.1
 
+COPY ./utils/pickle.patch /root/pickle.patch
+RUN cd / && patch -p1 < /root/pickle.patch
+
 RUN mkdir -p /root/policies
 WORKDIR /load-model

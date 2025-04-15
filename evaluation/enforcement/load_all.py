@@ -4,9 +4,10 @@ import argparse
 import glob
 import importlib
 import logging
-import time
+import pickle
 import resource
-
+import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
@@ -33,8 +34,21 @@ LIBRARIES = [
     "tner",
     "tweetnlp",
     "yolov5",
-    "yolov11"
+    "yolov11",
 ]
+
+original_load = pickle._Unpickler.load
+
+
+def hooked_load(self, *args, **kwargs):
+    start_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+    ret = original_load(self, *args, **kwargs)
+    end_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+    print(f"Time to load: {end_time_user - start_time_user}")
+    return ret
+
+
+pickle._Unpickler.load = hooked_load
 
 
 def get_model_paths(
@@ -71,9 +85,7 @@ if __name__ == "__main__":
         help="Run model with a big dataset for validation",
     )
     parser.add_argument(
-        "--models-file",
-        type=Path,
-        help="File containing model paths to load"
+        "--models-file", type=Path, help="File containing model paths to load"
     )
     parser.add_argument(
         "--allowed-patterns",
@@ -150,7 +162,7 @@ if __name__ == "__main__":
             args.all_model_path, model_patterns=args.allowed_patterns
         )
     else:
-        raise RuntimeError('Must provide either models-file or all-model-path')
+        raise RuntimeError("Must provide either models-file or all-model-path")
     logging.info(f"# models: {len(model_paths)}")
 
     successes = 0
@@ -161,11 +173,11 @@ if __name__ == "__main__":
             logging.info(f"{model_path} OUTPUT:")
             logging.info(output)
         else:
-            #start_time_real = time.time()
+            # start_time_real = time.time()
             start_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
             is_success, output = loading_module.load_model(model_path)
             end_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
-            #end_time_real = time.time()
+            # end_time_real = time.time()
             if len(output) == 0:
                 logging.warn(f"WARNING: Empty output for {model_path}")
             loader_used = verify_loader_was_used() or args.disable_verify

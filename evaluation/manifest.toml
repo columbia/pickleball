@@ -98,13 +98,6 @@ model_class = "ultralytics/engine/model.py:<module>.Model"
 use_cpg = false
 ignore_paths = "tests/,docs/,docker/"
 
-#[libraries.torch]
-#
-#library_path = "pytorch"
-#model_class = "torch/nn/modules/module.py:<module>.Module"
-#use_cpg = false
-#ignore_paths = "android/,aten/,benchmarks/,binaries/,c10/,caffe2/,cmake/,docs/,functorch/,mypy_plugins/,scripts/,test/,third_party/,tools/,torchgen/"
-
 [libraries.parrot]
 
 library_path = "Parrot_Paraphraser"

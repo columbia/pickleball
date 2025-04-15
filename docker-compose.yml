@@ -1111,6 +1111,20 @@ services:
       - ${DATASETS}:/datasets
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.pyannote-success --library pyannote --disable-verify --validate --output-dir /pickleball/evaluation/control/results-validation/
+      
+  control-validate-yolov5:
+    image: control-load-yolov5
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.yolov5
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ${DATASETS}:/datasets
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.yolov5-success --library yolov5 --disable-verify --allowed-patterns "*.pt" --validate --output-dir /pickleball/evaluation/control/results-validation/
 
 
   control-validate-yolov11:
@@ -1135,6 +1149,8 @@ services:
       pickleball-validate-flair:
         condition: service_completed_successfully
       pickleball-validate-pyannote:
+        condition: service_completed_successfully
+      pickleball-validate-yolov5:
         condition: service_completed_successfully
       pickleball-validate-yolov11:
         condition: service_completed_successfully
@@ -1168,6 +1184,21 @@ services:
       - ${DATASETS}:/datasets
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.pyannote-success --library pyannote --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
+      
+  pickleball-validate-yolov5:
+    image: pickleball-enforce-yolov5
+    build:
+      context: evaluation
+      dockerfile: enforcement/Dockerfile.yolov5
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/yolov5.json:/root/policies/policy.json
+      - ${DATASETS}:/datasets
+      - .:/pickleball
+    command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.yolov5-success --library yolov5 --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
 
   pickleball-validate-yolov11:
     image: pickleball-enforce-yolov11

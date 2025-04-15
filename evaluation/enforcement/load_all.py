@@ -4,9 +4,10 @@ import argparse
 import glob
 import importlib
 import logging
-import time
+import pickle
 import resource
-
+import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
@@ -33,8 +34,25 @@ LIBRARIES = [
     "tner",
     "tweetnlp",
     "yolov5",
-    "yolov11"
+    "yolov11",
 ]
+
+CURRENT_MODEL = ""
+CURRENT_LIBRARY = ""
+original_load = pickle._Unpickler.load
+
+
+def hooked_load(self, *args, **kwargs):
+    #start_time = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+    start_time = time.time()
+    ret = original_load(self, *args, **kwargs)
+    end_time = time.time()
+    #end_time = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+    logging.info(f"TIME,{CURRENT_LIBRARY},{CURRENT_MODEL},{end_time - start_time}")
+    return ret
+
+
+pickle._Unpickler.load = hooked_load
 
 
 def get_model_paths(
@@ -71,9 +89,7 @@ if __name__ == "__main__":
         help="Run model with a big dataset for validation",
     )
     parser.add_argument(
-        "--models-file",
-        type=Path,
-        help="File containing model paths to load"
+        "--models-file", type=Path, help="File containing model paths to load"
     )
     parser.add_argument(
         "--allowed-patterns",
@@ -111,6 +127,7 @@ if __name__ == "__main__":
 
     LIBRARY = args.library
     module_name = f"load{args.library}"
+    CURRENT_LIBRARY = LIBRARY
 
     try:
         loading_module = importlib.import_module(module_name)
@@ -150,22 +167,23 @@ if __name__ == "__main__":
             args.all_model_path, model_patterns=args.allowed_patterns
         )
     else:
-        raise RuntimeError('Must provide either models-file or all-model-path')
+        raise RuntimeError("Must provide either models-file or all-model-path")
     logging.info(f"# models: {len(model_paths)}")
 
     successes = 0
     for model_path in model_paths:
         logging.debug(f"loading model: {model_path}")
+        CURRENT_MODEL = model_path
         if args.validate:
             output = loading_module.validate_model(model_path)
             logging.info(f"{model_path} OUTPUT:")
             logging.info(output)
         else:
-            start_time_real = time.time()
+            # start_time_real = time.time()
             #start_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
             is_success, output = loading_module.load_model(model_path)
             #end_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
-            end_time_real = time.time()
+            # end_time_real = time.time()
             if len(output) == 0:
                 logging.warn(f"WARNING: Empty output for {model_path}")
             loader_used = verify_loader_was_used() or args.disable_verify
@@ -173,7 +191,7 @@ if __name__ == "__main__":
                 logging.info(f"{model_path} SUCCESS")
                 logging.info(f"{model_path} OUTPUT:")
                 #logging.info(f"{model_path},TIME,{end_time_user - start_time_user}")
-                logging.info(f"{model_path},TIME,{end_time_real - start_time_real}")
+                #logging.info(f"{model_path},TIME,{end_time_real - start_time_real}")
                 logging.info(output)
                 successes += 1
             else:

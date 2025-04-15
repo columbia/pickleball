@@ -3,3 +3,6 @@ FROM control-load:latest
 # TODO: pin version
 RUN pip3 install pysentimiento
 RUN pip3 install transformers==4.46.1
+
+COPY ./enforcement/utils/modeling_utils.patch /root/modeling_utils.patch
+RUN cd /root && patch -p1 < /root/modeling_utils.patch

@@ -4,3 +4,7 @@ RUN pip3 install torch==2.5.0
 RUN pip3 install huggingsound
 RUN pip3 install torch==2.5.0+cpu torchvision==0.20.0 torchaudio==2.5.0 --index-url https://download.pytorch.org/whl/cpu
 RUN pip3 install transformers==4.46.1
+
+COPY ./enforcement/utils/modeling_utils_deb11.patch /root/modeling_utils.patch
+RUN cd /root && patch -p1 < /root/modeling_utils.patch
+

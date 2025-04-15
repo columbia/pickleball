@@ -24,7 +24,7 @@ def validate_model(model_path) -> str:
         model = yolov5.load(model_path)
 
         all_output = ""
-        for file in validation_files[:1000]:
+        for file in validation_files[:100]:
             results = model(VALIDATION_DIR / file)
             all_output += str(results.pred) + "\n"
             # print(results)

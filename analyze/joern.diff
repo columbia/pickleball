@@ -1,0 +1,708 @@
+diff --git a/.devcontainer/Dockerfile b/.devcontainer/Dockerfile
+index d99a08280..cb976d0ed 100644
+--- a/.devcontainer/Dockerfile
++++ b/.devcontainer/Dockerfile
+@@ -1,21 +1,28 @@
+-FROM centos:centos7.9.2009
++FROM debian:12
+ 
+ # install git git-lfs
+-RUN yum -y install zlib zlib-devel curl perl-ExtUtils-CBuilder perl-ExtUtils-MakeMaker gcc curl-devel expect make wget gettext zip unzip \
+-    && yum -y remove git \
+-    && yum -y install git
++RUN apt update \
++    && apt install -y zlib1g-dev curl gcc expect make wget gettext zip unzip \
++                    git python3 python3-pip
+ 
+-# install jdk11 sbt
++# install jdk19 sbt
+ RUN mkdir -p /data/App \
+     && cd /data/App \
+-    && wget https://github.com/sbt/sbt/releases/download/v1.6.1/sbt-1.6.1.zip \
++    && wget https://github.com/sbt/sbt/releases/download/v1.9.8/sbt-1.9.8.zip \
+     && unzip *.zip \
+     && rm *.zip \
+-    && mv sbt/ sbt-1.6.1/ \
+-    && wget https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz \
++    && mv sbt/ sbt-1.9.8/ \
++    && wget https://download.oracle.com/java/19/archive/jdk-19.0.2_linux-x64_bin.tar.gz \
+     && tar zxvf *.tar.gz \
+     && rm *.tar.gz
+ 
++# install PHP 7.4 for joern-parse to work on PHP files
++RUN apt install -y software-properties-common ca-certificates lsb-release apt-transport-https gnupg
++RUN sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
++RUN wget -qO - https://packages.sury.org/php/apt.gpg | apt-key add -
++RUN apt update && apt install -y php7.4
++
++# JDK configuration
+ ENV LANG=en_US.UTF-8 \
+-    JAVA_HOME=/data/App/jdk-11.0.1 \
+-    PATH=/data/App/sbt-1.6.1/bin:/data/App/jdk-11.0.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++    JAVA_HOME=/data/App/jdk-19.0.2 \
++    PATH=/data/App/sbt-1.9.8/bin:/data/App/jdk-19.0.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+diff --git a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/NodeBuilder.scala b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/NodeBuilder.scala
+index 2ba76d0a9..616c1801b 100644
+--- a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/NodeBuilder.scala
++++ b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/NodeBuilder.scala
+@@ -215,6 +215,16 @@ class NodeBuilder(diffGraph: DiffGraphBuilder) {
+     addNodeToDiff(identifierNode)
+   }
+ 
++  def identifierNode(name: String, lineAndColumn: LineAndColumn, typeName: String): nodes.NewIdentifier = {
++    val identifierNode = nodes
++      .NewIdentifier()
++      .code(name)
++      .name(name)
++      .typeFullName(typeName)
++      .lineNumber(lineAndColumn.column)
++    addNodeToDiff(identifierNode)
++  }
++
+   def fieldIdentifierNode(name: String, lineAndColumn: LineAndColumn): nodes.NewFieldIdentifier = {
+     val fieldIdentifierNode = nodes
+       .NewFieldIdentifier()
+diff --git a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonAstVisitor.scala b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonAstVisitor.scala
+index 2cab1643d..99ed4f669 100644
+--- a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonAstVisitor.scala
++++ b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonAstVisitor.scala
+@@ -822,20 +822,34 @@ class PythonAstVisitor(
+   // TODO for now we ignore the annotation part and just emit the pure
+   // assignment.
+   def convert(annotatedAssign: ast.AnnAssign): NewNode = {
+-    val targetNode = convert(annotatedAssign.target)
++    val annotationType = nodeBuilder.extractTypesFromHint(Some(annotatedAssign.annotation))
++    val targetNode = annotatedAssign.target match {
++      case name: ast.Name => annotationType match {
++        case Some(typeName) => convertTypedName(name, typeName)
++        case None           => convert(name)
++      }
++      case _ => convert(annotatedAssign.target)
++    }
+ 
+     annotatedAssign.value match {
+       case Some(value) =>
+         val valueNode = convert(value)
+         createAssignment(targetNode, valueNode, lineAndColOf(annotatedAssign))
+       case None =>
+-        // If there is no value, this is just an expr: annotation and since
+-        // we for now ignore the annotation we emit just the expr because
+-        // it may have side effects.
++        // If there is no value, this is just an expr: annotation
+         targetNode
+     }
+   }
+ 
++  def convertTypedName(name: ast.Name, typeName: String): nodes.NewNode = {
++    val memoryOperation = memOpMap.get(name).get
++    val identifier = createIdentifierNodeTyped(name.id, memoryOperation, lineAndColOf(name), typeName)
++    if (contextStack.isClassContext && memoryOperation == Store) {
++      createAndRegisterMember(identifier.name, lineAndColOf(name))
++    }
++    identifier
++  }
++
+   def convert(augAssign: ast.AugAssign): NewNode = {
+     val targetNode = convert(augAssign.target)
+     val valueNode  = convert(augAssign.value)
+diff --git a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonAstVisitorHelpers.scala b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonAstVisitorHelpers.scala
+index b9e0fb060..ea0899762 100644
+--- a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonAstVisitorHelpers.scala
++++ b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonAstVisitorHelpers.scala
+@@ -513,6 +513,17 @@ trait PythonAstVisitorHelpers(implicit withSchemaValidation: ValidationMode) { t
+     identifierNode
+   }
+ 
++  protected def createIdentifierNodeTyped(
++    name: String,
++    memOp: MemoryOperation,
++    lineAndColumn: LineAndColumn,
++    typeName: String
++  ): NewIdentifier = {
++    val identifierNode = nodeBuilder.identifierNode(name, lineAndColumn, typeName)
++    contextStack.addVariableReference(identifierNode, memOp)
++    identifierNode
++  }
++
+   protected def createIndexAccess(baseNode: NewNode, indexNode: NewNode, lineAndColumn: LineAndColumn): NewNode = {
+     val code = codeOf(baseNode) + "[" + codeOf(indexNode) + "]"
+     val indexAccessNode =
+diff --git a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonInheritanceNamePass.scala b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonInheritanceNamePass.scala
+index 31157a899..97f6ff58a 100644
+--- a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonInheritanceNamePass.scala
++++ b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonInheritanceNamePass.scala
+@@ -2,6 +2,8 @@ package io.joern.pysrc2cpg
+ 
+ import io.joern.x2cpg.passes.frontend.XInheritanceFullNamePass
+ import io.shiftleft.codepropertygraph.Cpg
++import io.shiftleft.codepropertygraph.generated.nodes._
++import io.shiftleft.semanticcpg.language.*
+ 
+ /** Using some basic heuristics, will try to resolve type full names from types found within the CPG. Requires
+   * ImportPass as a pre-requisite.
+@@ -11,4 +13,22 @@ class PythonInheritanceNamePass(cpg: Cpg) extends XInheritanceFullNamePass(cpg)
+   override val moduleName: String = "<module>"
+   override val fileExt: String    = ".py"
+ 
++  override def generateParts(): Array[TypeDecl] =
++    cpg.typeDecl
++      .filterNot(t => inheritsNothingOfInterest(t.inheritsFromTypeFullName))
++      /* Joern runs this pass when constructing a CPG (joern-parse), and then
++       * again when starting the Joern interpreter sehssion. This pass does
++       * not compose, and so the namesAlreadyFixed method checks whether an
++       * inheritedType is already formatted, and if not, this pass is skipped
++       * for the part.
++       *
++       * A better fix is to disable the second pass, or to check if the pass has
++       * run before generating parts by checking all typeDecls.
++       */
++      .filterNot(t => namesAlreadyFixed(t.inheritsFromTypeFullName))
++      .toArray
++
++  def namesAlreadyFixed(inheritedTypes: Seq[String]): Boolean = inheritedTypes.exists(nameAlreadyFixed)
++
++  def nameAlreadyFixed(inheritedType: String): Boolean = inheritedType.contains(s"${fileExt}:${moduleName}")
+ }
+diff --git a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonTypeRecovery.scala b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonTypeRecovery.scala
+index f9e595d08..36b7a6630 100644
+--- a/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonTypeRecovery.scala
++++ b/joern-cli/frontends/pysrc2cpg/src/main/scala/io/joern/pysrc2cpg/PythonTypeRecovery.scala
+@@ -73,11 +73,13 @@ private class RecoverForPythonFile(cpg: Cpg, cu: File, builder: DiffGraphBuilder
+   }
+ 
+   override def visitAssignments(a: OpNodes.Assignment): Set[String] = {
++    logger.debug("override visitAssignments")
+     a.argumentOut.l match {
+       case List(i: Identifier, c: Call) if c.name.isBlank && c.signature.isBlank =>
+         // This is usually some decorator wrapper
+         c.argument.isMethodRef.headOption match {
+-          case Some(mRef) => visitIdentifierAssignedToMethodRef(i, mRef)
++          case Some(mRef) => logger.debug("- override ident to methodRef")
++                              visitIdentifierAssignedToMethodRef(i, mRef)
+           case None       => super.visitAssignments(a)
+         }
+       case _ => super.visitAssignments(a)
+@@ -99,13 +101,20 @@ private class RecoverForPythonFile(cpg: Cpg, cu: File, builder: DiffGraphBuilder
+     i.method.name.matches("(<module>|__init__)") || super.isFieldUncached(i)
+ 
+   override def visitIdentifierAssignedToOperator(i: Identifier, c: Call, operation: String): Set[String] = {
++    logger.debug("override visitIdentiferAssignedToOperator")
+     operation match {
+-      case "<operator>.listLiteral"  => associateTypes(i, Set(s"${Constants.builtinPrefix}list"))
+-      case "<operator>.tupleLiteral" => associateTypes(i, Set(s"${Constants.builtinPrefix}tuple"))
+-      case "<operator>.dictLiteral"  => associateTypes(i, Set(s"${Constants.builtinPrefix}dict"))
+-      case "<operator>.setLiteral"   => associateTypes(i, Set(s"${Constants.builtinPrefix}set"))
+-      case Operators.conditional     => associateTypes(i, Set(s"${Constants.builtinPrefix}bool"))
+-      case _                         => super.visitIdentifierAssignedToOperator(i, c, operation)
++      case "<operator>.listLiteral"  => logger.debug("- ident to listLiteral")
++                                        associateTypes(i, Set(s"${Constants.builtinPrefix}list"))
++      case "<operator>.tupleLiteral" => logger.debug("- ident to tupleLiteral")
++                                        associateTypes(i, Set(s"${Constants.builtinPrefix}tuple"))
++      case "<operator>.dictLiteral"  => logger.debug("- ident to dictLiteral")
++                                        associateTypes(i, Set(s"${Constants.builtinPrefix}dict"))
++      case "<operator>.setLiteral"   => logger.debug("- ident to setLiteral")
++                                        associateTypes(i, Set(s"${Constants.builtinPrefix}set"))
++      case Operators.conditional     => logger.debug("- ident to conditional")
++                                        associateTypes(i, Set(s"${Constants.builtinPrefix}bool"))
++      case _                         => logger.debug("- defer to super")
++                                        super.visitIdentifierAssignedToOperator(i, c, operation)
+     }
+   }
+ 
+@@ -124,6 +133,7 @@ private class RecoverForPythonFile(cpg: Cpg, cu: File, builder: DiffGraphBuilder
+ 
+   override def visitIdentifierAssignedToFieldLoad(i: Identifier, fa: FieldAccess): Set[String] = {
+     val fieldParents = getFieldParents(fa)
++    logger.debug(s"override visitIdentifierAssignedToFieldLoad: '${i.name}' to field load '${getFieldName(fa)}'")
+     fa.astChildren.l match {
+       case List(base: Identifier, fi: FieldIdentifier) if base.name.equals("self") && fieldParents.nonEmpty =>
+         val referencedFields = cpg.typeDecl.fullNameExact(fieldParents.toSeq*).member.nameExact(fi.canonicalName)
+@@ -143,13 +153,18 @@ private class RecoverForPythonFile(cpg: Cpg, cu: File, builder: DiffGraphBuilder
+   }
+ 
+   override def getFieldParents(fa: FieldAccess): Set[String] = {
++    logger.debug(s"- getting field parents for: ${getFieldName(fa)}")
+     if (fa.method.name == "<module>") {
+       Set(fa.method.fullName)
+     } else if (fa.method.typeDecl.nonEmpty) {
+-      val parentTypes       = fa.method.typeDecl.fullName.toSet
++      // This parentTypes does not account for nested fieldAccess nodes.
++      //val parentTypes       = fa.method.typeDecl.fullName.toSet
++      val parentTypes         = super.getFieldParents(fa)
+       val baseTypeFullNames = cpg.typeDecl.fullNameExact(parentTypes.toSeq*).inheritsFromTypeFullName.toSet
++      logger.debug(s"-- ${(parentTypes ++ baseTypeFullNames).filterNot(_.matches("(?i)(any|object)")).mkString(",")}")
+       (parentTypes ++ baseTypeFullNames).filterNot(_.matches("(?i)(any|object)"))
+     } else {
++      logger.debug("- deferring to super")
+       super.getFieldParents(fa)
+     }
+   }
+@@ -182,7 +197,34 @@ private class RecoverForPythonFile(cpg: Cpg, cu: File, builder: DiffGraphBuilder
+     }
+   }
+ 
++  val collectionTypes = Set("__builtin.dict")
++
++  def hasCollectionType(l: Local): Boolean = {
++    val types = (l.typeFullName +: l.dynamicTypeHintFullName).toSet
++    collectionTypes.intersect(types).nonEmpty
++  }
++
++  def hasCollectionType(i: Identifier): Boolean = {
++    val types = (i.typeFullName +: i.dynamicTypeHintFullName).toSet
++    collectionTypes.intersect(types).nonEmpty
++  }
++
++  def hasCollectionType(m: Member): Boolean = {
++    val types = (m.typeFullName +: m.dynamicTypeHintFullName).toSet
++    collectionTypes.intersect(types).nonEmpty
++  }
++
++  /** There has to be a better way of doing this than matching on each type */
++  def hasCollectionType(n: AstNode): Boolean = { n match {
++      case l: Local       => hasCollectionType(l)
++      case i: Identifier  => hasCollectionType(i)
++      case m: Member      => hasCollectionType(m)
++      case _              => false
++    }
++  }
++
+   override protected def postSetTypeInformation(): Unit = {
++    logger.debug(s"postSetTypeInformation")
+     super.postSetTypeInformation()
+     cu.typeDecl
+       .map(t => t -> t.inheritsFromTypeFullName.partition(itf => symbolTable.contains(LocalVar(itf))))
+@@ -193,6 +235,47 @@ private class RecoverForPythonFile(cpg: Cpg, cu: File, builder: DiffGraphBuilder
+           builder.setNodeProperty(t, PropertyNames.INHERITS_FROM_TYPE_FULL_NAME, resolvedTypes)
+         }
+       }
++
++    val collectionSymbols = symbolTable.itemsCopy.collect {
++      case (CollectionVar(collectionName, index), types) => (collectionName, types) }
++        .groupBy(_._1) /* Turn the array into a map of collectionName => Set(types) */
++        .view.mapValues(arr => arr.map(v => v._2))
++        .mapValues(arr => arr.fold(Set.empty)((s1, s2) => s1 ++ s2))
++        .mapValues(s => s.map("__collection." + _))
++    logger.debug(s"- found collection type symbols: ${collectionSymbols.mkString(",")}")
++
++    /** This limits the type recovery to collections in the same compilation unit.
++     * Need to think about how to do this for setting information for members
++     * declared in other compilation units, I think.
++     */
++    val collectionNodes = cu.ast.collect {
++      case n: Local       => n
++      case n: Identifier  => n
++      case n: Member      => n
++    }.filter { hasCollectionType }
++
++    /* Now need to update every collectionNode that has new types in the collectionSymbols */
++    collectionNodes.foreach { node => node match {
++      case l: Local if collectionSymbols.contains(l.name) =>
++        logger.debug(s"- updating types for node ${l.name} <- ${collectionSymbols.get(l.name).mkString(",")}")
++        // TODO
++      case i: Identifier if collectionSymbols.contains(i.name) =>
++        logger.debug(s"- updating types for node ${i.name} <- ${collectionSymbols.get(i.name).mkString(",")}")
++        // TODO
++      case m: Member if collectionSymbols.contains(m.name) =>
++        logger.debug(s"- updating types for node ${m.name} <- ${collectionSymbols.get(m.name).mkString(",")}")
++
++        /** If the node does not already have the collection type information, then add them to the node's types. */
++        val existingTypes = (m.typeFullName +: m.dynamicTypeHintFullName).toSet
++        val newTypes = collectionSymbols.getOrElse(m.name, Set.empty).filterNot(_ == "ANY") -- existingTypes
++        if (newTypes.nonEmpty) {
++          logger.debug(s"-- adding types: ${newTypes.mkString(",")}")
++          // TODO: Remove "ANY"
++          builder.setNodeProperty(m, PropertyNames.DYNAMIC_TYPE_HINT_FULL_NAME, (existingTypes.filterNot(_ == "ANY") ++ (newTypes.toSeq)))
++        }
++      case _  =>
++      }
++    }
+   }
+ 
+   override def prepopulateSymbolTable(): Unit = {
+@@ -211,6 +294,7 @@ private class RecoverForPythonFile(cpg: Cpg, cu: File, builder: DiffGraphBuilder
+   }
+ 
+   override protected def visitIdentifierAssignedToTypeRef(i: Identifier, t: TypeRef, rec: Option[String]): Set[String] =
++    logger.debug(s"override visitIdentifierAssignedToTypeRef: '${i.name}' -> '${t.typeFullName}'")
+     t.typ.referencedTypeDecl
+       .map(_.fullName.stripSuffix("<meta>"))
+       .map(td => symbolTable.append(CallAlias(i.name, rec), Set(td)))
+diff --git a/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/PySrc2CpgFixture.scala b/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/PySrc2CpgFixture.scala
+index 5ecfd7697..c5c3874a9 100644
+--- a/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/PySrc2CpgFixture.scala
++++ b/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/PySrc2CpgFixture.scala
+@@ -34,8 +34,10 @@ class PySrcTestCpg extends DefaultTestCpg with PythonFrontend with SemanticTestC
+   override def applyPostProcessingPasses(): Unit = {
+     new ImportsPass(this).createAndApply()
+     new PythonImportResolverPass(this).createAndApply()
+-    new PythonInheritanceNamePass(this).createAndApply()
++    // The following two passes were applied in a different order than in the
++    // PythonSrcCpgGenerator class - fixed here to match
+     new DynamicTypeHintFullNamePass(this).createAndApply()
++    new PythonInheritanceNamePass(this).createAndApply()
+     new PythonTypeRecoveryPassGenerator(this).generate().foreach(_.createAndApply())
+     new PythonTypeHintCallLinker(this).createAndApply()
+     new NaiveCallLinker(this).createAndApply()
+diff --git a/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/passes/InheritanceFullNamePassTests.scala b/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/passes/InheritanceFullNamePassTests.scala
+index 71e90af77..40590a6d0 100644
+--- a/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/passes/InheritanceFullNamePassTests.scala
++++ b/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/passes/InheritanceFullNamePassTests.scala
+@@ -31,6 +31,29 @@ class InheritanceFullNamePassTests extends PySrc2CpgFixture(withOssDataflow = fa
+     }
+   }
+ 
++  "inheritied type full names in same module" should {
++    lazy val cpg = code(
++      """
++       |class Parent(object):
++       |  pass
++       |
++       |class Child(Parent):
++       |  pass
++       |
++       |class Model(object):
++       |  def __init__(self, value: Parent):
++       |    self.value = value
++       |""".stripMargin,
++      "model.py"
++    )
++
++    "resolve the type being inherited fully" in {
++      def child = cpg.typeDecl("Child")
++      child.inheritsFromTypeFullName.l shouldBe Seq("model.py:<module>.Parent")
++      child.baseType.fullName.l shouldBe Seq("model.py:<module>.Parent")
++    }
++  }
++
+   "inherited external types" should {
+     lazy val cpg = code("""
+         |from tortoise.models import Model
+diff --git a/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/passes/TypeRecoveryPassTests.scala b/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/passes/TypeRecoveryPassTests.scala
+index ccf17765d..b56413ea5 100644
+--- a/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/passes/TypeRecoveryPassTests.scala
++++ b/joern-cli/frontends/pysrc2cpg/src/test/scala/io/joern/pysrc2cpg/passes/TypeRecoveryPassTests.scala
+@@ -1370,4 +1370,64 @@ class TypeRecoveryPassTests extends PySrc2CpgFixture(withOssDataflow = false) {
+     }
+   }
+ 
++  "assignment to nested fields in a class method" should {
++    val cpg = code(
++      """
++        |class Foo(object):
++        |   def __init__(self):
++        |     self.name = None
++        |     self.value = None
++        |""".stripMargin,
++      Seq("src", "foo.py").mkString(File.separator)
++    ).moreCode(
++      """
++        |from foo import Foo
++        |
++        |class Bar(object):
++        |   def __init__(self, foo: Foo, value: int):
++        |     self.foo = foo
++        |     self.foo.name = "baz"
++        |     self.foo.value = value
++        |""".stripMargin,
++      Seq("src", "bar.py").mkString(File.separator)
++    )
++
++    "recover the member type for the owning class when assignment is from a literal" in {
++      val fooName = cpg.typeDecl("Foo").member.nameExact("name")
++      val nameTypes = fooName.typeFullName ++ fooName.dynamicTypeHintFullName
++      nameTypes.toSet shouldBe Set("__builtin.str", "__builtin.None")
++    }
++
++    "recover the member type for the owning class when assignment is from an identifier with known type" in {
++      val fooValue = cpg.typeDecl("Foo").member.nameExact("value")
++      val valueTypes = fooValue.typeFullName ++ fooValue.dynamicTypeHintFullName
++      valueTypes.toSet shouldBe Set("__builtin.int", "__builtin.None")
++    }
++  }
++
++  "member type annotations" should {
++    val cpg = code(
++      """
++      |from library import make_value
++      |
++      |class Foo(object):
++      |   name: str
++      |   value: int = make_value()
++      |""".stripMargin
++    )
++
++    "be used for type recovery when no assignment is given" in {
++      val fooDecl = cpg.typeDecl("Foo").l
++      val nameMember = fooDecl.member.nameExact("name").l
++      val nameTypes = (nameMember.dynamicTypeHintFullName ++ nameMember.typeFullName)
++      nameTypes.toSet shouldBe Set("__builtin.str")
++    }
++
++    "be used for type recovery to complement assignment" in {
++      val fooDecl = cpg.typeDecl("Foo").l
++      val valueMember = fooDecl.member.nameExact("value").l
++      val valueTypes = (valueMember.dynamicTypeHintFullName ++ valueMember.typeFullName)
++      valueTypes.toSet shouldBe Set("__builtin.int", "library.py:<module>.make_value.<returnValue>")
++    }
++  }
+ }
+diff --git a/joern-cli/frontends/x2cpg/src/main/scala/io/joern/x2cpg/passes/frontend/XTypeRecovery.scala b/joern-cli/frontends/x2cpg/src/main/scala/io/joern/x2cpg/passes/frontend/XTypeRecovery.scala
+index 234f018b8..88472a473 100644
+--- a/joern-cli/frontends/x2cpg/src/main/scala/io/joern/x2cpg/passes/frontend/XTypeRecovery.scala
++++ b/joern-cli/frontends/x2cpg/src/main/scala/io/joern/x2cpg/passes/frontend/XTypeRecovery.scala
+@@ -409,18 +409,30 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+   protected def visitAssignments(a: Assignment): Set[String] = visitAssignmentArguments(a.argumentOut.l)
+ 
+   protected def visitAssignmentArguments(args: List[AstNode]): Set[String] = args match {
+-    case List(i: Identifier, b: Block)                             => visitIdentifierAssignedToBlock(i, b)
+-    case List(i: Identifier, c: Call)                              => visitIdentifierAssignedToCall(i, c)
+-    case List(x: Identifier, y: Identifier)                        => visitIdentifierAssignedToIdentifier(x, y)
+-    case List(i: Identifier, l: Literal) if state.isFirstIteration => visitIdentifierAssignedToLiteral(i, l)
+-    case List(i: Identifier, m: MethodRef)                         => visitIdentifierAssignedToMethodRef(i, m)
+-    case List(i: Identifier, t: TypeRef)                           => visitIdentifierAssignedToTypeRef(i, t)
+-    case List(c: Call, i: Identifier)                              => visitCallAssignedToIdentifier(c, i)
+-    case List(x: Call, y: Call)                                    => visitCallAssignedToCall(x, y)
+-    case List(c: Call, l: Literal) if state.isFirstIteration       => visitCallAssignedToLiteral(c, l)
+-    case List(c: Call, m: MethodRef)                               => visitCallAssignedToMethodRef(c, m)
+-    case List(c: Call, b: Block)                                   => visitCallAssignedToBlock(c, b)
+-    case _                                                         => Set.empty
++    case List(i: Identifier, b: Block)                             => logger.debug("- ident to block")
++                                                                      visitIdentifierAssignedToBlock(i, b)
++    case List(i: Identifier, c: Call)                              => logger.debug("- ident to call")
++                                                                      visitIdentifierAssignedToCall(i, c)
++    case List(x: Identifier, y: Identifier)                        => logger.debug("- ident to ident")
++                                                                      visitIdentifierAssignedToIdentifier(x, y)
++    case List(i: Identifier, l: Literal) if state.isFirstIteration => logger.debug("- ident to literal")
++                                                                      visitIdentifierAssignedToLiteral(i, l)
++    case List(i: Identifier, m: MethodRef)                         => logger.debug("- ident to methodRef")
++                                                                      visitIdentifierAssignedToMethodRef(i, m)
++    case List(i: Identifier, t: TypeRef)                           => logger.debug("- ident to typeRef")
++                                                                      visitIdentifierAssignedToTypeRef(i, t)
++    case List(c: Call, i: Identifier)                              => logger.debug("- call to ident")
++                                                                      visitCallAssignedToIdentifier(c, i)
++    case List(x: Call, y: Call)                                    => logger.debug("- call to call")
++                                                                      visitCallAssignedToCall(x, y)
++    case List(c: Call, l: Literal) if state.isFirstIteration       => logger.debug("- call to literal")
++                                                                      visitCallAssignedToLiteral(c, l)
++    case List(c: Call, m: MethodRef)                               => logger.debug("- call to methodRef")
++                                                                      visitCallAssignedToMethodRef(c, m)
++    case List(c: Call, b: Block)                                   => logger.debug("- call to block")
++                                                                      visitCallAssignedToBlock(c, b)
++    case _                                                         => logger.debug("- unhandled")
++                                                                      Set.empty
+   }
+ 
+   /** Visits an identifier being assigned to the result of some operation.
+@@ -463,6 +475,7 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+     * constructor invocation.
+     */
+   protected def visitIdentifierAssignedToCall(i: Identifier, c: Call): Set[String] = {
++    logger.debug(s"visitIdentifierAssignedToCall: '${i.name}' -> '${c.name}' @ ${debugLocation(i)}")
+     if (c.name.startsWith("<operator>")) {
+       visitIdentifierAssignedToOperator(i, c, c.name)
+     } else if (symbolTable.contains(c) && isConstructor(c)) {
+@@ -537,6 +550,7 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+     */
+   protected def getFieldParents(fa: FieldAccess): Set[String] = {
+     val fieldName = getFieldName(fa).split(Pattern.quote(pathSep)).last
++    logger.debug(s"- (super) getting field parents for: ${fieldName}")
+     Try(cpg.member.nameExact(fieldName).typeDecl.fullName.filterNot(_.contains("ANY")).toSet) match
+       case Failure(exception) =>
+         logger.warn("Unable to obtain name of member's parent type declaration", exception)
+@@ -548,11 +562,18 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+     * which this method uses [[isField]] to determine.
+     */
+   protected def associateTypes(symbol: LocalVar, fa: FieldAccess, types: Set[String]): Set[String] = {
++    logger.debug(s"- associateTypes")
+     fa.astChildren.filterNot(_.code.matches("(this|self)")).headOption.collect {
+       case fi: FieldIdentifier =>
++        logger.debug(s"- associating types (FI): ${getFieldParents(fa)}.${fi.canonicalName} <- ${types}")
+         getFieldParents(fa).foreach(t => persistMemberWithTypeDecl(t, fi.canonicalName, types))
+       case i: Identifier if isField(i) =>
++        logger.debug(s"- associating types (I): ${getFieldParents(fa)}.${i.name} <- ${types}")
+         getFieldParents(fa).foreach(t => persistMemberWithTypeDecl(t, i.name, types))
++      case c: Call if c.name == "<operator>.fieldAccess" =>
++        val fieldName = getFieldName(fa).split(Pattern.quote(pathSep)).last
++        logger.debug(s"- associating types (C): fieldAccess ${c.name} ${fieldName} <- ${types}")
++        getFieldParents(fa).foreach(t => persistMemberWithTypeDecl(t, fieldName, types))
+     }
+     symbolTable.append(symbol, types)
+   }
+@@ -602,11 +623,16 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+   /** Visits an identifier being assigned to an operator call.
+     */
+   protected def visitIdentifierAssignedToOperator(i: Identifier, c: Call, operation: String): Set[String] = {
++    logger.debug("visitIdentifierAssignedToOperator")
+     operation match {
+-      case Operators.alloc       => visitIdentifierAssignedToConstructor(i, c)
+-      case Operators.fieldAccess => visitIdentifierAssignedToFieldLoad(i, c.asInstanceOf[FieldAccess])
+-      case Operators.indexAccess => visitIdentifierAssignedToIndexAccess(i, c)
+-      case Operators.cast        => visitIdentifierAssignedToCast(i, c)
++      case Operators.alloc       => logger.debug("- ident to constructor")
++                                    visitIdentifierAssignedToConstructor(i, c)
++      case Operators.fieldAccess => logger.debug("- ident to field load")
++                                    visitIdentifierAssignedToFieldLoad(i, c.asInstanceOf[FieldAccess])
++      case Operators.indexAccess => logger.debug("- ident to index access")
++                                    visitIdentifierAssignedToIndexAccess(i, c)
++      case Operators.cast        => logger.debug("- ident to cast")
++                                    visitIdentifierAssignedToCast(i, c)
+       case x                     => logger.debug(s"Unhandled operation $x (${c.code}) @ ${debugLocation(c)}"); Set.empty
+     }
+   }
+@@ -614,6 +640,7 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+   /** Visits an identifier being assigned to a constructor and attempts to speculate the constructor path.
+     */
+   protected def visitIdentifierAssignedToConstructor(i: Identifier, c: Call): Set[String] = {
++    logger.debug("visitIdentifierAssignedToConstructor")
+     val constructorPaths = symbolTable.get(c).map(t => t.concat(s"$pathSep${Defines.ConstructorMethodName}"))
+     associateTypes(i, constructorPaths)
+   }
+@@ -667,17 +694,21 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+     m: MethodRef,
+     rec: Option[String] = None
+   ): Set[String] =
++    logger.debug(s"visitIdentifierAssignedToMethodRef: '${i.name}' -> '${m.methodFullName}' @ ${debugLocation(i)}")
+     symbolTable.append(CallAlias(i.name, rec), Set(m.methodFullName))
+ 
+   /** Will handle an identifier holding a type pointer.
+     */
+   protected def visitIdentifierAssignedToTypeRef(i: Identifier, t: TypeRef, rec: Option[String] = None): Set[String] =
++    logger.debug(s"visitIdentifierAssignedToTypeRef: '${i.name}' -> '${t.typeFullName}' @ ${debugLocation(i)}")
+     symbolTable.append(CallAlias(i.name, rec), Set(t.typeFullName))
+ 
+   /** Visits a call assigned to an identifier. This is often when there are operators involved.
+     */
+   protected def visitCallAssignedToIdentifier(c: Call, i: Identifier): Set[String] = {
++    logger.debug(s"visitCallAssignedToIdentifier: '${c.name}' -> '${i.name}' @ ${debugLocation(i)}")
+     val rhsTypes = symbolTable.get(i)
++    logger.debug(s"- rhsTypes: ${rhsTypes}")
+     assignTypesToCall(c, rhsTypes)
+   }
+ 
+@@ -703,13 +734,22 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+     if (types.nonEmpty) {
+       getSymbolFromCall(x) match {
+         case (lhs, globalKeys) if globalKeys.nonEmpty =>
++          logger.debug(s"assignTypesToCall: ${globalKeys.mkString(",")}")
+           globalKeys.foreach { (fieldVar: FieldPath) =>
+-            persistMemberWithTypeDecl(fieldVar.compUnitFullName, fieldVar.identifier, types)
++            val fieldVarIdentifier = fieldVar.identifier.split(Pattern.quote(pathSep)).last
++            logger.debug(s"- fieldVar compUnit: ${fieldVar.compUnitFullName}; fieldVar: ${fieldVarIdentifier}; types: ${types.mkString(",")}")
++            persistMemberWithTypeDecl(fieldVar.compUnitFullName, fieldVarIdentifier, types)
+           }
+           symbolTable.append(lhs, types)
+-        case (lhs, _) => symbolTable.append(lhs, types)
++        case (lhs, _) => {
++          logger.debug(s"assignTypesToCall: empty globalKeys")
++          symbolTable.append(lhs, types)
++        }
+       }
+-    } else Set.empty
++    } else {
++      logger.debug(s"assignTypesToCall: empty types")
++      Set.empty
++    }
+   }
+ 
+   /** Will attempt to retrieve index access types otherwise will return dummy value.
+@@ -782,6 +822,7 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+   }
+ 
+   protected def visitCallAssignedToLiteral(c: Call, l: Literal): Set[String] = {
++    logger.debug(s"visitCallAssignedToLiteral: '${c.name}' -> '${l.typeFullName}' @ ${debugLocation(c)}")
+     if (c.name.equals(Operators.indexAccess)) {
+       // For now, we will just handle this on a very basic level
+       c.argumentOut.l match {
+@@ -803,6 +844,8 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+     } else if (c.name.equals(Operators.fieldAccess)) {
+       val fa        = c.asInstanceOf[FieldAccess]
+       val fieldName = getFieldName(fa)
++      logger.debug(s"- associating types: '${fieldName}': ${getLiteralType(l)}")
++      logger.debug(s"- fieldParents: ${getFieldParents(fa).mkString(",")}")
+       associateTypes(LocalVar(fieldName), fa, getLiteralType(l))
+     } else {
+       logger.warn(s"Unhandled call assigned to literal point ${c.name} @ ${debugLocation(c)}")
+@@ -818,6 +861,7 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+   /** Generates an identifier for collection/index-access operations in the symbol table.
+     */
+   protected def indexAccessToCollectionVar(c: Call): Option[CollectionVar] = {
++    logger.debug("indexAccessToCollectionVar")
+     def callName(x: Call) =
+       if (x.name.equals(Operators.fieldAccess))
+         getFieldName(x.asInstanceOf[FieldAccess])
+@@ -831,7 +875,10 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+       case List(i: Identifier, idx: Literal)    => CollectionVar(i.name, idx.code)
+       case List(i: Identifier, idx: Identifier) => CollectionVar(i.name, idx.code)
+       case List(c: Call, idx: Call)             => CollectionVar(callName(c), callName(idx))
+-      case List(c: Call, idx: Literal)          => CollectionVar(callName(c), idx.code)
++      case List(c: Call, idx: Literal)          => {
++        logger.debug(s"- ${callName(c)}, ${idx.code}")
++        CollectionVar(callName(c), idx.code)
++      }
+       case List(c: Call, idx: Identifier)       => CollectionVar(callName(c), idx.code)
+       case xs =>
+         logger.debug(s"Unhandled index access ${xs.map(x => (x.label, x.code)).mkString(",")} @ ${debugLocation(c)}")
+@@ -843,6 +890,7 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+     */
+   protected def visitIdentifierAssignedToFieldLoad(i: Identifier, fa: FieldAccess): Set[String] = {
+     val fieldName = getFieldName(fa)
++    logger.debug(s"visitIdentifierAssignedToFieldLoad: '${i.name}' to field load '$fieldName' @ ${debugLocation(i)}")
+     fa.argumentOut.l match {
+       case ::(base: Identifier, ::(fi: FieldIdentifier, _)) if symbolTable.contains(LocalVar(base.name)) =>
+         // Get field from global table if referenced as a variable
+@@ -954,6 +1002,7 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+   /** Using an entry from the symbol table, will queue the CPG modification to persist the recovered type information.
+     */
+   protected def setTypeInformation(): Unit = {
++    logger.debug(s"setTypeInformation - symbolTable: ${symbolTable.itemsCopy.mkString(",")}")
+     cu.ast
+       .collect {
+         case n: Local                                       => n
+@@ -1168,7 +1217,9 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+     *   the types to associate.
+     */
+   protected def persistMemberWithTypeDecl(typeFullName: String, memberName: String, types: Set[String]): Unit =
++    logger.debug(s"- persistMemberWithTypeDecl: ${typeFullName} . ${memberName} <- ${types.mkString(",")}")
+     typeDeclIterator(typeFullName).member.nameExact(memberName).headOption.foreach { m =>
++      logger.debug(s"-- storing type info: ${m.name} <- ${types.mkString(",")}")
+       storeNodeTypeInfo(m, types.toSeq)
+     }
+ 
+@@ -1185,6 +1236,7 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+       .headOption
+ 
+   private def storeNodeTypeInfo(storedNode: StoredNode, types: Seq[String]): Unit = {
++    logger.debug(s"- storeNodeTypeInfo: ${storedNode} <- ${types.mkString(",")}")
+     lazy val existingTypes = storedNode.getKnownTypes
+ 
+     val hasUnknownTypeFullName = storedNode
+@@ -1195,15 +1247,24 @@ abstract class RecoverForXCompilationUnit[CompilationUnitType <: AstNode](
+       storedNode match {
+         case m: Member =>
+           // To avoid overwriting member updates, we store them elsewhere until the end
++          logger.debug(s"-- storing node type info for member '${m.name}' <- ${types.mkString(",")}")
+           newTypesForMembers.updateWith(m) {
+             case Some(ts) => Option(ts ++ types)
+             case None     => Option(types.toSet)
+           }
+-        case i: Identifier                               => storeIdentifierTypeInfo(i, types)
+-        case l: Local                                    => storeLocalTypeInfo(l, types)
+-        case c: Call if !c.name.startsWith("<operator>") => storeCallTypeInfo(c, types)
+-        case _: Call                                     =>
++        case i: Identifier                               =>
++          logger.debug(s"-- storing node type info for identifier '${i.name}' <- ${types.mkString(",")}")
++          storeIdentifierTypeInfo(i, types)
++        case l: Local                                    =>
++          logger.debug(s"-- storing node type info for local '${l.name}' <- ${types.mkString(",")}")
++          storeLocalTypeInfo(l, types)
++        case c: Call if !c.name.startsWith("<operator>") =>
++          logger.debug(s"-- storing node type info for call '${c.name}' <- ${types.mkString(",")}")
++          storeCallTypeInfo(c, types)
++        case c: Call                                     =>
++          logger.debug(s"-- ignoring setting node type info for call '${c.name}'")
+         case n =>
++          logger.debug(s"-- setTypes ${n} <- ${types.mkString(",")}")
+           setTypes(n, types)
+       }
+     }

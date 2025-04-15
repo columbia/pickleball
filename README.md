@@ -1,7 +1,10 @@
 # PickleBall
 
+This artifact is hosted anonymously at: https://anonymous.4open.science/r/pickleball
+See the link for the full repository.
+
 PickleBall protects users when loading untrusted pickle-based machine learning
-models. PickleBall uses model loading policies to.
+models.
 
 PickleBall ensures that the when loading an untrusted model, only functions
 that are necessary for loading the model are executed. PickleBall infers this

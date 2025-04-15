@@ -161,18 +161,19 @@ if __name__ == "__main__":
             logging.info(f"{model_path} OUTPUT:")
             logging.info(output)
         else:
-            #start_time_real = time.time()
-            start_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+            start_time_real = time.time()
+            #start_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
             is_success, output = loading_module.load_model(model_path)
-            end_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
-            #end_time_real = time.time()
+            #end_time_user = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+            end_time_real = time.time()
             if len(output) == 0:
                 logging.warn(f"WARNING: Empty output for {model_path}")
             loader_used = verify_loader_was_used() or args.disable_verify
             if is_success and loader_used:
                 logging.info(f"{model_path} SUCCESS")
                 logging.info(f"{model_path} OUTPUT:")
-                logging.info(f"{model_path},TIME,{end_time_user - start_time_user}")
+                #logging.info(f"{model_path},TIME,{end_time_user - start_time_user}")
+                logging.info(f"{model_path},TIME,{end_time_real - start_time_real}")
                 logging.info(output)
                 successes += 1
             else:

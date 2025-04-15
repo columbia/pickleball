@@ -1,8 +1,0 @@
-FROM pickleball-enforce-deb11:latest
-
-RUN apt-get update && apt-get install -y git ffmpeg libsm6 libxext6
-
-COPY ./LanguageBind /LanguageBind
-WORKDIR /LanguageBind
-RUN pip install -r requirements.txt
-RUN pip install torch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1

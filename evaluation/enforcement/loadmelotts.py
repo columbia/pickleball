@@ -41,6 +41,12 @@ def load_model(model_path: str, text=TEXT) -> tuple[bool, str]:
             config_path=model_config,
             ckpt_path=model_path,
         )
+    except Exception as e:
+        print(f"\033[91mFAILED LOADING in {model_path}\033[0m")
+        print(e)
+        return False, ""
+
+    try:
         speaker_ids = model.hps.data.spk2id
         speakers = list(speaker_ids.keys())
         output_path = "test.wav"
@@ -55,7 +61,7 @@ def load_model(model_path: str, text=TEXT) -> tuple[bool, str]:
             break
 
     except Exception as e:
-        print(f"\033[91mFAILED in {model_path}\033[0m")
+        print(f"\033[91mFAILED INFERENCE in {model_path}\033[0m")
         print(e)
         return False, ""
     else:

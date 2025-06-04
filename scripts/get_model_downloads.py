@@ -40,7 +40,11 @@ if __name__ == '__main__':
     else:
         raise RuntimeError("Must provide --repostory or --repositories-list")
 
+    total = 0
     for repository in repositories:
         model = get_modelinfo(repository)
+        total += model.downloads
         print(repository, model.downloads)
         # model.downloads_all_time returns None for all models
+
+    print(f'total: {total}')

@@ -1239,6 +1239,7 @@ services:
       dockerfile: ablation/Dockerfile.flair
     depends_on:
       - pickleball-enforce
+      - enforce-flair
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
@@ -1253,6 +1254,7 @@ services:
       dockerfile: ablation/Dockerfile.pyannote
     depends_on:
       - pickleball-enforce
+      - enforce-pyannote
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
@@ -1267,6 +1269,7 @@ services:
       dockerfile: ablation/Dockerfile.yolov5
     depends_on:
       - pickleball-enforce
+      - enforce-yolov5
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
@@ -1281,6 +1284,7 @@ services:
       dockerfile: ablation/Dockerfile.yolov11
     depends_on:
       - pickleball-enforce
+      - enforce-yolov11
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
@@ -1360,3 +1364,552 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11 --output-dir /pickleball/evaluation/ablation/results-lazy-wou/
 
+
+## Load time measurements
+  load-time:
+    image: pickleball-enforce
+    command: ["echo", "All model load time tests completed"]
+    depends_on:
+      control-load-time-conch:
+        condition: service_completed_successfully
+      control-load-time-flagembedding:
+        condition: service_completed_successfully
+      control-load-time-flair:
+        condition: service_completed_successfully
+      control-load-time-gliner:
+        condition: service_completed_successfully
+      control-load-time-huggingsound:
+        condition: service_completed_successfully
+      # control-load-time-languagebind:
+      #   condition: service_completed_successfully
+      control-load-time-melotts:
+        condition: service_completed_successfully
+      control-load-time-parrot:
+        condition: service_completed_successfully
+      control-load-time-pyannote:
+        condition: service_completed_successfully
+      control-load-time-pysentimiento:
+        condition: service_completed_successfully
+      control-load-time-sentencetransformers:
+        condition: service_completed_successfully
+      control-load-time-superimage:
+        condition: service_completed_successfully
+      control-load-time-tner:
+        condition: service_completed_successfully
+      control-load-time-tweetnlp:
+        condition: service_completed_successfully
+      control-load-time-yolov5:
+        condition: service_completed_successfully
+      control-load-time-yolov11:
+        condition: service_completed_successfully
+      enforce-load-time-conch:
+        condition: service_completed_successfully
+      enforce-load-time-flagembedding:
+        condition: service_completed_successfully
+      enforce-load-time-flair:
+        condition: service_completed_successfully
+      enforce-load-time-gliner:
+        condition: service_completed_successfully
+      enforce-load-time-huggingsound:
+        condition: service_completed_successfully
+      # enforce-load-time-languagebind:
+      #   condition: service_completed_successfully
+      enforce-load-time-melotts:
+        condition: service_completed_successfully
+      enforce-load-time-parrot:
+        condition: service_completed_successfully
+      enforce-load-time-pyannote:
+        condition: service_completed_successfully
+      enforce-load-time-pysentimiento:
+        condition: service_completed_successfully
+      enforce-load-time-sentencetransformers:
+        condition: service_completed_successfully
+      enforce-load-time-superimage:
+        condition: service_completed_successfully
+      enforce-load-time-tner:
+        condition: service_completed_successfully
+      enforce-load-time-tweetnlp:
+        condition: service_completed_successfully
+      enforce-load-time-yolov5:
+        condition: service_completed_successfully
+      enforce-load-time-yolov11:
+        condition: service_completed_successfully
+
+
+  control-load-time-conch:
+    image: control-load-time-conch
+    build:
+      context: ./evaluation/
+      dockerfile: ./control/Dockerfile.conch
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/conch/CoCa --output-dir /results/times.csv
+
+  control-load-time-flagembedding:
+    image: control-load-time-flagembedding
+    build:
+      context: ./evaluation/
+      dockerfile: ./control/Dockerfile.flagembedding
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flagembedding/FlagModel --output-dir /results/times.csv
+  
+
+  control-load-time-flair:
+    image: control-load-time-flair
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.flair
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flair --output-dir /results/times.csv 
+
+
+  control-load-time-gliner:
+    image: control-load-time-gliner
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.gliner
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/gliner/GliNER --output-dir /results/times.csv
+
+
+  control-load-time-huggingsound:
+    image: control-load-time-huggingsound
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.huggingsound
+    depends_on:
+      - control-load-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --output-dir /results/times.csv
+
+
+  control-load-time-languagebind:
+    image: control-load-time-languagebind
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.languagebind
+    depends_on:
+      - control-load-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/languagebind/LanguageBind --output-dir /results/times.csv
+
+
+  control-load-time-melotts:
+    image: control-load-time-melotts
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.melotts
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/melo/TTS --output-dir /results/times.csv
+
+
+  control-load-time-parrot:
+    image: control-load-time-parrot
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.parrot
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/Parrot/Parrot --output-dir /results/times.csv
+
+
+  control-load-time-pyannote:
+    image: control-load-time-pyannote
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.pyannote
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/pyannote-audio/Model --output-dir /results/times.csv
+
+
+  control-load-time-pysentimiento:
+    image: control-load-time-pysentimiento
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.pysentimiento
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --output-dir /results/times.csv
+
+
+  control-load-time-sentencetransformers:
+    image: control-load-time-sentencetransformers
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.sentencetransformers
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --allowed-patterns "pytorch_model.bin" --output-dir /results/times.csv
+
+
+  control-load-time-superimage:
+    image: control-load-time-superimage
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.superimage
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/super-image/EdsrModel --output-dir /results/times.csv
+
+
+  control-load-time-tner:
+    image: control-load-time-tner
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.tner
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/tner/TransformersNER --output-dir /results/times.csv
+
+
+  control-load-time-tweetnlp:
+    image: control-load-time-tweetnlp
+    build:
+      context: ./evaluation/
+      dockerfile: control/Dockerfile.tweetnlp
+    depends_on:
+      - control-load-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/tweetnlp/Classifier --output-dir /results/times.csv
+
+
+  control-load-time-yolov5:
+    image: control-load-time-yolov5
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.yolov5
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/yolov5/ --output-dir /results/times.csv
+
+
+  control-load-time-yolov11:
+    image: control-load-time-yolov11
+    build:
+      context: evaluation
+      dockerfile: control/Dockerfile.yolov11
+    depends_on:
+      - control-load
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/yolov11/ --output-dir /results/times.csv
+
+  enforce-load-time-conch:
+    image: pickleball-enforce-load-time-conch
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.conch
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/conch.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/conch/CoCa  --output-dir /results/times.csv
+
+  enforce-load-time-flagembedding:
+    image: pickleball-enforce-load-time-flagembedding
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.flagembedding
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/flagembedding.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flagembedding/FlagModel  --output-dir /results/times.csv
+
+  enforce-load-time-flair:
+    image: pickleball-enforce-load-time-flair
+    build:
+      context: ./evaluation/enforcement/
+      dockerfile: Dockerfile.flair
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/flair.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flair/  --output-dir /results/times.csv
+
+  enforce-load-time-gliner:
+    image: pickleball-enforce-load-time-gliner
+    build:
+      context: ./evaluation/
+      dockerfile: enforcement/Dockerfile.gliner
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/gliner.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/gliner/GliNER  --output-dir /results/times.csv
+
+  enforce-load-time-huggingsound:
+    image: pickleball-enforce-load-time-huggingsound
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.huggingsound
+    depends_on:
+      - pickleball-enforce-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/huggingsound.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel  --output-dir /results/times.csv
+
+  enforce-load-time-languagebind:
+    image: pickleball-enforce-load-time-languagebind
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.languagebind
+    depends_on:
+      - pickleball-enforce-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/languagebind.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/languagebind/LanguageBind  --output-dir /results/times.csv
+
+  enforce-load-time-melotts:
+    image: pickleball-enforce-load-time-melotts
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.melotts
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/melotts.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/melo/TTS  --output-dir /results/times.csv
+
+  enforce-load-time-parrot:
+    image: pickleball-enforce-load-time-parrot
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.parrot
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/parrot.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/Parrot/Parrot  --output-dir /results/times.csv
+
+  enforce-load-time-pyannote:
+    image: pickleball-enforce-load-time-pyannote
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.pyannote
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/pyannote.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/pyannote-audio/Model  --output-dir /results/times.csv
+
+  enforce-load-time-pysentimiento:
+    image: pickleball-enforce-load-time-pysentimiento
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.pysentimiento
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/pysentimiento.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer  --output-dir /results/times.csv
+
+  enforce-load-time-sentencetransformers:
+    image: pickleball-enforce-load-time-sentencetransformers
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.sentencetransformers
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/sentencetransformers.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --allowed-patterns "pytorch_model.bin" --output-dir /results/times.csv
+
+  enforce-load-time-superimage:
+    image: pickleball-enforce-load-time-superimage
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.superimage
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/superimage.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/super-image/EdsrModel --allowed-patterns "*.pt" --output-dir /results/times.csv
+
+  enforce-load-time-tner:
+    image: pickleball-enforce-load-time-tner
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.tner
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/tner.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/tner/TransformersNER --output-dir /results/times.csv
+
+  enforce-load-time-tweetnlp:
+    image: pickleball-enforce-load-time-tweetnlp
+    build:
+      context: ./evaluation/
+      dockerfile: ./enforcement/Dockerfile.tweetnlp
+    depends_on:
+      - pickleball-enforce-deb11
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/tweetnlp.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/tweetnlp/Classifier --output-dir /results/times.csv
+
+  enforce-load-time-yolov5:
+    image: pickleball-enforce-load-time-yolov5
+    build:
+      context: evaluation
+      dockerfile: enforcement/Dockerfile.yolov5
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/yolov5.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/yolov5 --output-dir /results/times.csv
+
+  enforce-load-time-yolov11:
+    image: pickleball-enforce-load-time-yolov11
+    build:
+      context: evaluation
+      dockerfile: enforcement/Dockerfile.yolov11
+    depends_on:
+      - pickleball-enforce
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/policies/baseline/yolov11.json:/root/policies/policy.json
+      - .:/pickleball
+      - ./results:/results
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/yolov11 --output-dir /results/times.csv

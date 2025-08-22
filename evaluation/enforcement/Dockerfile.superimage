@@ -8,4 +8,4 @@ RUN pip3 install huggingface_hub==0.25.2
 RUN pip3 install super-image
 
 COPY ./enforcement/utils/superimage.patch /root/superimage.patch
-RUN cd /root && patch -p1 --binary < /root/superimage.patch
+RUN cd /root && patch -p1 < /root/superimage.patch

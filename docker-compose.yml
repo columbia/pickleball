@@ -292,7 +292,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11
 
-
   #
   # Control - Ensure all models load with the regular Pickle Machine
   # (no PickleBall policies or enforcement)
@@ -371,7 +370,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding/FlagModel --library flagembedding --disable-verify --output-dir /pickleball/evaluation/control/results
-  
 
   control-load-flair:
     image: control-load-flair
@@ -386,7 +384,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair --library flair --disable-verify --output-dir /pickleball/evaluation/control/results
 
-
   control-load-gliner:
     image: control-load-gliner
     build:
@@ -399,7 +396,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner --disable-verify --output-dir /pickleball/evaluation/control/results
-
 
   control-load-huggingsound:
     image: control-load-huggingsound
@@ -414,7 +410,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound --disable-verify --output-dir /pickleball/evaluation/control/results
 
-
   control-load-languagebind:
     image: control-load-languagebind
     build:
@@ -427,7 +422,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind --disable-verify --output-dir /pickleball/evaluation/control/results
-
 
   control-load-melotts:
     image: control-load-melotts
@@ -442,7 +436,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/melo/TTS --library melotts --disable-verify --output-dir /pickleball/evaluation/control/results
 
-
   control-load-parrot:
     image: control-load-parrot
     build:
@@ -455,7 +448,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot --disable-verify --output-dir /pickleball/evaluation/control/results
-
 
   control-load-pyannote:
     image: control-load-pyannote
@@ -470,7 +462,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --disable-verify --output-dir /pickleball/evaluation/control/results
 
-
   control-load-pysentimiento:
     image: control-load-pysentimiento
     build:
@@ -483,7 +474,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento --disable-verify --output-dir /pickleball/evaluation/control/results
-
 
   control-load-sentencetransformers:
     image: control-load-sentencetransformers
@@ -498,7 +488,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns "pytorch_model.bin" --disable-verify --output-dir /pickleball/evaluation/control/results
 
-
   control-load-superimage:
     image: control-load-superimage
     build:
@@ -511,7 +500,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns "*.pt" --disable-verify --output-dir /pickleball/evaluation/control/results
-
 
   control-load-tner:
     image: control-load-tner
@@ -526,7 +514,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner --disable-verify --output-dir /pickleball/evaluation/control/results
 
-
   control-load-tweetnlp:
     image: control-load-tweetnlp
     build:
@@ -539,7 +526,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp --disable-verify --output-dir /pickleball/evaluation/control/results
-
 
   control-load-yolov5:
     image: control-load-yolov5
@@ -554,7 +540,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov5/ --library yolov5 --disable-verify --allowed-patterns "*.pt" --output-dir /pickleball/evaluation/control/results
 
-
   control-load-yolov11:
     image: control-load-yolov11
     build:
@@ -567,8 +552,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11/ --library yolov11 --disable-verify --allowed-patterns "*.pt" --output-dir /pickleball/evaluation/control/results
-
-
 
   check-vulnerable-all:
     image: control-load
@@ -864,7 +847,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/conch/CoCa --library conch --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
-      
+
   weightsonly-load-flagembedding:
     image: weightsonly-load-flagembedding
     build:
@@ -877,7 +860,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flagembedding/FlagModel --library flagembedding --disable-verify --output-dir /pickleball/weights-only/results-benign"
-  
 
   weightsonly-load-flair:
     image: weightsonly-load-flair
@@ -905,7 +887,6 @@ services:
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/gliner/GliNER --library gliner --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
 
-
   weightsonly-load-huggingsound:
     image: weightsonly-load-huggingsound
     build:
@@ -919,7 +900,6 @@ services:
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --library huggingsound --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
 
-
   weightsonly-load-languagebind:
     image: weightsonly-load-languagebind
     build:
@@ -932,7 +912,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/languagebind/LanguageBind --library languagebind --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
-
 
   weightsonly-load-melotts:
     image: weightsonly-load-melotts
@@ -960,7 +939,6 @@ services:
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/Parrot/Parrot --library parrot --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
 
-
   weightsonly-load-pyannote:
     image: weightsonly-load-pyannote
     build:
@@ -973,7 +951,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pyannote-audio/Model --library pyannote --disable-verify --output-dir /pickleball/evaluation/weights-onlyresults-benign"
-
 
   weightsonly-load-pysentimiento:
     image: weightsonly-load-pysentimiento
@@ -988,7 +965,6 @@ services:
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --library pysentimiento --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
 
-
   weightsonly-load-sentencetransformers:
     image: weightsonly-load-sentencetransformers
     build:
@@ -1001,7 +977,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --library sentencetransformers --allowed-patterns \"pytorch_model.bin\" --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
-
 
   weightsonly-load-superimage:
     image: weightsonly-load-superimage
@@ -1016,7 +991,6 @@ services:
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/super-image/EdsrModel --library superimage --allowed-patterns \"*.pt\" --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
 
-
   weightsonly-load-tner:
     image: weightsonly-load-tner
     build:
@@ -1029,7 +1003,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tner/TransformersNER --library tner --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
-
 
   weightsonly-load-tweetnlp:
     image: weightsonly-load-tweetnlp
@@ -1044,7 +1017,6 @@ services:
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/tweetnlp/Classifier --library tweetnlp --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
 
-
   weightsonly-load-yolov5:
     image: weightsonly-load-yolov5
     build:
@@ -1057,7 +1029,6 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
     command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov5/ --library yolov5 --disable-verify --allowed-patterns \"*.pt\" --output-dir /pickleball/evaluation/weights-only/results-benign"
-
 
   weightsonly-load-yolov11:
     image: weightsonly-load-yolov11
@@ -1097,7 +1068,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.flair-success --library flair --disable-verify --validate --output-dir /pickleball/evaluation/control/results-validation/
 
-
   control-validate-pyannote:
     image: control-load-pyannote
     build:
@@ -1111,7 +1081,7 @@ services:
       - ${DATASETS}:/datasets
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.pyannote-success --library pyannote --disable-verify --validate --output-dir /pickleball/evaluation/control/results-validation/
-      
+
   control-validate-yolov5:
     image: control-load-yolov5
     build:
@@ -1126,7 +1096,6 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.yolov5-success --library yolov5 --disable-verify --allowed-patterns "*.pt" --validate --output-dir /pickleball/evaluation/control/results-validation/
 
-
   control-validate-yolov11:
     image: control-load-yolov11
     build:
@@ -1140,7 +1109,6 @@ services:
       - ${DATASETS}:/datasets
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.yolov11-success --library yolov11 --disable-verify --allowed-patterns "*.pt" --validate --output-dir /pickleball/evaluation/control/results-validation/
-
 
   pickleball-validate-all:
     image: pickleball-enforce
@@ -1184,7 +1152,7 @@ services:
       - ${DATASETS}:/datasets
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --models-file /pickleball/evaluation/enforcement/.pyannote-success --library pyannote --validate --output-dir /pickleball/evaluation/enforcement/results-validation/
-      
+
   pickleball-validate-yolov5:
     image: pickleball-enforce-yolov5
     build:
@@ -1364,8 +1332,7 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11 --output-dir /pickleball/evaluation/ablation/results-lazy-wou/
 
-
-## Load time measurements
+  ## Load time measurements
   load-time:
     image: pickleball-enforce
     command: ["echo", "All model load time tests completed"]
@@ -1380,8 +1347,8 @@ services:
         condition: service_completed_successfully
       control-load-time-huggingsound:
         condition: service_completed_successfully
-      # control-load-time-languagebind:
-      #   condition: service_completed_successfully
+      control-load-time-languagebind:
+        condition: service_completed_successfully
       control-load-time-melotts:
         condition: service_completed_successfully
       control-load-time-parrot:
@@ -1412,8 +1379,8 @@ services:
         condition: service_completed_successfully
       enforce-load-time-huggingsound:
         condition: service_completed_successfully
-      # enforce-load-time-languagebind:
-      #   condition: service_completed_successfully
+      enforce-load-time-languagebind:
+        condition: service_completed_successfully
       enforce-load-time-melotts:
         condition: service_completed_successfully
       enforce-load-time-parrot:
@@ -1434,7 +1401,6 @@ services:
         condition: service_completed_successfully
       enforce-load-time-yolov11:
         condition: service_completed_successfully
-
 
   control-load-time-conch:
     image: control-load-time-conch
@@ -1463,7 +1429,6 @@ services:
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flagembedding/FlagModel --output-dir /results/times.csv
-  
 
   control-load-time-flair:
     image: control-load-time-flair
@@ -1477,8 +1442,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
       - ./results:/results
-    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flair --output-dir /results/times.csv 
-
+    command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flair --output-dir /results/times.csv
 
   control-load-time-gliner:
     image: control-load-time-gliner
@@ -1494,7 +1458,6 @@ services:
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/gliner/GliNER --output-dir /results/times.csv
 
-
   control-load-time-huggingsound:
     image: control-load-time-huggingsound
     build:
@@ -1508,7 +1471,6 @@ services:
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel --output-dir /results/times.csv
-
 
   control-load-time-languagebind:
     image: control-load-time-languagebind
@@ -1524,7 +1486,6 @@ services:
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/languagebind/LanguageBind --output-dir /results/times.csv
 
-
   control-load-time-melotts:
     image: control-load-time-melotts
     build:
@@ -1538,7 +1499,6 @@ services:
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/melo/TTS --output-dir /results/times.csv
-
 
   control-load-time-parrot:
     image: control-load-time-parrot
@@ -1554,7 +1514,6 @@ services:
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/Parrot/Parrot --output-dir /results/times.csv
 
-
   control-load-time-pyannote:
     image: control-load-time-pyannote
     build:
@@ -1568,7 +1527,6 @@ services:
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/pyannote-audio/Model --output-dir /results/times.csv
-
 
   control-load-time-pysentimiento:
     image: control-load-time-pysentimiento
@@ -1584,7 +1542,6 @@ services:
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer --output-dir /results/times.csv
 
-
   control-load-time-sentencetransformers:
     image: control-load-time-sentencetransformers
     build:
@@ -1598,7 +1555,6 @@ services:
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --allowed-patterns "pytorch_model.bin" --output-dir /results/times.csv
-
 
   control-load-time-superimage:
     image: control-load-time-superimage
@@ -1614,7 +1570,6 @@ services:
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/super-image/EdsrModel --output-dir /results/times.csv
 
-
   control-load-time-tner:
     image: control-load-time-tner
     build:
@@ -1628,7 +1583,6 @@ services:
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/tner/TransformersNER --output-dir /results/times.csv
-
 
   control-load-time-tweetnlp:
     image: control-load-time-tweetnlp
@@ -1644,7 +1598,6 @@ services:
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/tweetnlp/Classifier --output-dir /results/times.csv
 
-
   control-load-time-yolov5:
     image: control-load-time-yolov5
     build:
@@ -1658,7 +1611,6 @@ services:
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/yolov5/ --output-dir /results/times.csv
-
 
   control-load-time-yolov11:
     image: control-load-time-yolov11

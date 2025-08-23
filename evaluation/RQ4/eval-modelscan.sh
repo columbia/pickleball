@@ -66,11 +66,10 @@ done < "$PATH_LIST_FILE"
 # Clean up temporary file
 rm -f "$temp_output"
 
-echo "=========================================="
-echo "SUMMARY:"
-echo "   Total scanned: $total_files"
-echo "   Benign: $benign_count"
-echo "   Malicious: $malicious_count"
+echo "=== SUMMARY ===:"
+echo "Total model tested: $total_files"
+echo "Benign: $benign_count"
+echo "Malicious: $malicious_count"
 echo ""
 
 # Show percentages with one decimal place
@@ -80,6 +79,6 @@ if [ $total_files -gt 0 ]; then
     error_pct=$(awk "BEGIN {printf \"%.1f\", $error_count * 100 / $total_files}")
     
     echo "PERCENTAGES:"
-    echo "   Benign: ${benign_pct}%"
-    echo "   Malicious: ${malicious_pct}%"
+    echo "Benign: ${benign_pct}%"
+    echo "Malicious: ${malicious_pct}%"
 fi

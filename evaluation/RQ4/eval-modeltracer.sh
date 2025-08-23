@@ -39,7 +39,7 @@ run_model_tracer() {
 
         if [ \$tracer_exit -eq 124 ]; then
             echo 'TIMEOUT_MALICIOUS: model_tracer ($mode mode) exceeded timeout'
-            echo 'FOUND UNSAFE: Model caused hanging/infinite execution in $mode mode'
+            echo 'Unsafe: Model caused hanging/infinite execution in $mode mode'
             exit 124
         elif [ \$tracer_exit -eq 0 ]; then
             timeout $timeout_seconds python3 -m scripts.parse_tracer
@@ -47,7 +47,7 @@ run_model_tracer() {
 
             if [ \$parser_exit -eq 124 ]; then
                 echo 'TIMEOUT_MALICIOUS: parse_tracer exceeded timeout'
-                echo 'FOUND UNSAFE: Parser caused hanging/infinite execution'
+                echo 'Unsafe: Parser caused hanging/infinite execution'
                 exit 124
             else
                 exit \$parser_exit
@@ -135,7 +135,7 @@ process_model() {
 main() {
     local input_file="$1"
     local image="$2"
-    local timeout="${3:-300}"  # Default 5 minutes, can be overridden
+    local timeout="${3:-100}"  # Default 100 seconds, can be overridden
 
     if [ ! -f "$input_file" ]; then
         echo "Error: Input file '$input_file' not found"
@@ -173,7 +173,7 @@ main() {
                 local model_is_unsafe=$(cat /tmp/unsafe_count_$$)
                 unsafe_models=$((unsafe_models + model_is_unsafe))
                 if [ $model_is_unsafe -eq 1 ]; then
-                    echo "Found UNSAFE"
+                    echo "Unsafe"
                 else
                     echo "Safe"
                 fi
@@ -186,11 +186,11 @@ main() {
             if [ $exit_code -eq 124 ]; then
                 timeout_models=$((timeout_models + 1))
                 unsafe_models=$((unsafe_models + 1))  # Count timeout as unsafe
-                echo "Found UNSAFE (timeout)"
+                echo "Unsafe (timeout)"
             elif [ $exit_code -eq 137 ]; then
                 killed_models=$((killed_models + 1))
                 unsafe_models=$((unsafe_models + 1))  # Count killed as unsafe
-                echo "Found UNSAFE (killed)"
+                echo "Unsafe (killed)"
             else
                 failed_models=$((failed_models + 1))
                 echo "Failed"
@@ -203,20 +203,18 @@ main() {
 
     # Final summary
     echo ""
-    echo "=== FINAL SUMMARY ==="
-    echo "Total models processed: $total_models"
-    echo "UNSAFE models: $unsafe_models"
-    echo "  - Timeout (malicious): $timeout_models"
-    echo "  - Killed (malicious): $killed_models"
-    echo "  - Other unsafe: $((unsafe_models - timeout_models - killed_models))"
-    echo "Safe models: $((total_models - unsafe_models - failed_models))"
+    echo "=== SUMMARY ==="
+    echo "Total models tested: $total_models"
+    echo "Unsafe: $unsafe_models"
+    echo "Safe: $((total_models - unsafe_models - failed_models))"
+    echo ""
 
     if [ $total_models -gt 0 ]; then
         local unsafe_rate=$((unsafe_models * 100 / total_models))
         local safe_rate=$(((total_models - unsafe_models - failed_models) * 100 / total_models))
-        echo ""
-        echo "UNSAFE rate: $unsafe_rate% ($unsafe_models/$total_models models)"
-        echo "Safe rate: $safe_rate% ($(($total_models - unsafe_models - failed_models))/$total_models models)"
+        echo "PERCENTAGES:"
+        echo "Unsafe: $unsafe_rate% ($unsafe_models/$total_models models)"
+        echo "Safe: $safe_rate% ($(($total_models - unsafe_models - failed_models))/$total_models models)"
     fi
 }
 
@@ -233,7 +231,7 @@ if [ $# -lt 2 ] || [ $# -gt 3 ]; then
     echo ""
     echo "Examples:"
     echo "  $0 model_paths.txt myimage:latest"
-    echo "  $0 model_paths.txt myimage:latest 600  # 10 minute timeout"
+    echo "  $0 model_paths.txt myimage:latest 100  # 100 seconds timeout"
     exit 1
 fi
 

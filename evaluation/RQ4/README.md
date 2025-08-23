@@ -1,4 +1,4 @@
-# RQ4: Comparison to State-of-the-Art - Artifact Evaluation
+# RQ4: Comparison to SOTA
 
 ## ModelScan Evaluation
 ### Setup
@@ -14,14 +14,14 @@ sh eval-modelscan.sh malicious-model-on-host.txt
 
 **Expected Output:**
 ```
-SUMMARY:
-   Total scanned: 84
-   Benign: 9
-   Malicious: 75
+=== SUMMARY ===
+Total model tested: 84
+Benign: 9
+Malicious: 75
 
 PERCENTAGES:
-   Benign: 10.7%
-   Malicious: 89.3%
+Benign: 10.7%
+Malicious: 89.3%
 ```
 
 ### Benign Models (14 minutes)
@@ -32,14 +32,14 @@ sh eval-modelscan.sh benign-model-on-host.txt
 
 **Expected Output:**
 ```
-SUMMARY:
-   Total scanned: 252
-   Benign: 236
-   Malicious: 16
+=== SUMMARY ===
+Total model tested: 252
+Benign: 236
+Malicious: 16
 
 PERCENTAGES:
-   Benign: 93.7%
-   Malicious: 6.3%
+Benign: 93.7%
+Malicious: 6.3%
 ```
 
 
@@ -61,15 +61,14 @@ sh eval-modeltracer.sh malicious-model-on-host.txt modeltracer:latest 80
 
 **Expected Output:**
 ```
-Total models processed: 84
-UNSAFE models: 43
-  - Timeout (malicious): 6
-  - Killed (malicious): 0
-  - Other unsafe: 37
-Safe models: 41
+=== SUMMARY ===
+Total model tested: 84
+Unsafe: 43
+Safe: 41
 
-UNSAFE rate: 51% (43/84 models)
-Safe rate: 48% (41/84 models)
+PERCENTAGES:
+Unsafe: 51% (43/84 models)
+Safe: 48% (41/84 models)
 ```
 
 ### Manual Verification for Complete Count
@@ -92,16 +91,14 @@ sh eval-modeltracer.sh benign-model-on-host.txt modeltracer:latest 80
 
 **Expected Output:**
 ```
-=== FINAL SUMMARY ===
-Total models processed: 252
-UNSAFE models: 0
-  - Timeout (malicious): 0
-  - Killed (malicious): 0
-  - Other unsafe: 0
-Safe models: 252
+=== SUMMARY ===
+Total model tested: 252
+Unsafe: 0
+Safe: 252
 
-UNSAFE rate: 0% (0/252 models)
-Safe rate: 100% (252/252 models)
+PERCENTAGES:
+Unsafe: 0% (0/252 models)
+Safe: 100% (252/252 models)
 ```
 
 
@@ -115,7 +112,8 @@ python3 eval-weights-only.py malicious-model-on-host.txt
 
 **Expected Output:**
 ```
-Total files tested: 84
+=== FINAL SUMMARY ===
+Total model tested: 84
 Loaded: 0
 Blocked: 84
 
@@ -132,7 +130,8 @@ python3 eval-weights-only.py benign-model-on-host.txt
 
 **Expected Output:**
 ```
-Total files tested: 252
+=== FINAL SUMMARY ===
+Total model tested: 252
 Loaded: 157
 Blocked: 95
 

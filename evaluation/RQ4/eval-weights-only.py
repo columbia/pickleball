@@ -166,12 +166,12 @@ def wrap_and_test_models(file_list_path, output_dir="pytorch_wrapped"):
     
     # Final Results
     print()
-    print("=" * 80)
+    print("=== SUMMARY ===" )
     
     total_tested = len(test_files)
     total_valid = total_tested - not_found_count
     
-    print(f"Total files tested: {total_tested}")
+    print(f"Total model tested: {total_tested}")
     
     print(f"Loaded: {loaded_count}")
     print(f"Blocked: {blocked_count}")

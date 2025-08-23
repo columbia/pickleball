@@ -1,25 +1,14 @@
 #!/bin/bash
 # Script for running modelscan on a list of files - screen output only
 
-usage() {
-    echo "Usage: $0 -f <file_with_paths>"
-    echo "  -f: File containing list of model paths (one per line)"
+# Usage
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    echo "Usage: $0 <file_with_paths>"
+    echo " File containing list of model paths (one per line)"
     exit 1
-}
-
-# Parse arguments
-while getopts ":f:" opt; do
-    case $opt in
-        f) PATH_LIST_FILE="$OPTARG" ;;
-        *) usage ;;
-    esac
-done
-
-# Check required args
-if [ -z "$PATH_LIST_FILE" ]; then
-    echo "Error: File list must be specified with -f"
-    usage
 fi
+
+PATH_LIST_FILE="$1"
 
 # Check if the file list exists
 if [ ! -f "$PATH_LIST_FILE" ]; then

@@ -118,7 +118,7 @@
 /proj/rcs-ssd/phli/pickleball/no-malicious/sentence-transformers/SequenceTransformer/hiiamsid-sentence_similarity_spanish_es/pytorch_model.bin
 /proj/rcs-ssd/phli/pickleball/no-malicious/sentence-transformers/SequenceTransformer/intfloat-e5-base-v2/pytorch_model.bin
 /proj/rcs-ssd/phli/pickleball/no-malicious/sentence-transformers/SequenceTransformer/intfloat-e5-large-v2/pytorch_model.bin
-/proj/rcs-ssd/phli/pickleball/no-malicious/sentence-transformers/SequenceTransformer/intfloat-e5-mistral-7b-instruct//
+/proj/rcs-ssd/phli/pickleball/no-malicious/sentence-transformers/SequenceTransformer/intfloat-e5-mistral-7b-instruct/pytorch_model-00001-of-00002.bin
 /proj/rcs-ssd/phli/pickleball/no-malicious/sentence-transformers/SequenceTransformer/intfloat-e5-small-v2/pytorch_model.bin
 /proj/rcs-ssd/phli/pickleball/no-malicious/sentence-transformers/SequenceTransformer/intfloat-multilingual-e5-base/pytorch_model.bin
 /proj/rcs-ssd/phli/pickleball/no-malicious/sentence-transformers/SequenceTransformer/intfloat-multilingual-e5-large/pytorch_model.bin

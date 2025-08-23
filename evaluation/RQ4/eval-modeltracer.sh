@@ -28,9 +28,10 @@ run_model_tracer() {
     local mode="$5"  # "pickle" or "torch"
     
     local output
+    host_path=$(realpath "$model_path")
     output=$(docker run --rm \
         -e PYTHONBREAKPOINT=0 \
-        -v "$model_path:/app/model/$model_name" \
+	-v "${host_path}:/app/model/${model_name}"  \
         "$image" bash -c "
         
         timeout $timeout_seconds python3 -m scripts.model_tracer /app/model/$model_name $mode
@@ -79,7 +80,7 @@ process_model() {
 
     # Detect model type
     local model_type=$(detect_model_type "$model_path")
-    local model_name=$(basename "$model_path")
+    local model_name=testmodel
 
     local total_unsafe=0
     local overall_exit_code=0

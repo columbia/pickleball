@@ -3,6 +3,7 @@
 import argparse
 import glob
 import pickle
+import sys
 import time
 from pathlib import Path
 from typing import List
@@ -15,8 +16,9 @@ CURRENT_LIBRARY = ""
 OUTPUT_DIR = "/results/times.csv"
 MODELS_TESTED = "/results/models.txt"
 
+WARMUP_ITERS = 3
 ITERS = 10
-WARMUP = 3
+WARMUP = True
 
 original_load = pickle._Unpickler.load
 
@@ -88,6 +90,10 @@ except:
 
 
 model_paths = get_model_paths(args.all_model_path, model_patterns=args.allowed_patterns)
+if len(model_paths) == 0:
+    print("No models found")
+    sys.exit(1)
+
 model = model_paths[0]
 library = model.split("/")[3]
 
@@ -95,6 +101,7 @@ library = model.split("/")[3]
 # yolov5 models assume yolov5 is already loaded
 if library == "yolov5":
     import yolov5
+
     # ensure that we select a yolov5 model that loads with PB policies
     model = "/models/benign/yolov5/keremberke-yolov5m-smoke/best.pt"
 # ensure that we select a yolov11 model that loads with PB policies
@@ -114,9 +121,10 @@ with open(MODELS_TESTED, "a+") as f:
     f.write(f"{model}\n")
 
 # Warmup
-while WARMUP > 0:
+for _ in range(WARMUP_ITERS):
     torch.load(model, map_location=torch.device("cpu"))
-    WARMUP -= 1
+
+WARMUP = False
 
 for _ in range(ITERS):
     torch.load(model, map_location=torch.device("cpu"))

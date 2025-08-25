@@ -6,6 +6,8 @@ versions=("control" "enforce")
 for library in ${libraries[@]}; do
     for version in ${versions[@]}; do
         container="$version-load-time-$library"
-        docker compose run $container
+        docker compose run --name $container $container
+        docker stop $container
+        docker rm $container
     done
 done

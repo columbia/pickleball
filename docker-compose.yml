@@ -1333,75 +1333,6 @@ services:
     command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/yolov11 --library yolov11 --output-dir /pickleball/evaluation/ablation/results-lazy-wou/
 
   ## Load time measurements
-  load-time:
-    image: pickleball-enforce
-    command: ["echo", "All model load time tests completed"]
-    depends_on:
-      control-load-time-conch:
-        condition: service_completed_successfully
-      control-load-time-flagembedding:
-        condition: service_completed_successfully
-      control-load-time-flair:
-        condition: service_completed_successfully
-      control-load-time-gliner:
-        condition: service_completed_successfully
-      control-load-time-huggingsound:
-        condition: service_completed_successfully
-      control-load-time-languagebind:
-        condition: service_completed_successfully
-      control-load-time-melotts:
-        condition: service_completed_successfully
-      control-load-time-parrot:
-        condition: service_completed_successfully
-      control-load-time-pyannote:
-        condition: service_completed_successfully
-      control-load-time-pysentimiento:
-        condition: service_completed_successfully
-      control-load-time-sentencetransformers:
-        condition: service_completed_successfully
-      control-load-time-superimage:
-        condition: service_completed_successfully
-      control-load-time-tner:
-        condition: service_completed_successfully
-      control-load-time-tweetnlp:
-        condition: service_completed_successfully
-      control-load-time-yolov5:
-        condition: service_completed_successfully
-      control-load-time-yolov11:
-        condition: service_completed_successfully
-      enforce-load-time-conch:
-        condition: service_completed_successfully
-      enforce-load-time-flagembedding:
-        condition: service_completed_successfully
-      enforce-load-time-flair:
-        condition: service_completed_successfully
-      enforce-load-time-gliner:
-        condition: service_completed_successfully
-      enforce-load-time-huggingsound:
-        condition: service_completed_successfully
-      enforce-load-time-languagebind:
-        condition: service_completed_successfully
-      enforce-load-time-melotts:
-        condition: service_completed_successfully
-      enforce-load-time-parrot:
-        condition: service_completed_successfully
-      enforce-load-time-pyannote:
-        condition: service_completed_successfully
-      enforce-load-time-pysentimiento:
-        condition: service_completed_successfully
-      enforce-load-time-sentencetransformers:
-        condition: service_completed_successfully
-      enforce-load-time-superimage:
-        condition: service_completed_successfully
-      enforce-load-time-tner:
-        condition: service_completed_successfully
-      enforce-load-time-tweetnlp:
-        condition: service_completed_successfully
-      enforce-load-time-yolov5:
-        condition: service_completed_successfully
-      enforce-load-time-yolov11:
-        condition: service_completed_successfully
-
   control-load-time-conch:
     image: control-load-time-conch
     build:
@@ -1636,7 +1567,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/conch.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/conch.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/conch/CoCa  --output-dir /results/times.csv
@@ -1651,7 +1582,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/flagembedding.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/flagembedding.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flagembedding/FlagModel  --output-dir /results/times.csv
@@ -1666,7 +1597,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/flair.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/flair.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/flair/SequenceTagger/  --output-dir /results/times.csv
@@ -1681,7 +1612,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/gliner.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/gliner.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/gliner/GliNER  --output-dir /results/times.csv
@@ -1696,7 +1627,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/huggingsound.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/huggingsound.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/huggingsound/SpeechRecognitionModel  --output-dir /results/times.csv
@@ -1711,7 +1642,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/languagebind.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/languagebind.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/languagebind/LanguageBind  --output-dir /results/times.csv
@@ -1726,7 +1657,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/melotts.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/melotts.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/melo/TTS  --output-dir /results/times.csv
@@ -1741,7 +1672,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/parrot.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/parrot.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/Parrot/Parrot  --output-dir /results/times.csv
@@ -1756,7 +1687,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/pyannote.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/pyannote.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/pyannote-audio/Model  --output-dir /results/times.csv
@@ -1771,7 +1702,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/pysentimiento.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/pysentimiento.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/pysentimiento/BaseAnalyzer  --output-dir /results/times.csv
@@ -1786,7 +1717,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/sentencetransformers.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/sentencetransformers.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/sentence-transformers/SequenceTransformer --allowed-patterns "pytorch_model.bin" --output-dir /results/times.csv
@@ -1801,7 +1732,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/superimage.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/superimage.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/super-image/EdsrModel --allowed-patterns "*.pt" --output-dir /results/times.csv
@@ -1816,7 +1747,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/tner.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/tner.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/tner/TransformersNER --output-dir /results/times.csv
@@ -1831,7 +1762,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/tweetnlp.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/tweetnlp.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/tweetnlp/Classifier --output-dir /results/times.csv
@@ -1846,7 +1777,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/yolov5.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/yolov5.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/yolov5 --output-dir /results/times.csv
@@ -1861,7 +1792,7 @@ services:
     volumes:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
-      - ./evaluation/policies/yolov11.json:/root/policies/policy.json
+      - ./evaluation/policies/baseline/yolov11.json:/root/policies/policy.json
       - .:/pickleball
       - ./results:/results
     command: /pickleball/evaluation/enforcement/load_time.py --all-model-path /models/benign/yolov11 --output-dir /results/times.csv

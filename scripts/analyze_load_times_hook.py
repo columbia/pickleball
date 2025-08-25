@@ -8,6 +8,15 @@ project_path = os.path.join(file_path, "..")
 results_path = os.path.join(project_path, "results/times.csv")
 
 
+def avg_without_outliers(series):
+    mean = series.mean()
+    abs_diff = (series - mean).abs()
+    combined = pd.DataFrame({"time": series, "diff": abs_diff})
+    combined = combined.sort_values(by="diff", ascending=False)
+    series_without_outliers = combined.iloc[2:]["time"]
+    return series_without_outliers.mean()
+
+
 # Read the CSV data into a pandas DataFrame
 try:
     df = pd.read_csv(results_path, header=None, names=["library", "version", "time"])
@@ -15,7 +24,9 @@ except FileNotFoundError:
     print("Error: Load time results not found")
     sys.exit()
 
-avg_df = df.groupby(["library", "version"])["time"].mean().reset_index()
+avg_df = (
+    df.groupby(["library", "version"])["time"].apply(avg_without_outliers).reset_index()
+)
 
 # Pivot the table to have 'vanilla' and 'pickleball' as columns for easy comparison
 pivot_df = avg_df.pivot(index="library", columns="version", values="time").reset_index()

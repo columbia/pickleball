@@ -13,9 +13,10 @@ ALLOWED_PATTERNS = ["*.bin", "*.pkl", "*pt", "*pth"]
 EXCLUDED_FILES = ["training_args.bin", "tfevents.bin"]
 CURRENT_LIBRARY = ""
 OUTPUT_DIR = "/results/times.csv"
+MODELS_TESTED = "/results/models.txt"
 
-ITERS = 3
-WARMUP = True
+ITERS = 10
+WARMUP = 3
 
 original_load = pickle._Unpickler.load
 
@@ -94,7 +95,6 @@ library = model.split("/")[3]
 # yolov5 models assume yolov5 is already loaded
 if library == "yolov5":
     import yolov5
-
     # ensure that we select a yolov5 model that loads with PB policies
     model = "/models/benign/yolov5/keremberke-yolov5m-smoke/best.pt"
 # ensure that we select a yolov11 model that loads with PB policies
@@ -109,13 +109,14 @@ if library == "flair":
         "/models/benign/flair/SequenceTagger/flair-upos-english-fast/pytorch_model.bin"
     )
 
-CURRENT_LIBRARY = library
 print(f"Attempting to load model: {model}")
+with open(MODELS_TESTED, "a+") as f:
+    f.write(f"{model}\n")
 
 # Warmup
-torch.load(model, map_location=torch.device("cpu"))
-
-WARMUP = False
+while WARMUP > 0:
+    torch.load(model, map_location=torch.device("cpu"))
+    WARMUP -= 1
 
 for _ in range(ITERS):
     torch.load(model, map_location=torch.device("cpu"))

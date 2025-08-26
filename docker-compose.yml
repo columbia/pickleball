@@ -28,6 +28,34 @@ services:
       - .:/pickleball
     command: /pickleball/evaluation/policy-evaluation.sh
 
+  modelscan:
+    image: modelscan
+    build:
+      context: evaluation/RQ4
+      dockerfile: Dockerfile.modelscan
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/RQ4/eval-modelscan.sh:/root/modelscan/eval-modelscan.sh
+    command: sh /root/modelscan/eval-modelscan.sh /models/malicious /models/benign
+    
+  modeltracer:
+    image: modeltracer
+    build:
+      context: evaluation/RQ4
+      dockerfile: Dockerfile.modeltracer
+  
+  weightsonly:
+    image: weightsonly
+    build:
+      context: evaluation/RQ4
+      dockerfile: Dockerfile.weightsonly
+    volumes:
+      - ${BENIGN_MODELS}:/models/benign
+      - ${MALICIOUS_MODELS}:/models/malicious
+      - ./evaluation/RQ4/eval-weights-only.py:/root/weights-only/eval-weights-only.py
+    command: python3 /root/weights-only/eval-weights-only.py /models/malicious /models/benign
+
   #
   # Evaluate enforcement of loading policies
   #

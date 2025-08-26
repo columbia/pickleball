@@ -23,6 +23,10 @@ MALICIOUS_MODELS=<path to malicious models>
 DATASETS=<path to datasets>
 ```
 
+
+
+
+
 ## Reproduce Policy Generation Table (Table 1)
 
 From root project directory:
@@ -55,133 +59,62 @@ Intermediate artifacts:
 Results table can be produced with the `scripts/generatetable.py` script,
 once all enforcement results have been produced (next step).
 
-## Block Malicious Models in Our Dataset
 
-Within the enforcer container, try to load the malicious models using torch or pickle.
+## RQ1: Malicious Model Blocking
+TODO:
 
-For each set of library models, determine how many are loaded with
-`scripts/modelload.py`.
 
-```
-python3 scripts/modelload.py /path/to/models/library/ --loader torch --out evaluation/malicious/torch
-```
+## RQ4: Comparison to SOTA
+### ModelScan (20 mins)
+Please make sure there is a `model-list.txt` file under the model path.
+@andreas, please make sure the two model-list files are included in dataset, thanks!
 
-There is also a pickle loader, which can be used as
-
-```
-python3 scripts/modelload.py /path/to/models/library/ --loader pickle --modelname data.pkl --out evaluation/malicious/pickle
+```sh
+docker compose run modelscan
 ```
 
-This produces a summary file that indicates the number of models attempted, successfully loaded, and failed.
-
-## Load Benign Models in Our Dataset with PickleBall Policy
-
-In the project root directory, invoke:
-
+The expected results:
 ```
-docker compose run enforce-all
+Tool        #TP     #TN     #FP     #FN     FPR     FNR
+ModelScan   75      236     16      9       6.3%    10.7%
 ```
 
-TODO: Explain steps invoked.
-
-(Below - Old)
-
-For each library, we created a loader script at `evaluation/library/models/class/load.py`
-
-Within the enforcer container, load the benign model with the loader script.
-
-```
-python3 load.py --model-path path/to/model
-```
-This script prints either `SUCCESSED` or `FAILED` for the loading process.
-
-Some models might need to specify the configuration and and check point, please run `python3 load.py --help` for instructions.
-
-
-## Comparison with ModelScan
-
-Install [ModelScan](https://github.com/protectai/modelscan/tree/main) using `pip install modelscan`.
-
-Run ModelScan on a model by `modelscal -p path/to/model`. This applies to both benign and malicious models.
-
-Note that ModelScan outputs "No Issue Found" when even when no supported files were passed to the tool. Thus it is necessary to check the exit code.
-
-The following is the malicious models ModelScan failed to identify.
-```
-coldwaterq/sectest/coldwaterq_inject_calc.pt (multiple STOPs, and excluded from our malicious dataset)
-Frase/tiny-bert-model-unsafe/pytorch_model.bin (pickle.loads)
-ScanMe/Models/numpy_load.pkl (numpy.load)
-Yash2998db/totally_safe_model/python_model.pkl (IPython.core.display)
-drhyrum/bert-tiny-torch-picklebomb/pytorch_model.bin (pickle.loads)
-zhuzhuzai/harmless_model_for_research/pytorch/pytorch_reduce_execfile.pt (_pydev_bundle._pydev_execfile.execfile)
-zhuzhuzai/harmless_model_for_research/pytorch/pytorch_reduce_subprocess_model.pt (commands.run)
-ours/call_system.pkl
-ours/write_file.pkl
+### ModelTracer (75 mins)
+```sh
+sh RQ4/eval-modeltracer.sh
 ```
 
-## Comparison with ModelTracer (Casey et al.)
-
-@Andreas: Casey et al. have yet released their tool to public so we might not release this part without the their acknowledgment
-
+The expected results:
 ```
-cd modeltracer/
-mkdir -p results/malicious_dynamic # for results
-python3 -m scripts.model_tracer /path/to/model pickle # for pickles
-python3 -m scripts.model_tracer /path/to/model torch # for torch
+Tool        #TP     #TN     #FP     #FN     FPR     FNR
+ModelTracer 43      252     0       41      0%      48.8%
 ```
 
-After tracing the models
-```
+**Note**: The above shows 43 TP detections while the paper reports 44. One model hangs in interactive mode and should be manually verified. The steps are in follows:
+```sh
+docker run -dit --name modeltracer_container modeltracer:latest
+docker cp $MALICIOUS_MODEL/mkiani/gpt2-exec/gpt2-exec/pytorch_model.bin modeltracer_container:/root/modeltracer/pytorch_model.bin
+docker exec -it modeltracer_container /bin/sh
+python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
 python3 -m scripts.parse_tracer
 ```
 
-Note: ModelTracer dynamically loads the models so if you use it for malicious models, please run it in a safe environment to avoid damage. ModelTracer might contain bugs and we only tested it for torch and pickle.
 
-The 42 malicious models labeled by ModelTracer:
+### Weights-Only (5 mins)
+```sh
+docker compose run weightsonly
 ```
-Ankush-Org-New_safe-model_safe-model_model.pkl
-Ankush-Org-Original_safe-model_safe-model_model.pkl
-Ankush-Organization_safe-model_safe-model_model.pkl
-Madans_twitter-roberta-base-sentiment-unsafe_twitter-roberta-base-sentiment-unsafe_unsafe_model.pt
-MustEr_gpt2-elite_gpt2-elite_pytorch_model.bin
-MustEr_rager_legacy_rager_legacy_psgs_w100.tsv.pkl
-Shayo_pickle_test_pickle_test_pickle_test.pt
-Wi_gptp_gptp_pytorch_model.bin
-ankush-new-org_safe-model_safe-model_model.pkl
-ankushvangari-org2_unsafe-model_unsafe-model_unsafe_model.pkl
-ankushvangari-org2_unsafe_model_unsafe_model_unsafe_model.pkl
-ankushvangari_unsafe_model_unsafe_model_unsafe_model.pkl
-bricksbricks919_threemodelz_threemodelz_pytorch_model.bin
-coldwaterq_sectest_sectest_coldwaterq_inject_calc.pt
-coldwaterq_sectest_sectest_coldwaterq_inject_first_calc.pt
-coldwaterq_sectest_sectest_fickling_system_calc.pt
-funnythingy123a_balling112a_balling112a_pytorch_model.bin
-funnythingy123a_imessedup123_imessedup123_pytorch_model.bin
-graniet_fwefwefwe_fwefwefwe_BadDreams.pkl
-jossefharush_gpt2-rs_gpt2-rs_pytorch_model.bin
-mkiani_gpt2-eval_gpt2-eval_pytorch_model.bin
-neilalfred93_my_demo_my_demo_malware_mnist.pt
-oceanhacktitude_tinymodel_tinymodel_realmodel_pickle_exec_writefile.bin
-oceanhacktitude_tinymodel_tinymodel_twitter-roberta-base-sentiment.bin
-paclove_pytorchTest_pytorchTest_pytorch_model.bin
-star23_baller10_baller10_pytorch_model.bin
-star23_baller11_baller11_pytorch_model.bin
-star23_baller12_baller12_pytorch_model.bin
-star23_baller13_baller13_pytorch_model.bin
-star23_death2_death2_pytorch_model.bin
-star23_death_death_pytorch_model.bin
-star23_round2-1_round2-1_pytorch_model.bin
-star23_round2_round2_pytorch_model.bin
-star23_servomotor-1_servomotor-1_pytorch_model.bin
-star23_sm-1_sm-1_pytorch_model.bin
-zhuzhuzai_harmless_model_for_research_harmless_model_for_research_pytorch_pytorch_reduce_eval.pt
-zhuzhuzai_harmless_model_for_research_harmless_model_for_research_pytorch_pytorch_reduce_os_system.pt
-zhuzhuzai_harmless_model_for_research_harmless_model_for_research_pytorch_pytorch_reduce_subprocess_model.pt
-zhuzhuzai_harmless_model_for_research_harmless_model_for_research_pytorch_pytorch_reduce_test.pt
-zpbrent_RagReuse_RagReuse_psgs_w100.tsv.pkl
-zpbrent_reuse_reuse_vocab.pkl
-ours_call_system.pkl
+
+The expected results:
 ```
+Tool        #TP     #TN     #FP     #FN     FPR     FNR
+WeightsOnly 84      157     95      0       37.7%   0.0%
+```
+
+### PickleBall
+The results are already obtained and explained in RQ1 and RQ2.
+
+
 
 ## Steps to add library to evaluation
 

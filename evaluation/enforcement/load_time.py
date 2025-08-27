@@ -3,6 +3,7 @@
 import argparse
 import glob
 import pickle
+import sys
 import time
 from pathlib import Path
 from typing import List
@@ -13,6 +14,7 @@ ALLOWED_PATTERNS = ["*.bin", "*.pkl", "*pt", "*pth"]
 EXCLUDED_FILES = ["training_args.bin", "tfevents.bin"]
 CURRENT_LIBRARY = ""
 OUTPUT_DIR = "/results/times.csv"
+MODELS_TESTED = "/results/models.txt"
 
 WARMUP_ITERS = 3
 ITERS = 10
@@ -88,6 +90,10 @@ except:
 
 
 model_paths = get_model_paths(args.all_model_path, model_patterns=args.allowed_patterns)
+if len(model_paths) == 0:
+    print("No models found")
+    sys.exit(1)
+
 model = model_paths[0]
 library = model.split("/")[3]
 
@@ -111,7 +117,10 @@ if library == "flair":
     )
 
 CURRENT_LIBRARY = library
+
 print(f"Attempting to load model: {model}")
+with open(MODELS_TESTED, "a+") as f:
+    f.write(f"{model}\n")
 
 # Warmup
 for _ in range(WARMUP_ITERS):

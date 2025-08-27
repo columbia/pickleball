@@ -100,6 +100,16 @@ Enforce policies:
 $ docker compose run enforce-all
 ```
 
+Load time performance experiment:
+
+```
+$ mkdir results
+$ scripts/run-load-time.sh
+$ python3 scripts/analyze_load_times.py
+```
+
+This will produce a table showing the load time overheads of the PickleBall loader. To rerun this experiment, delete the file at `results/times.csv` and rerun the above scripts.
+
 ## Policy Generation
 
 PickleBall uses the Joern program analysis platform to generate policies for

@@ -249,7 +249,7 @@ if __name__ == "__main__":
         result_files = [f for f in args.enforcementresults.iterdir() if f.is_file()]
 
         for result_file in result_files:
-            print(f'analyzing: {result_file}')
+            #print(f'analyzing: {result_file}')
             if result_file.suffix != ".log":
                 continue
             library_name = result_file.stem

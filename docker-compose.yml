@@ -136,7 +136,7 @@ services:
       - ${MALICIOUS_MODELS}:/models/malicious
       - ./evaluation/policies/flair.json:/root/policies/policy.json
       - .:/pickleball
-    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/ --library flair
+    command: /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger --library flair
 
   enforce-gliner:
     image: pickleball-enforce-gliner
@@ -900,7 +900,7 @@ services:
       - ${BENIGN_MODELS}:/models/benign
       - ${MALICIOUS_MODELS}:/models/malicious
       - .:/pickleball
-    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/ --library flair --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
+    command: /bin/sh -c "TORCH_FORCE_WEIGHTS_ONLY_LOAD=true /pickleball/evaluation/enforcement/load_all.py --all-model-path /models/benign/flair/SequenceTagger/ --library flair --disable-verify --output-dir /pickleball/evaluation/weights-only/results-benign"
 
   weightsonly-load-gliner:
     image: weightsonly-load-gliner

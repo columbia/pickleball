@@ -1,6 +1,6 @@
 FROM pickleball-enforce-deb11:latest
 
-RUN pip3 install tner numpy==1.23
+RUN pip3 install tner numpy==1.23 pyarrow==20.0.0 typing_extensions==4.4.0
 
 COPY ./enforcement/utils/tner.patch /root/tner.patch
 RUN cd /root && patch -p1 < /root/tner.patch

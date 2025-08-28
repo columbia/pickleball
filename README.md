@@ -1,24 +1,35 @@
 # PickleBall
 
+TODO: remove this link and replace with Zenodo artifact.
 This artifact is hosted anonymously at: https://anonymous.4open.science/r/pickleball
 See the link for the full repository.
 
-PickleBall protects users when loading untrusted pickle-based machine learning
-models.
+PickleBall protects users who load untrusted pickle-based machine learning
+models. The pickle serialization format permits arbitrary function invocations,
+which attackers abuse by invoking malicious payloads when the model is loaded.
 
-PickleBall ensures that the when loading an untrusted model, only functions
-that are necessary for loading the model are executed. PickleBall infers this
-allowed code by analyzing the source code of the machine learning library used
-to produce the model.
+PickleBall ensures that the when the model is loaded, it may only invoke functions
+necessary for loading. PickleBall infers the necessary functions by analyzing the
+source code of the machine learning library used to create and load the model.
 
 To use PickleBall, you must know the library that produced the model (often the
-same as the library used to load the model) and the Python class of the model.
+same as the library used to load the model) and the Python class definition of the 
+model.
 
 PickleBall works in two steps:
 1. Policy inference: generate a model loading policy.
 2. Policy enforcement: enforce a model loading policy.
 
-Policy inference only needs to run once per machine learning library.
+You only need to infer a policy once per machine learning library. After a
+policy is generated, it can be used to load models using the library loading
+API.
+
+When you load a model, you will use PickleBall's loader to enforce the
+generated policy.
+
+For more details see our paper 
+[PickleBall: Secure Deserialization of Pickle-based Machine Learning Models](https://www.arxiv.org/abs/2508.15987),
+appearing in the proceedings of the 2025 ACM CCS conference.
 
 ## Overview
 

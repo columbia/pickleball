@@ -1,45 +1,82 @@
 # Evaluation
 
-* RQ1: TODO
-* RQ2: TODO
-* RQ3: TODO
-* RQ4: TODO
+PickleBall's evaluation (Section 6) addresses four Research Questions and makes
+the following claims:
 
-Additional evaluation claims: TODO
+* RQ1: PickleBall generates policies that blocks all malicious models from
+  loading.
+* RQ2: PickleBall generates policies that loads 79% of benign models.
+* RQ3: PickleBall generates policies in a reasonable amount of time, and it
+  enforces policies with minimal overhead.
+* RQ4: PickleBall compares favorably to other state of the art tools.
+
+This README provides steps to reproduce these claims. These steps assume that
+you have access to this code repository and the malicious and benign models
+distributed in the PickleBall artifact.
+
+The steps below demonstrate how to reproduce the data provided in Table 1,
+Table 2, Figure 6, and Figure 7 of the PickleBall paper.
+
+TODO: map the tables and figures to the RQs being addressed.
 
 ## Preparation
 
-Download models (benign and malicious) (TODO: provide) at some path outside of this git 
-repository directory.
+Download all models the evaluation dataset from the following locations:
+- Benign models: TODO
+- Malicious models: TODO
 
-TODO: prepare datasets directory.
+Decompress each at a location outside of this code repository.
 
-Create a .env file in this git repository root that sets the following environment
-variables:
+1. Create a `.env` file in the root of this code repository that sets the
+following environment variables:
 
 ```
 BENIGN_MODELS=<path to benign models>
 MALICIOUS_MODELS=<path to malicious models>
-DATASETS=<path to datasets>
 ```
 
+(This file must be in the directory above this `evaluation/` directory.)
 
+2. Build all docker containers.
 
+From the repository root:
 
+```
+$ docker compose build
+```
+
+This will take approximately TODO minutes.
 
 ## Reproduce Policy Generation Table (Table 1)
 
-From root project directory:
+Table 1 shows that when PickleBall generates policies for each library in the
+dataset, ...
+
+1. Generate policies for all libraries in the PickleBall evaluation dataset.
+
+Command (from repository root):
 
 ```
-docker compose run generate-all
+$ docker compose run generate-all
 ```
 
-This invokes the following actions:
-1. Builds all necessary docker containers (specified in `docker-compose.yml`)
-2. Fetches all evaluation libraries (`evaluation/setup/fetch.sh`)
-3. Analyzes and generates policies for each library (`evaluation/generate-policies.py`)
+Expected result:
+* `evaluation/policies/`
 
+Explanation:
+
+This command invokes the following actions inside the policy generation
+container:
+1. Executes `evaluation/setup/fetch.sh` to fetch all evaluation libraries
+  and apply our manual modifications, which can be inspected in
+  `evaluation/setup/*.diff` files.
+2. Executes `evaluation/generate-policies.py` to analyzes and generates policies
+  for each library. This script is configured based on the
+  `evaluation/manifest.toml` file, which specifies how the `pickleball-generate`
+  program is invoked for each library in the evaluation dataset.
+  **NOTE:** non-determinism ...
+
+Note:
 
 Output file:
 * `evaluation/tables/table.pdf`: this table should reproduce the values in
@@ -65,6 +102,7 @@ TODO:
 
 
 ## RQ4: Comparison to SOTA
+
 ### ModelScan (20 mins)
 Please make sure there is a `model-list.txt` file under the model path.
 @andreas, please make sure the two model-list files are included in dataset, thanks!

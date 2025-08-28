@@ -13,7 +13,7 @@ necessary for loading. PickleBall infers the necessary functions by analyzing th
 source code of the machine learning library used to create and load the model.
 
 To use PickleBall, you must know the library that produced the model (often the
-same as the library used to load the model) and the Python class definition of the 
+same as the library used to load the model) and the Python class definition of the
 model.
 
 PickleBall works in two steps:
@@ -27,9 +27,19 @@ API.
 When you load a model, you will use PickleBall's loader to enforce the
 generated policy.
 
-For more details see our paper 
+For more details see our paper
 [PickleBall: Secure Deserialization of Pickle-based Machine Learning Models](https://www.arxiv.org/abs/2508.15987),
 appearing in the proceedings of the 2025 ACM CCS conference.
+
+## Note to Artifact Evaluators
+
+This top-level README provides general instructions for how to use PickleBall.
+To specifically reproduce the results of the PickleBall paper, see:
+
+* `evaluation/README.md`: instructions for reproducing the PickleBall evaluation
+  (Section 6 of paper)
+* `surveys/README.md`: instructions for reproducing the survey of the Hugging
+  Face ecosystem (Section 3.1 and 3.2 of paper)
 
 ## Overview
 
@@ -43,7 +53,7 @@ the class.
 
 The Policy Enforcer replaces the `pickle` module on the system. It receives (1) an
 ML model and (2) the loading policy. It loads the model while enforcing the given
-policy. 
+policy.
 
 ### Policy Generator
 
@@ -56,7 +66,7 @@ outputs a policy as a JSON file.
 
 The Policy Executor is executed on-line to load a model. It is implemented in the
 `enforce/enforce.py`, which is a modified version of the Pickle Machine and serves
-as a drop-in replacement. We provide Dockerfiles (`enforce/Dockerfile`) for 
+as a drop-in replacement. We provide Dockerfiles (`enforce/Dockerfile`) for
 configuring an environment to use the module.
 
 Primary components:
@@ -77,11 +87,9 @@ TODO
 
 ## Evaluation
 
-### Evaluation Overview
-
-TODO
-
 ### Evaluation Setup
+
+TODO: Move to `evaluation/README.md`
 
 Create a .env file that defines the following environment variables:
 
@@ -120,12 +128,6 @@ $ python3 scripts/analyze_load_times.py
 ```
 
 This will produce a table showing the load time overheads of the PickleBall loader. To rerun this experiment, delete the file at `results/times.csv` and rerun the above scripts.
-
-## Policy Generation
-
-PickleBall uses the Joern program analysis platform to generate policies for
-model class objects. The policy need only be generated once for a given class,
-and then used anytime a model of that class is loaded.
 
 ## Run Joern tests
 

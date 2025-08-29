@@ -74,9 +74,10 @@ This builds the following relevant container images (specified in the
 **Note:** unless otherwise indicated, all following commands should be executed
 from the `evaluation/` directory.
 
-## RQ1 & RQ2
+## RQ1 & RQ2 - PickleBall policies block malicious models and load benign models
 
-To
+To validate RQ1 and RQ2, the following steps will reproduce Table 1 and the
+last row of Table 2.
 
 ### 1. Generate policies for all libraries in the PickleBall evaluation dataset.
 
@@ -112,7 +113,7 @@ than on larger (e.g., server with 128 cores and 256GB RAM).
 
 ### 2. Enforce policies while attempting to load all benign models in the dataset
 
-**Command** (from `evaluate/` directory), approximately 20 minutes to execute:
+**Command** (approximately 20 minutes to execute):
 
 ```
 $ ./enforce-all.sh
@@ -142,7 +143,7 @@ the total number of models attempted.
 
 ### 3. Analyze results and compare to Table 1
 
-**Command**:
+**Command** (immediate):
 
 ```
 $ python3 ../scripts/generatetable.py manifest.toml enforcement/results
@@ -165,21 +166,21 @@ Unpickler (WOUp column in Table 1), which we will collect and analyze next.
 
 ### 4. Enforce Weights Only Unpickler policies while attempting to load all benign models in the dataset
 
-**Command**:
+**Command** (approximately 20 minutes to execute):
 
 ```
 $ docker compose run weightsonly-load-all
 ```
 
 **Expected result**:
-* `evaluation/weights-only/results-benign/<library>.log`: analogously to when
-  enforcing PickleBall policies, this step produces log files indicating whether
-  the Weights-Only Unpickler default policy successfully loads the library's
-  models.
+* `evaluation/weights-only/results-benign/<library>.log`: analogous to Step 2
+  above for enforcing PickleBall policies, this step produces log files
+  indicating whether the Weights-Only Unpickler default policy successfully
+  loads the library's models.
 
 ### 5. Analyze results and compare to Table 1
 
-**Command**:
+**Command** (immediate):
 
 ```
 $ python3 ../scripts/generatetable.py manifest.toml weights-only/results-benign
@@ -193,14 +194,72 @@ Weights-Only Unpickler successfully loaded.
 
 This concludes the reproduction of Table 1 of our results.
 
-## RQ1: Malicious Model Blocking
-Similar to loading benign models, this script starts a container with each library's Pickleball policy and attempts to load malicious models.
+### 6. Enforce policies while loading malicious models
+
+**Note:** this step will attempt to load malicious models. The `RQ1-blocking.sh`
+script will start a docker container, and all models will be loaded in the
+container. If additional protection is desired, you may create a virtual machine.
+
+**Command** (approximately 10 minutes):
 
 ```sh
 $ ./RQ1-blocking.sh
 ```
 
+**Expected results**:
+
+* `evaluation/enforcement/results-malicious/malicious-<library>.log` file created
+  for each library
+
+Similar to loading benign models, this script starts a container with each library's Pickleball policy and attempts to load malicious models.
+
+
 The command will show the enforcement results for each library on the terminal and output all malicious models are blocked.
+
+## RQ3: Performance
+
+To validate claims about PickleBall's performance, the steps below reproduce
+data used to create Figure 6 and Figure 7.
+
+### Figure 6 - Policy Generation Runtime
+
+The policy generation should have produced a file under
+`results/<timestamp>.timelog` containing the time to generate the policy for
+each library, corresponding to Figure 6. The results can be pretty-printed as a
+table by running
+
+```
+python3 scripts/analyze_generation_times.py
+```
+
+In our experiment setup (14-core Intel i7 CPU and 32GB of RAM), the policy
+generation required anywhere ~10 to ~30 seconds depending on the library. The
+exact numbers may vary due to noise or different setups, but you should expect
+to see generation times in a similar range.
+
+### Figure 7 - Policy Enforcement Runtime Overhead
+
+Load time performance experiment (approximately 5 minutes):
+
+```
+$ mkdir results
+$ scripts/run-load-time.sh
+$ python3 scripts/analyze_load_times.py
+```
+
+This will produce a table showing the load time overheads of the PickleBall
+loader. To rerun this experiment, delete the file at `results/times.csv` and
+rerun the above scripts.
+
+This experiment can be noisy and load times for the same model may vary between
+runs. To counteract this, our script first loads each model 3 times without
+measuring the load times to ensure it has been loaded in memory, then measures
+the load time for 10 more loads, and finally presents the average load time
+after removing outliers. This reduces the fluctuation due to noise but does not
+completely eliminate it, so the overhead of the PickleBall loader may vary
+across runs and may even have negative overhead (i.e., speedup) for some models.
+However, you should still see a similar pattern: the overhead of using the
+PickleBall loader should be relatively small.
 
 ## RQ4: Comparison to SOTA
 
@@ -264,45 +323,3 @@ TODO: add analysis - Row X in Table 2
 The results are already obtained and explained in RQ1 and RQ2.
 
 TODO: the final row in Table 2 is reproduced from results already checked above.
-
-## Performance
-
-### Figure 6 - Policy Generation Runtime
-
-The policy generation should have produced a file under
-`results/<timestamp>.timelog` containing the time to generate the policy for
-each library, corresponding to Figure 6. The results can be pretty-printed as a
-table by running
-
-```
-python3 scripts/analyze_generation_times.py
-```
-
-In our experiment setup (14-core Intel i7 CPU and 32GB of RAM), the policy
-generation required anywhere ~10 to ~30 seconds depending on the library. The
-exact numbers may vary due to noise or different setups, but you should expect
-to see generation times in a similar range.
-
-### Figure 7 - Policy Enforcement Runtime Overhead
-
-Load time performance experiment (approximately 5 minutes):
-
-```
-$ mkdir results
-$ scripts/run-load-time.sh
-$ python3 scripts/analyze_load_times.py
-```
-
-This will produce a table showing the load time overheads of the PickleBall
-loader. To rerun this experiment, delete the file at `results/times.csv` and
-rerun the above scripts.
-
-This experiment can be noisy and load times for the same model may vary between
-runs. To counteract this, our script first loads each model 3 times without
-measuring the load times to ensure it has been loaded in memory, then measures
-the load time for 10 more loads, and finally presents the average load time
-after removing outliers. This reduces the fluctuation due to noise but does not
-completely eliminate it, so the overhead of the PickleBall loader may vary
-across runs and may even have negative overhead (i.e., speedup) for some models.
-However, you should still see a similar pattern: the overhead of using the
-PickleBall loader should be relatively small.

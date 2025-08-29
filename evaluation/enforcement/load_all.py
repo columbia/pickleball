@@ -123,12 +123,15 @@ if __name__ == "__main__":
         print("ERROR: need to specify model path and library")
         exit(1)
 
-    if args.library not in LIBRARIES and args.library != "malicious":
+    if args.library not in LIBRARIES and not args.library.startswith("malicious"):
         print("ERROR: invalid library name")
         exit(1)
 
     LIBRARY = args.library
-    module_name = f"load{args.library}"
+    if LIBRARY.startswith('malicious'):
+        module_name = f'loadmalicious'
+    else:
+        module_name = f"load{args.library}"
     CURRENT_LIBRARY = LIBRARY
 
     try:
@@ -164,7 +167,7 @@ if __name__ == "__main__":
 
     if args.models_file:
         model_paths = args.models_file.read_text().splitlines()
-    elif args.library == "malicious" and args.all_model_path:
+    elif args.library.startswith("malicious") and args.all_model_path:
         with open(Path(args.all_model_path) / "model-list.txt", "r") as f:
             model_paths = [str(Path(args.all_model_path) / line.strip()) for line in f.readlines()]
     elif args.all_model_path:

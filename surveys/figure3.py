@@ -103,7 +103,7 @@ ax.legend(handles=legend_elements, bbox_to_anchor=(1.0, 0),
 ax.grid(False)
 
 # Save the figure
-plt.savefig("deserialization-pickle_safetensors_proportion_barChart_march2025.pdf", 
+plt.savefig("figure3.pdf", 
             bbox_inches='tight', format='pdf')
 
 # Show the plot

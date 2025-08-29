@@ -1,1 +1,0 @@
-{"Multimodal": {"pytorch": 256, "safetensors": 203}, "Computer Vision": {"pytorch": 555, "safetensors": 332}, "NLP": {"pytorch": 1131, "safetensors": 473}, "Audio": {"pytorch": 325, "safetensors": 195}, "Other": {"pytorch": 37, "safetensors": 9}}

@@ -1,2 +1,0 @@
-{"Multimodal": {".bin": 498, ".safetensors": 586, ".pt": 34, ".pth": 15, ".pkl": 0}, "Computer Vision": {".bin": 645, ".safetensors": 421, ".pt": 100, ".pth": 15, ".pkl": 3}, "NLP": {".bin": 1865, ".safetensors": 1337, ".pt": 110, ".pth": 46, ".pkl": 3}, "Audio": {".bin": 1662, ".safetensors": 1420, ".pt": 202, ".pth": 103, ".pkl": 1}, "Other": {".bin": 80, ".safetensors": 14, ".pt": 22, ".pth": 2, ".pkl": 60}}
-

@@ -64,7 +64,7 @@ This builds the following relevant container images (specified in the
 ## Reproduce Policy Generation Table (Table 1)
 
 Table 1 shows that when PickleBall generates policies for each library in the
-dataset, ...
+dataset, ... TODO
 
 ### 1. Generate policies for all libraries in the PickleBall evaluation dataset.
 
@@ -191,7 +191,7 @@ Please make sure there is a `model-list.txt` file under the model path.
 @andreas, please make sure the two model-list files are included in dataset, thanks!
 
 ```sh
-docker compose run modelscan
+$ docker compose run modelscan
 ```
 
 The expected results:
@@ -202,7 +202,7 @@ ModelScan   75      236     16      9       6.3%    10.7%
 
 ### ModelTracer (75 mins)
 ```sh
-sh RQ4/eval-modeltracer.sh
+$ sh RQ4/eval-modeltracer.sh
 ```
 
 The expected results:
@@ -213,17 +213,17 @@ ModelTracer 43      252     0       41      0%      48.8%
 
 **Note**: The above shows 43 TP detections while the paper reports 44. One model hangs in interactive mode and should be manually verified. The steps are in follows:
 ```sh
-docker run -dit --name modeltracer_container modeltracer:latest
-docker cp $MALICIOUS_MODEL/mkiani/gpt2-exec/gpt2-exec/pytorch_model.bin modeltracer_container:/root/modeltracer/pytorch_model.bin
-docker exec -it modeltracer_container /bin/sh
-python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
-python3 -m scripts.parse_tracer
+$ docker run -dit --name modeltracer_container modeltracer:latest
+$ docker cp $MALICIOUS_MODEL/mkiani/gpt2-exec/gpt2-exec/pytorch_model.bin modeltracer_container:/root/modeltracer/pytorch_model.bin
+$ docker exec -it modeltracer_container /bin/sh
+$ python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
+$ python3 -m scripts.parse_tracer
 ```
 
 
 ### Weights-Only (5 mins)
 ```sh
-docker compose run weightsonly
+$ docker compose run weightsonly
 ```
 
 The expected results:
@@ -234,3 +234,25 @@ WeightsOnly 84      157     95      0       37.7%   0.0%
 
 ### PickleBall
 The results are already obtained and explained in RQ1 and RQ2.
+
+## Performance
+
+### Figure 6 - Policy Generation Runtime
+
+TODO
+
+### Figure 7 - Policy Enforcement Runtime Overhead
+
+Load time performance experiment (approximately 5 minutes):
+
+```
+$ mkdir results
+$ scripts/run-load-time.sh
+$ python3 scripts/analyze_load_times.py
+```
+
+This will produce a table showing the load time overheads of the PickleBall
+loader. To rerun this experiment, delete the file at `results/times.csv` and
+rerun the above scripts.
+
+TODO: Neo, can you provide some text about how this might fluctuate?

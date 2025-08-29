@@ -1,6 +1,6 @@
 # Evaluation
 
-PickleBall's evaluation (Section 6) addresses four Research Questions and makes
+PickleBall's evaluation (Section 6) addresses four Research Questions with
 the following claims:
 
 * RQ1: PickleBall generates policies that blocks all malicious models from
@@ -14,10 +14,20 @@ This README provides steps to reproduce these claims. These steps assume that
 you have access to this code repository and the malicious and benign models
 distributed in the PickleBall artifact.
 
-The steps below demonstrate how to reproduce the data provided in Table 1,
-Table 2, Figure 6, and Figure 7 of the PickleBall paper.
+To validate these claims, the steps below demonstrate how to reproduce the data
+presented in Table 1, Table 2, Figure 6, and Figure 7 of the PickleBall paper.
+By following the steps, you will be able to validate that the outputs match
+what is presented in these tables.
 
-TODO: map the tables and figures to the RQs being addressed.
+These tables and figures support our main claims:
+* RQ1 is supported by Table 2 showing that PickleBall has a 0% false negative
+  rate.
+* RQ2 is supported by Table 1 showing that PickleBall successfully loads 79% of
+  benign models.
+* RQ3 is supported by Figure 6 and Figure 7 showing PickleBall's policy
+  generation time and enforcement overhead.
+* RQ4 is supported by Table 2 showing how PickleBall performs in comparison to
+  the Weights Only Unpickler, ModelScanner, and ModelTracer.
 
 Prior to reproducing the evaluation, you should familiarize yourself with the
 PickleBall implementation as described in the top level README.
@@ -61,14 +71,16 @@ This builds the following relevant container images (specified in the
   container image as the base image when installing library-specific
   dependencies for each library, when the Debian 12 environment is incompatible.
 
-## Reproduce Policy Generation Table (Table 1)
+**Note:** unless otherwise indicated, all following commands should be executed
+from the `evaluation/` directory.
 
-Table 1 shows that when PickleBall generates policies for each library in the
-dataset, ... TODO
+## RQ1 & RQ2
+
+To
 
 ### 1. Generate policies for all libraries in the PickleBall evaluation dataset.
 
-**Command** (from repository root), approximately 10 minutes to execute:
+**Command** (approximately 10 minutes to execute):
 
 ```
 $ docker compose run generate-all

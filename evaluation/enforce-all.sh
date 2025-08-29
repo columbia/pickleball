@@ -11,6 +11,7 @@ docker compose run enforce-parrot && \
 docker compose run enforce-pyannote && \
 docker compose run enforce-pysentimiento && \
 docker compose run enforce-sentencetransformers && \
+docker compose run enforce-superimage && \
 docker compose run enforce-tner && \
 docker compose run enforce-tweetnlp && \
 docker compose run enforce-yolov5 && \

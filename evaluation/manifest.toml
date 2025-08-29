@@ -9,6 +9,16 @@ policies_dir = "policies/"
 joern_dir = "/joern/" # TODO: Make relative
 analyzer_path = "/pickleball/analyze/analyze.sc" # TODO: Make relative
 
+# Each library entry requires:
+# * `library_path`: path to the library source code
+# * `model_class`: the library's model class definition, using Joern's naming
+#       convention for fully-qualifed class definition in the CPG
+# * `use_cpg`: whether to instruct Joern to create just an AST (false) or a full
+#       CPG (true). Generally, the full CPG provides better type recovery
+#       information and therefore more accurate results, but also introduces
+#       a non-deterministic crash into Joern's analysis, so it is only used when
+#       the AST does not provide enough recovered type information.
+
 [libraries]
 
 [libraries.conch]

@@ -82,6 +82,13 @@ if __name__ == "__main__":
         default="/load-model/models",
         help=("the location of all models to test"),
     )
+
+    parser.add_argument(
+        "--test-malicious",
+        action="store_true",
+        help=("if set, test malicious models instead of benign models"),
+    )
+
     parser.add_argument("--library", help="name of library to evaluate")
     parser.add_argument(
         "--validate",
@@ -121,7 +128,7 @@ if __name__ == "__main__":
         print("ERROR: need to specify model path and library")
         exit(1)
 
-    if args.library not in LIBRARIES:
+    if args.library not in LIBRARIES and args.library != "basic":
         print("ERROR: invalid library name")
         exit(1)
 
@@ -162,6 +169,9 @@ if __name__ == "__main__":
 
     if args.models_file:
         model_paths = args.models_file.read_text().splitlines()
+    elif args.test_malicious and args.all_model_path:
+        with open(Path(args.all_model_path) / "model-list.txt", "r") as f:
+            model_paths = [str(Path(args.all_model_path) / line.strip()) for line in f.readlines()]
     elif args.all_model_path:
         model_paths = get_model_paths(
             args.all_model_path, model_patterns=args.allowed_patterns

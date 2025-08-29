@@ -194,58 +194,61 @@ Weights-Only Unpickler successfully loaded.
 This concludes the reproduction of Table 1 of our results.
 
 ## RQ1: Malicious Model Blocking
-TODO:
+Similar to loading benign models, this script starts a container with each library's Pickleball policy and attempts to load malicious models.
 
+```sh
+$ ./RQ1-blocking.sh
+```
+
+The command will show the enforcement results for each library on the terminal and output all malicious models are blocked.
 
 ## RQ4: Comparison to SOTA
 
 ### ModelScan (20 mins)
-Please make sure there is a `model-list.txt` file under the model path.
-@andreas, please make sure the two model-list files are included in dataset, thanks!
+This step runs [ModelScan](https://github.com/protectai/modelscan/tree/v0.8.1) against both malicious and benign models. The following command starts a container using the `modelscan:latest` Docker image built earlier and tests each model.
 
-```sh
+```bash
 $ docker compose run modelscan
 ```
 
-The expected results:
+This command will show the analysis progress and results of individual models on the terminal and finally output the results corresponding to the first row in Table 2.
 ```
 Tool        #TP     #TN     #FP     #FN     FPR     FNR
 ModelScan   75      236     16      9       6.3%    10.7%
 ```
 
-TODO: explanation -
-
-TODO: Analysis - compare these results to Row X in Table 2
-
 ### ModelTracer (75 mins)
+This step runs [ModelTracer](https://github.com/s2e-lab/hf-model-analyzer/tree/5725b26f62a1c0e4f22c793761cefb70ead64ee5) against both malicious and benign models. The following command starts a container per model using the `modeltracer:latest` Docker image built earlier and tests it.
+
 ```bash
-$ bash RQ4/eval-modeltracer.sh
+$ ./RQ4-modeltracer.sh
 ```
 
-The expected results:
+Similarly, this command will show the analysis progress and results of individual models on the terminal and finally output results like the following:
 ```
 Tool        #TP     #TN     #FP     #FN     FPR     FNR
 ModelTracer 43      252     0       41      0%      48.8%
 ```
 
-**Note**: The above shows 43 TP detections while the paper reports 44. One model hangs in interactive mode and should be manually verified. The steps are in follows:
+Compared to the second row of Table 2, the above shows 43 TP detections instead of 44. This is because one model hangs in interactive mode and should be manually verified. The steps to verify this are as follows:
 ```sh
 $ docker run -dit --name modeltracer_container modeltracer:latest
 $ docker cp $MALICIOUS_MODEL/mkiani/gpt2-exec/gpt2-exec/pytorch_model.bin modeltracer_container:/root/modeltracer/pytorch_model.bin
 $ docker exec -it modeltracer_container /bin/sh
-# python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
-# python3 -m scripts.parse_tracer
+
+# in the container, run:
+$ python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
+$ python3 -m scripts.parse_tracer
 ```
 
-TODO: add explanation
-TODO: add analysis check - Row X in Table 2
-
 ### Weights-Only (5 mins)
+This step runs the weights-only unpickler against both malicious and benign models. The following command starts a container using the `weightsonly:latest` Docker image and tests each model.
+
 ```sh
 $ docker compose run weightsonly
 ```
 
-The expected results:
+This produces the third row of Table 2:
 ```
 Tool        #TP     #TN     #FP     #FN     FPR     FNR
 WeightsOnly 84      157     95      0       37.7%   0.0%

@@ -12,8 +12,8 @@ The data is a collection of longitudinal data from multiple resources, including
 
   This covers the longitudinal data from *January 2023* to *March 2025*. We filtered models with over 1000 monthly downloads from each database, and extracted the `siblings` metadata, which includes all the files in each model repository. We provide the extracted data to support the reproducibility of our survey study ($3).
 
-   
-3. Run the following commands to generate Figure 2:
+
+2. Run the following commands to generate Figure 2:
 ```sh
 python figure2.py
 ```

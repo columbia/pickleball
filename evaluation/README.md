@@ -209,12 +209,17 @@ $ ./RQ1-blocking.sh
 **Expected results**:
 
 * `evaluation/enforcement/results-malicious/malicious-<library>.log` file created
-  for each library
+  for each library. Each file indicates the number of malicious models that were
+  successfully loaded when loaded with PickleBall's policy for that library.
+  Manual inspection of each file should show that no malicious models are
+  successfully loaded (last line of each file should indicate `0:84`).
 
-Similar to loading benign models, this script starts a container with each library's Pickleball policy and attempts to load malicious models.
+**Explanation**:
 
-
-The command will show the enforcement results for each library on the terminal and output all malicious models are blocked.
+The `RQ1-blocking.sh` script invokes each library container with the appropriate
+PickleBall policy loaded for the library, and attempts to load each of the 84
+malicious models in our dataset. The `enforcement/load_all.py` script is invoked to perform
+the model loading, which in turn invokes `enforcement/loadmalicious.py`.
 
 ## RQ3: Performance
 
@@ -263,12 +268,24 @@ PickleBall loader should be relatively small.
 
 ## RQ4: Comparison to SOTA
 
-### ModelScan (20 mins)
-This step runs [ModelScan](https://github.com/protectai/modelscan/tree/v0.8.1) against both malicious and benign models. The following command starts a container using the `modelscan:latest` Docker image built earlier and tests each model.
+To validate RQ4, following steps indicate how to execute the compared
+state-of-the-art tools on the PickleBall model datasets, replicating rows 1-3 of
+Table 2 (row 4 was already replicating in RQ1 and RQ2).
+
+### ModelScan
+
+This step runs [ModelScan](https://github.com/protectai/modelscan/tree/v0.8.1)
+against both malicious and benign models. The following command starts a
+container using the `modelscan:latest` Docker image built earlier and tests each
+model.
+
+**Command** (approximately 20 minutes):
 
 ```bash
 $ docker compose run modelscan
 ```
+
+**Expected results**:
 
 This command will show the analysis progress and results of individual models on the terminal and finally output the results corresponding to the first row in Table 2.
 ```
@@ -276,12 +293,29 @@ Tool        #TP     #TN     #FP     #FN     FPR     FNR
 ModelScan   75      236     16      9       6.3%    10.7%
 ```
 
-### ModelTracer (75 mins)
-This step runs [ModelTracer](https://github.com/s2e-lab/hf-model-analyzer/tree/5725b26f62a1c0e4f22c793761cefb70ead64ee5) against both malicious and benign models. The following command starts a container per model using the `modeltracer:latest` Docker image built earlier and tests it.
+### ModelTracer
+
+This step runs
+[ModelTracer](https://github.com/s2e-lab/hf-model-analyzer/tree/5725b26f62a1c0e4f22c793761cefb70ead64ee5)
+against both malicious and benign models. The following command starts a
+container per model using the `modeltracer:latest` Docker image built earlier
+and tests it.
+
+**Note:** this step **will load** malicious models. The `RQ4-modeltracer.sh`
+script will start a docker container, and all models will be loaded in the
+container. If additional protection is desired, you may create a virtual
+machine, and the models will execute their payloads. The payloads will not
+alter system state outside of the container, but you may wish to temporarily
+disable network connectivity. The ModelTracer tool that we compare to must
+execute the model in order to trace its behavior.
+
+**Command** (approximately 75 minutes):
 
 ```bash
 $ ./RQ4-modeltracer.sh
 ```
+
+**Expected results**:
 
 Similarly, this command will show the analysis progress and results of individual models on the terminal and finally output results like the following:
 ```
@@ -289,7 +323,10 @@ Tool        #TP     #TN     #FP     #FN     FPR     FNR
 ModelTracer 43      252     0       41      0%      48.8%
 ```
 
+**Note**:
+
 Compared to the second row of Table 2, the above shows 43 TP detections instead of 44. This is because one model hangs in interactive mode and should be manually verified. The steps to verify this are as follows:
+
 ```sh
 $ docker run -dit --name modeltracer_container modeltracer:latest
 $ docker cp $MALICIOUS_MODEL/mkiani/gpt2-exec/gpt2-exec/pytorch_model.bin modeltracer_container:/root/modeltracer/pytorch_model.bin
@@ -300,12 +337,19 @@ $ python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
 $ python3 -m scripts.parse_tracer
 ```
 
-### Weights-Only (5 mins)
-This step runs the weights-only unpickler against both malicious and benign models. The following command starts a container using the `weightsonly:latest` Docker image and tests each model.
+### Weights-Only Unpickler
+
+This step runs the weights-only unpickler against both malicious and benign
+models. The following command starts a container using the `weightsonly:latest`
+Docker image and tests each model.
+
+**Command** (approximately 5 minutes):
 
 ```sh
 $ docker compose run weightsonly
 ```
+
+**Expected Results**:
 
 This produces the third row of Table 2:
 ```
@@ -313,13 +357,7 @@ Tool        #TP     #TN     #FP     #FN     FPR     FNR
 WeightsOnly 84      157     95      0       37.7%   0.0%
 ```
 
-TODO: add explanation - this also loads malicious models (in addition to the
-benign ones from Table 1)
-
-TODO: add analysis - Row X in Table 2
-
 ### PickleBall
 
-The results are already obtained and explained in RQ1 and RQ2.
-
-TODO: the final row in Table 2 is reproduced from results already checked above.
+The results are already obtained and explained in RQ1 and RQ2, which are copied
+into row 4 of Table 2.

@@ -6,10 +6,12 @@ ENV VIRTUAL_ENV=/root/pickle-venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Back up original pickle.py
-COPY modeltracer /root/modeltracer
+COPY modeltracer.patch /root/modeltracer.patch
+RUN git clone https://github.com/s2e-lab/hf-model-analyzer /root/modeltracer && cd /root/modeltracer && git checkout 5725b26f62a1c0e4f22c793761cefb70ead64ee5 && patch -p1 < /root/modeltracer.patch
 
 RUN pip3 install -r /root/modeltracer/requirements.txt
 RUN pip3 install git+https://github.com/bmwcarit/stracepy.git
+
+RUN mkdir -p /root/modeltracer/results/malicious_dynamic
 
 WORKDIR /root/modeltracer

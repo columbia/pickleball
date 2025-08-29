@@ -1,0 +1,94 @@
+diff --color -ruN a/scripts/model_tracer.py b/scripts/model_tracer.py
+--- a/scripts/model_tracer.py	2025-08-29 08:44:47
++++ b/scripts/model_tracer.py	2025-08-29 09:11:20
+@@ -189,27 +189,31 @@
+                 run_strace(filepath, straceCommand, outFilePath)
+ 
+             if method == 'pickle':
++                '''
+                 try:
+                     sys.settrace(trace_with_csv(writer))
+                     pickle.load(filepath)
+                     sys.settrace(None)
+                 except:
+                     pass
++                '''
+ 
+                 #run strace
+-                stringLoader = f'import pickle; pickle.load("{filepath}")'
++                stringLoader = f'import pickle; pickle.load(open("{filepath}", "rb"))'
+                 straceCommand.append('python')
+                 straceCommand.append('-c') 
+                 straceCommand.append(stringLoader)
+                 run_strace(filepath, straceCommand, outFilePath)
+ 
+             if method == 'torch':
++                '''
+                 try:
+                     sys.settrace(trace_with_csv(writer))
+                     torch.load(filepath, map_location=torch.device('cpu'))
+                     sys.settrace(None)
+                 except:
+                     pass
++                '''
+ 
+                 #run strace
+                 stringLoader = f'import torch; torch.load("{filepath}", map_location=torch.device("cpu"))'
+diff --color -ruN a/scripts/parse_tracer.py b/scripts/parse_tracer.py
+--- a/scripts/parse_tracer.py	2025-08-29 08:44:47
++++ b/scripts/parse_tracer.py	2025-08-22 18:01:13
+@@ -39,28 +39,31 @@
+     strace_files_anlayse = [os.path.join('./results', *filename.split("/")) for filename in all_files if 'strace.csv'in filename]
+     for filename in strace_files_anlayse:
+         if '_strace.csv' in filename:
+-            df = pd.read_csv(filename)
+-            '''there will always be one execve call in the very first line. this is definitely benign, so we 
+-            can ignore it. We want to get the rows in the df that have a suspicious syscall, namely the ones
+-            in the commands_of_interest list. if the df is not empty, eg contains calls to these suspicious calls,
+-            we write the df to a csv. Otherwise, we add the model to a list of clean repos.'''
+-            first_execve_index = df[df['syscall'] == 'execve'].index[0]
+-            df = df.drop(first_execve_index)
+-            filtered = df[df['syscall'].isin(commands_of_interest)]
+-            if filtered.empty:
+-                idx = filename.find('_strace.csv')
+-                last_slash = filename.rfind('/')
+-                model_name = filename[last_slash+1:idx]
+-                clean_repos.append(model_name)
+-            else:
+-                print('FOUND UNSAFE')
+-                malicious_dir = './results' / 'malicious_dynamic/'
+-                idx = filename.find('_strace.csv')
+-                last_slash = filename.rfind('/')
+-                model_name = filename[last_slash+1:idx] + '_malicious_results.csv'
+-                malicious_filepath =  os.path.join(malicious_dir, *model_name.split('/'))
+-                print(malicious_filepath)
+-                filtered.to_csv(malicious_filepath)
++            try:
++                df = pd.read_csv(filename)
++                '''there will always be one execve call in the very first line. this is definitely benign, so we 
++                can ignore it. We want to get the rows in the df that have a suspicious syscall, namely the ones
++                in the commands_of_interest list. if the df is not empty, eg contains calls to these suspicious calls,
++                we write the df to a csv. Otherwise, we add the model to a list of clean repos.'''
++                first_execve_index = df[df['syscall'] == 'execve'].index[0]
++                df = df.drop(first_execve_index)
++                filtered = df[df['syscall'].isin(commands_of_interest)]
++                if filtered.empty:
++                    idx = filename.find('_strace.csv')
++                    last_slash = filename.rfind('/')
++                    model_name = filename[last_slash+1:idx]
++                    clean_repos.append(model_name)
++                else:
++                    print('FOUND UNSAFE')
++                    malicious_dir = './results' +  '/malicious_dynamic/'
++                    idx = filename.find('_strace.csv')
++                    last_slash = filename.rfind('/')
++                    model_name = filename[last_slash+1:idx] + '_malicious_results.csv'
++                    malicious_filepath =  os.path.join(malicious_dir, *model_name.split('/'))
++                    print(malicious_filepath)
++                    filtered.to_csv(malicious_filepath)
++            except pd.errors.EmptyDataError:
++                continue
+     return clean_repos
+             
+ 
+

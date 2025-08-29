@@ -202,8 +202,8 @@ ModelScan   75      236     16      9       6.3%    10.7%
 ```
 
 ### ModelTracer (75 mins)
-```sh
-$ sh RQ4/eval-modeltracer.sh
+```bash
+$ bash RQ4/eval-modeltracer.sh
 ```
 
 The expected results:

@@ -1,0 +1,11 @@
+Attempted models: 8
+Successful loads: 8
+Failed loads: 0
+/proj/rcs-ssd/phli/pickleball/no-malicious/languagebind/LanguageBind/LanguageBind-LanguageBind_Video_Huge_V1.5_FT/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/languagebind/LanguageBind/LanguageBind-LanguageBind_Video_merge/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/languagebind/LanguageBind/LanguageBind-LanguageBind_Video_V1.5_FT/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/languagebind/LanguageBind/LanguageBind-LanguageBind_Audio_FT/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/languagebind/LanguageBind/LanguageBind-LanguageBind_Audio/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/languagebind/LanguageBind/LanguageBind-LanguageBind_Video/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/languagebind/LanguageBind/LanguageBind-LanguageBind_Video_FT/pytorch_model.bin: SUCCESS
+/proj/rcs-ssd/phli/pickleball/no-malicious/languagebind/LanguageBind/LanguageBind-LanguageBind_Image/pytorch_model.bin: SUCCESS

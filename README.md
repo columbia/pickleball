@@ -1,7 +1,8 @@
 # PickleBall
 
-PickleBall protects machine learning engineers when loading untrusted
-pickle-based machine learning models.
+PickleBall is a proof-of-concept system to protect users when loading untrusted
+pickle-based machine learning models. PickleBall uses model loading policies to
+do so, described in our [paper](TODO).
 
 PickleBall ensures that the when loading an untrusted model, only functions that
 are necessary for loading the model are executed. PickleBall infers this allowed
@@ -18,7 +19,7 @@ PickleBall works in two steps:
 
 Policy inference only needs to run once per machine learning library.
 
-# Setup
+## Setup
 
 1. Build the static inference Docker container (`inference container`) with our
 Joern fork:
@@ -34,10 +35,11 @@ $ docker build -t joern .
 
 ```
 $ cd enforce
-$ docker build -t pickleball-enforce .
+$ docker build -t pickleball-enforce -f Dockerfile .
+$ docker build -t pickleball-enforce-deb11 -f Dockerfile.deb11 .
 ```
 
-# Policy Generation
+## Policy Generation
 
 PickleBall uses the Joern program analysis platform to generate policies for
 model class objects. The policy need only be generated once for a given class,
@@ -76,7 +78,7 @@ The steps above will produce a policy file named
 `flair-sequence-tagger-policy.json` for loading models that implement the
 `SequenceTagger` class of the `flair` library.
 
-# Policy Enforcement
+## Policy Enforcement
 
 PickleBall enforces load policies when loading a model. We provide an
 enforcement container for model loading.
@@ -87,7 +89,7 @@ using our provided enforcement container image to load models, but it is not
 strictly necessary. Future implementations will not overwrite the Pickle module.
 
 
-# Evaluating PickleBall on a library and model
+## Evaluating PickleBall on a library and model
 
 We evaluate PickleBall on a dataset of models. We identify the libraries used to
 produce the model and the class implemented by the model. PickleBall generates a
@@ -138,7 +140,7 @@ To add a library to the evaluation dataset:
 If the `load.py` script successfully executes for all model classes in the
 evaluation dataset, then we consider the evaluation of the library a success.
 
-# Run inference tests
+## Run inference tests
 
 In the inference docker container:
 
@@ -146,7 +148,7 @@ In the inference docker container:
 # python3 runtests.py
 ```
 
-# Tracing a model
+## Tracing a model
 
 Given a pickle-based model, to generate a trace of the imported and invoked
 callables in the model:
@@ -168,9 +170,9 @@ $ python3 scripts/parsetrace.py data.trace > data.json
 $ python3 scripts/modelunion.py `echo <name of model class>` data.json data2.json ... > baseline.json
 ```
 
-# Troubleshooting
+## Troubleshooting
 
-## Joern crash
+### Joern crash
 
 Non-determinism in Joern may result in a crash on some executions. If one
 occurs, first try re-executing Joern. If this occurs while running the inference

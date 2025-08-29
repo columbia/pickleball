@@ -199,19 +199,23 @@ def main():
     parser.add_argument("csv_file")
     args = parser.parse_args()
 
-    repos: Dict[str, Repository] = read_repos(args.csv_file)
+    all_repos: Dict[str, Repository] = read_repos(args.csv_file)
+    failures: List[str] = failed_downloads(all_repos)
+
+    filtered_repos = {k: v for k, v in all_repos.items()
+                      if k not in failures}
+    repos = filtered_repos
 
     violations = violating_models(repos)
     violating_repositories = violating_repos(violations)
     pytorch_violations = violating_models_pytorch(violations)
 
-    failures = failed_downloads(repos)
-
-    print(f'total repositories: {total_repositories(repos)}')
-    print(f'failed analyses: {len(failures)} ({(len(failures) / total_repositories(repos)) * 100:.2f}%)')
+    print(f'total repositories: {total_repositories(all_repos)}')
+    print(f'failed analyses: {len(failures)} ({(len(failures) / total_repositories(all_repos)) * 100:.2f}%)')
+    print(f'failures: {failures}')
+    print(f'analyzed repositories: {len(repos)}')
     print(f'violating repositories: {len(violating_repositories)} ({(len(violating_repositories) / total_repositories(repos)) * 100:.2f}%)')
-    print(failures)
-
+    print(violating_repositories)
 
     print(f'total models: {total_models(repos)}')
     print(f'violating models: {len(violations)} ({(len(violations) / total_models(repos)) * 100:.2f}%)')

@@ -13,27 +13,6 @@ For each sub-directory in the pickle-defense/analyze/tests/ directory:
 TODO: produce a test report
 """
 
-# - Generate fickling trace and json policy description for each model
-#   - input: subdir/class/*.pkl
-#   - output: subdir/class/*.trace
-#   - output: subdir/class/*.json
-# - Generate the fixture baseline policy for each class
-#   (union of all policies generated per model)
-#   - input: subdir/class/*.json
-#   - input: subdir/class/metadata
-#   - output: subdir/class/baseline.json
-# - Generate Joern CPG
-#   - input: subdir/src/
-#   - output: subdir/out.cpg
-# - Generate inferred policy for each class
-#   - input: subdir/out.cpg
-#   - input: subdir/*/metadata
-#   - output: subdir/*/inferred.json
-# - Report F1 score for each inferred policy compared to baseline:
-#   - input: subdir/*/inferred.json
-#   - input: subdir/*/baseline.json
-#   - output: subdir/*/result.json
-
 import argparse
 import pathlib
 import subprocess
@@ -51,6 +30,8 @@ FIXTURES = [
     'dictionary-types',
     'interprocedural-attribute-writes',
     'reduce',
+    'reduce-ancestor',
+    'reduce-ancestor-library',
     'inherit-from-library',
     #'follow-collection-object'
 ]
@@ -58,8 +39,8 @@ FIXTURES = [
 # Hardcoded for docker container paths
 # TODO: Make configurable
 PATH_TO_JOERN = pathlib.Path('/joern')
-PATH_TO_ANALYSIS_SCRIPT = pathlib.Path('/pickle-defense/analyze/analyze.sc')
-PATH_TO_FIXTURES = pathlib.Path('/pickle-defense/analyze/tests/')
+PATH_TO_ANALYSIS_SCRIPT = pathlib.Path('/pickleball/analyze/analyze.sc')
+PATH_TO_FIXTURES = pathlib.Path('/pickleball/analyze/tests/')
 
 RED = '\033[91m'
 GREEN = '\033[92m'
@@ -122,7 +103,7 @@ def infer_policy(
 
 def compare_policies(policy: pathlib.Path, baseline: pathlib.Path) -> Tuple[float, float]:
 
-    result = compare.compare_json_files(str(policy), str(baseline))
+    result = compare.compare_json_files(str(baseline), str(policy))
     global_scores = result["global_lines"]
     reduce_scores = result["reduce_lines"]
     return (global_scores, reduce_scores)
@@ -194,7 +175,7 @@ def main():
             # Compare the policy to a test baseline
             global_scores, reduce_scores = compare_policies(inferred_path, baseline_path)
 
-            if global_scores["precision"] < 1.0 or reduce_scores["precision"] < 1.0:
+            if global_scores["recall"] < 1.0 or reduce_scores["recall"] < 1.0:
                 print(f"{RED}[-] FAIL{RESET}")
                 test_results[f'{fixture}-{model_class_name}'] = 'FAIL'
             else:

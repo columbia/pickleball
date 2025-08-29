@@ -1,0 +1,15 @@
+FROM pickleball-enforce-deb11:latest
+
+RUN apt-get update && apt-get install -y git ffmpeg libsm6 libxext6
+
+# Path relative to evaluation directory
+COPY ./libraries/LanguageBind /languagebind
+
+WORKDIR /languagebind
+RUN pip install -r requirements.txt
+RUN pip install torch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1
+ENV PYTHONPATH=/languagebind
+
+# Relative to evaluation
+COPY ./enforcement/utils/languagebind.patch /root/languagebind.patch
+RUN cd / && patch -p1 < /root/languagebind.patch

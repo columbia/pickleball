@@ -1,0 +1,7 @@
+FROM pickleball-enforce:latest
+
+RUN pip3 install flair
+
+# Relative to evaluation/enforcement
+COPY ./utils/flair.patch /root/flair.patch
+RUN cd /root && patch -p1 < /root/flair.patch

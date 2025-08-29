@@ -1,0 +1,48 @@
+{
+  "flair/models/sequence_tagger_model.py:<module>.SequenceTagger": {
+    "globals": [
+        "torch.nn.backends.thnn._get_thnn_function_backend",
+        "torch.backends.cudnn.rnn.Unserializable",
+        "flair.embeddings.token.FlairEmbeddings",
+        "flair.models.language_model.LanguageModel",
+        "pathlib.PosixPath",
+        "flair.embeddings.token.CharacterEmbeddings",
+        "flair.embeddings.FlairEmbeddings",
+        "gensim.models.keyedvectors.Word2VecKeyedVectors",
+        "flair.trainers.plugins.functional.linear_scheduler.LinearSchedulerPlugin",
+        "torch.optim.sgd.SGD",
+        "flair.models.prefixed_tagger.EntityTypeTaskPromptAugmentationStrategy",
+        "torch.nn.modules.linear.Linear",
+        "flair.data.Dictionary",
+        "torch.FloatStorage",
+        "torch.LongStorage",
+        "torch.optim.adamw.AdamW",
+        "torch.torch_version.TorchVersion",
+        "flair.training_utils.AnnealOnPlateau",
+        "collections.OrderedDict",
+        "torch.nn.modules.sparse.Embedding",
+        "torch.nn.modules.dropout.Dropout",
+        "torch.nn.modules.rnn.LSTM",
+        "flair.trainers.plugins.loggers.tensorboard.TensorboardLogger",
+        "flair.embeddings.token.TransformerWordEmbeddings",
+        "gensim.models.keyedvectors.Vocab",
+        "torch.optim.lr_scheduler.OneCycleLR",
+        "collections.defaultdict",
+        "flair.optim.LinearSchedulerWithWarmup",
+        "torch._utils._rebuild_tensor_v2",
+        "torch._utils._rebuild_parameter",
+        "flair.embeddings.token.WordEmbeddings",
+        "flair.embeddings.token.StackedEmbeddings",
+        "flair.embeddings.StackedEmbeddings",
+        "_io.BytesIO"
+    ],
+    "reduces": [
+        "torch.nn.backends.thnn._get_thnn_function_backend",
+        "pathlib.PosixPath",
+        "collections.defaultdict",
+        "collections.OrderedDict",
+        "torch._utils._rebuild_tensor_v2",
+        "torch._utils._rebuild_parameter"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+FROM pickleball-enforce:latest
+
+# TODO: pin version
+RUN pip3 install pysentimiento
+RUN pip3 install transformers==4.46.1
+
+# Relative to the evaluation directory
+COPY ./enforcement/utils/pysentimiento.patch /root/pysentimiento.patch
+RUN cd /root && patch -p1 < /root/pysentimiento.patch
+
+COPY ./enforcement/utils/modeling_utils.patch /root/modeling_utils.patch
+RUN cd /root && patch -p1 < /root/modeling_utils.patch

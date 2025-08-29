@@ -1,0 +1,3 @@
+FROM control-load-deb11:latest
+
+RUN pip3 install tner numpy==1.23

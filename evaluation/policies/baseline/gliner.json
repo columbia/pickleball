@@ -1,0 +1,1 @@
+{"model.py:<module>.GLiNER": {"globals": ["torch.FloatStorage", "torch._utils._rebuild_tensor_v2", "collections.OrderedDict"], "reduces": ["torch._utils._rebuild_tensor_v2", "collections.OrderedDict"]}}

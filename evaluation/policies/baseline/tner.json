@@ -1,0 +1,1 @@
+{"ner_model.py:<module>.TransformersNER": {"globals": ["torch.LongStorage", "torch._utils._rebuild_tensor_v2", "torch.FloatStorage", "collections.OrderedDict"], "reduces": ["collections.OrderedDict", "torch._utils._rebuild_tensor_v2"]}}

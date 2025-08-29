@@ -1,0 +1,25 @@
+--- a/pickle-venv/lib/python3.11/site-packages/pyannote/audio/models/embedding/wespeaker/__init__.py	2025-02-24 16:21:52.917294631 +0000
++++ b/pickle-venv/lib/python3.11/site-packages/pyannote/audio/models/embedding/wespeaker/__init__.py	2025-02-24 16:21:38.649086434 +0000
+@@ -23,6 +23,7 @@
+
+ from functools import lru_cache, partial
+ from typing import Optional
++from pklballcheck import _pklball_accessed_attrs
+
+ import torch
+ import torch.nn.functional as F
+@@ -371,6 +372,14 @@ class WeSpeakerResNet34(BaseWeSpeakerRes
+             num_mel_bins, 256, pooling_func="TSTP", two_emb_layer=False
+         )
+
++    def __getattribute__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return object.__getattribute__(self, name)
++
++    def __getattr__(self, name):
++        _pklball_accessed_attrs.add(name)
++        return super().__getattr__(name)
++
+
+
+ class WeSpeakerResNet152(BaseWeSpeakerResNet):

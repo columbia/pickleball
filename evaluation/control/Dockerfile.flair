@@ -1,0 +1,3 @@
+FROM control-load:latest
+
+RUN pip3 install flair

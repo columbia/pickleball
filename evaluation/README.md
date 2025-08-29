@@ -255,4 +255,4 @@ This will produce a table showing the load time overheads of the PickleBall
 loader. To rerun this experiment, delete the file at `results/times.csv` and
 rerun the above scripts.
 
-TODO: Neo, can you provide some text about how this might fluctuate?
+This experiment can be noisy and load times for the same model may vary between runs. To counteract this, our script first loads each model 3 times without measuring the load times to ensure it has been loaded in memory, then measures the load time for 10 more loads, and finally presents the average load time after removing outliers. This reduces the fluctuation due to noise but does not completely eliminate it, so the overhead of the PickleBall loader may vary across runs and may even have negative overhead (i.e., speedup) for some models. However, you should still see a similar pattern: the overhead of using the PickleBall loader should be relatively small.

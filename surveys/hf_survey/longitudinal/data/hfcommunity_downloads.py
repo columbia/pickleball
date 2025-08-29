@@ -18,7 +18,8 @@ zenodo_urls = [
     "https://zenodo.org/records/8240989/files/dump_20230812.zip?download=1",
     "https://zenodo.org/records/8324809/files/dump_20230907.zip?download=1",
     "https://zenodo.org/records/10020642/files/dump_20231009.zip?download=1", 
-    # "https://zenodo.org/records/13929743/files/dump_hfc_20241001.zip?download=1"
+    "https://zenodo.org/records/12782059/files/dump-hf_test-202407161033.rar?download=1",
+    "https://zenodo.org/records/13929743/files/dump_hfc_20241001.zip?download=1",
 ]
 
 # Local directory where files will be saved
@@ -47,10 +48,10 @@ def download_file(url, save_path):
         print(f"Failed to download file from {url}")
         return None
 
-# Function to extract a zip file
-def extract_zip(file_path, extract_to):
+# Function to extract a file
+def extract_file(file_path, extract_to):
     try:
-        # Create a subfolder based on the zip file's name
+        # Create a subfolder based on the file's name
         subfolder_name = file_path.stem
         subfolder_path = extract_to / subfolder_name
         
@@ -60,8 +61,19 @@ def extract_zip(file_path, extract_to):
         
         subfolder_path.mkdir(parents=True, exist_ok=True)
 
-        with zipfile.ZipFile(file_path, 'r') as zf:
-            zf.extractall(path=subfolder_path)
+        # Check file extension
+        if file_path.suffix.lower() == '.zip':
+            with zipfile.ZipFile(file_path, 'r') as zf:
+                zf.extractall(path=subfolder_path)
+        elif file_path.suffix.lower() == '.rar':
+            # Use unrar command line tool
+            command = f"unrar x -o+ {shlex.quote(str(file_path))} {shlex.quote(str(subfolder_path))}"
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise Exception(f"Failed to extract RAR file: {result.stderr}")
+        else:
+            raise Exception(f"Unsupported file format: {file_path.suffix}")
+
         print(f"Extracted {file_path} to {subfolder_path}")
         return subfolder_path
     except Exception as e:
@@ -180,8 +192,8 @@ extracted_path.mkdir(parents=True, exist_ok=True)
 # Loop through all URLs, download, and extract files
 extracted_folders = []
 for url in zenodo_urls:
-    # Extract the folder name from the URL
-    folder_name = url.split('/')[-1].split('?')[0].replace('.zip', '')
+    # Extract the folder name from the URL, handling both .zip and .rar files
+    folder_name = url.split('/')[-1].split('?')[0].replace('.zip', '').replace('.rar', '')
     unique_extract_path = extracted_path / folder_name
 
     # Check if the extracted folder already exists
@@ -189,9 +201,9 @@ for url in zenodo_urls:
         print(f"Folder {unique_extract_path} already exists and is not empty. Skipping download and extraction.")
         extracted_folders.append((unique_extract_path, folder_name))
     else:
-        zip_file = download_file(url, path_data)
-        if zip_file:
-            extracted_folder = extract_zip(zip_file, extracted_path)
+        downloaded_file = download_file(url, path_data)
+        if downloaded_file:
+            extracted_folder = extract_file(downloaded_file, extracted_path)
             if extracted_folder:
                 extracted_folders.append((extracted_folder, folder_name))
 

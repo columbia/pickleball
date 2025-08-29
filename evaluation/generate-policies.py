@@ -2,15 +2,14 @@
 
 import argparse
 import importlib
-import pathlib
 import os
+import pathlib
 import sys
 import time
 import tomllib
-from datetime import datetime
-
 from dataclasses import dataclass
-from typing import Tuple, List, Dict
+from datetime import datetime
+from typing import Dict, List, Tuple
 
 now = datetime.now()
 timestamp = now.strftime("%Y-%m-%d-%H:%M:%S")
@@ -26,7 +25,7 @@ if parent_dir not in sys.path:
 module_name = "pickleball-generate"
 pickleball = importlib.__import__(module_name)
 
-OUTPATH = pathlib.Path('/tmp')
+OUTPATH = pathlib.Path("/tmp")
 
 
 @dataclass
@@ -38,6 +37,7 @@ class SystemConfig(object):
     joern_dir: pathlib.Path
     analyzer_path: pathlib.Path
     timelog: pathlib.Path
+
 
 @dataclass
 class LibraryConfig(object):
@@ -54,52 +54,75 @@ class LibraryConfig(object):
 # Parse the manifest file into a SystemConfig and and list of LibraryConfigs
 def parse_manifest(manifest: pathlib.Path) -> Tuple[SystemConfig, List[LibraryConfig]]:
 
-    with open(manifest, 'rb') as manifest_file:
+    with open(manifest, "rb") as manifest_file:
         config = tomllib.load(manifest_file)
 
-    mem: int = config['system']['mem']
-    libraries_dir = pathlib.Path(config['system']['libraries_dir'])
-    cache_dir = pathlib.Path(config['system']['cache_dir'])
-    policies_dir = pathlib.Path(config['system']['policies_dir'])
-    joern_dir = pathlib.Path(config['system']['joern_dir'])
-    analyzer_path = pathlib.Path(config['system']['analyzer_path'])
+    mem: int = config["system"]["mem"]
+    libraries_dir = pathlib.Path(config["system"]["libraries_dir"])
+    cache_dir = pathlib.Path(config["system"]["cache_dir"])
+    policies_dir = pathlib.Path(config["system"]["policies_dir"])
+    joern_dir = pathlib.Path(config["system"]["joern_dir"])
+    analyzer_path = pathlib.Path(config["system"]["analyzer_path"])
 
-    systemcfg = SystemConfig(mem=mem, libraries_dir=libraries_dir,
-                        cache_dir=cache_dir, policies_dir=policies_dir,
-                        joern_dir=joern_dir, analyzer_path=analyzer_path,
-                        timelog=None)
+    systemcfg = SystemConfig(
+        mem=mem,
+        libraries_dir=libraries_dir,
+        cache_dir=cache_dir,
+        policies_dir=policies_dir,
+        joern_dir=joern_dir,
+        analyzer_path=analyzer_path,
+        timelog=None,
+    )
 
-    def parse_library_config(library_name: str, library_setting: Dict[str, str],
-                            systemcfg: SystemConfig):
+    def parse_library_config(
+        library_name: str, library_setting: Dict[str, str], systemcfg: SystemConfig
+    ):
 
-        library_path = systemcfg.libraries_dir / pathlib.Path(library_setting['library_path'])
-        model_class = library_setting['model_class']
-        cpg_mode = library_setting['use_cpg']
-        ignore_paths = library_setting['ignore_paths'] if 'ignore_paths' in library_setting else ''
-        policy_path = systemcfg.policies_dir / pathlib.Path(f'{library_name}.json')
-        cpg_path = OUTPATH / pathlib.Path(f'{library_name}.cpg')
-        log_path = OUTPATH / pathlib.Path(f'{library_name}.log')
+        library_path = systemcfg.libraries_dir / pathlib.Path(
+            library_setting["library_path"]
+        )
+        model_class = library_setting["model_class"]
+        cpg_mode = library_setting["use_cpg"]
+        ignore_paths = (
+            library_setting["ignore_paths"] if "ignore_paths" in library_setting else ""
+        )
+        policy_path = systemcfg.policies_dir / pathlib.Path(f"{library_name}.json")
+        cpg_path = OUTPATH / pathlib.Path(f"{library_name}.cpg")
+        log_path = OUTPATH / pathlib.Path(f"{library_name}.log")
 
-        return LibraryConfig(name=library_name, library_path=library_path,
-                             model_class=model_class, cpg_mode=cpg_mode,
-                             ignore_paths=ignore_paths, policy_path=policy_path,
-                             cpg_path=cpg_path, log_path=log_path)
+        return LibraryConfig(
+            name=library_name,
+            library_path=library_path,
+            model_class=model_class,
+            cpg_mode=cpg_mode,
+            ignore_paths=ignore_paths,
+            policy_path=policy_path,
+            cpg_path=cpg_path,
+            log_path=log_path,
+        )
 
     # Run parse_library_config on each library entry in the manifest file.
-    librarycfgs = [parse_library_config(library, values, systemcfg) for library, values in config['libraries'].items()]
+    librarycfgs = [
+        parse_library_config(library, values, systemcfg)
+        for library, values in config["libraries"].items()
+    ]
 
     return systemcfg, librarycfgs
+
 
 def write_time_log(libraryname, logfile, time):
 
     with logfile.open("a") as file:
-        file.write(f"{libraryname},{time}\n") 
+        file.write(f"{libraryname},{time}\n")
 
-def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int) -> None:
+
+def generate_policy(
+    librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int
+) -> None:
 
     # TODO: Timing
-    print('-------------------------------------------------------------')
-    print(f'Generating CPG and policy for: {librarycfg.name}')
+    print("-------------------------------------------------------------")
+    print(f"Generating CPG and policy for: {librarycfg.name}")
     try:
 
         start = time.time()
@@ -109,7 +132,7 @@ def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int
             systemmem,
             out_path=librarycfg.cpg_path,
             ignore_paths=librarycfg.ignore_paths,
-            use_cpg=librarycfg.cpg_mode
+            use_cpg=librarycfg.cpg_mode,
         )
 
         pickleball.generate_policy(
@@ -120,11 +143,11 @@ def generate_policy(librarycfg: LibraryConfig, systemcfg: SystemConfig, mem: int
             systemcfg.joern_dir,
             systemcfg.cache_dir,
             librarycfg.policy_path,
-            log_path=librarycfg.log_path
+            log_path=librarycfg.log_path,
         )
         end = time.time()
-        
-        print(f'TIME: {end - start}')
+
+        print(f"TIME: {end - start}")
         write_time_log(librarycfg.name, systemcfg.timelog, end - start)
 
     except pickleball.JoernRuntimeError as err:
@@ -140,26 +163,27 @@ def print_libraries(librarycfs: List[LibraryConfig]) -> None:
         print(library.name)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description="Generate all policies defined for an experiment")
+        description="Generate all policies defined for an experiment"
+    )
     parser.add_argument(
         "manifest",
         type=pathlib.Path,
-        help="Path to manifest file describing experiment setup"
+        help="Path to manifest file describing experiment setup",
     )
     parser.add_argument(
-        "--list-libraries",
-        action='store_true',
-        help="List all libraries in manifest"
+        "--list-libraries", action="store_true", help="List all libraries in manifest"
     )
     parser.add_argument(
         "--fixtures",
         nargs="*",
-        help=("A list of individual libraries to evaluate. If none are provided, "
-            "defaults to generating policies for all libraries"),
-        default=[]
+        help=(
+            "A list of individual libraries to evaluate. If none are provided, "
+            "defaults to generating policies for all libraries"
+        ),
+        default=[],
     )
     args = parser.parse_args()
 
@@ -171,8 +195,9 @@ if __name__ == '__main__':
 
     if args.fixtures:
         # Filter the libraries specified in the fixture list
-        evaluation_libraries: List[LibraryConfig] = [library for library in librarycfgs
-                                                     if library.name in args.fixtures]
+        evaluation_libraries: List[LibraryConfig] = [
+            library for library in librarycfgs if library.name in args.fixtures
+        ]
     else:
         # Otherwise, use all libraries in the manifest
         evaluation_libraries: List[LibraryConfig] = librarycfgs
@@ -182,7 +207,8 @@ if __name__ == '__main__':
     else:
         systemmem = pickleball.gb_to_kb(systemcfg.mem)
 
-    systemcfg.timelog = systemcfg.policies_dir / pathlib.Path(f'.{timestamp}.timelog')
+    # systemcfg.timelog = systemcfg.policies_dir / pathlib.Path(f'.{timestamp}.timelog')
+    systemcfg.timelog = pathlib.Path(f"/results/{timestamp}.timelog")
     systemcfg.timelog.write_text("library,time\n")
     for librarycfg in evaluation_libraries:
         generate_policy(librarycfg, systemcfg, systemmem)

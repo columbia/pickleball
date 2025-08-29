@@ -26,6 +26,7 @@ services:
       - pickleball-generate
     volumes:
       - .:/pickleball
+      - ./results:/results
     command: /pickleball/evaluation/policy-evaluation.sh
 
   modelscan:

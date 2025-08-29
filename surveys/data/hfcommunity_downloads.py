@@ -27,8 +27,8 @@ path_data = Path("./")
 extracted_path = path_data / "hfcommunity"
 
 # Database credentials
-db_user = "root"
-db_password = "19980818"
+db_user = os.getenv("DB_USER")
+db_password = os.getenv("DB_PASSWORD")
 
 # Function to download and save files
 def download_file(url, save_path):

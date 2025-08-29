@@ -201,6 +201,10 @@ Tool        #TP     #TN     #FP     #FN     FPR     FNR
 ModelScan   75      236     16      9       6.3%    10.7%
 ```
 
+TODO: explanation -
+
+TODO: Analysis - compare these results to Row X in Table 2
+
 ### ModelTracer (75 mins)
 ```bash
 $ bash RQ4/eval-modeltracer.sh
@@ -217,10 +221,12 @@ ModelTracer 43      252     0       41      0%      48.8%
 $ docker run -dit --name modeltracer_container modeltracer:latest
 $ docker cp $MALICIOUS_MODEL/mkiani/gpt2-exec/gpt2-exec/pytorch_model.bin modeltracer_container:/root/modeltracer/pytorch_model.bin
 $ docker exec -it modeltracer_container /bin/sh
-$ python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
-$ python3 -m scripts.parse_tracer
+# python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
+# python3 -m scripts.parse_tracer
 ```
 
+TODO: add explanation
+TODO: add analysis check - Row X in Table 2
 
 ### Weights-Only (5 mins)
 ```sh
@@ -233,20 +239,34 @@ Tool        #TP     #TN     #FP     #FN     FPR     FNR
 WeightsOnly 84      157     95      0       37.7%   0.0%
 ```
 
+TODO: add explanation - this also loads malicious models (in addition to the
+benign ones from Table 1)
+
+TODO: add analysis - Row X in Table 2
+
 ### PickleBall
+
 The results are already obtained and explained in RQ1 and RQ2.
+
+TODO: the final row in Table 2 is reproduced from results already checked above.
 
 ## Performance
 
 ### Figure 6 - Policy Generation Runtime
 
-The policy generation should have produced a file under `results/<timestamp>.timelog` containing the time to generate the policy for each library, corresponding to Figure 6. The results can be pretty-printed as a table by running 
+The policy generation should have produced a file under
+`results/<timestamp>.timelog` containing the time to generate the policy for
+each library, corresponding to Figure 6. The results can be pretty-printed as a
+table by running
 
 ```
 python3 scripts/analyze_generation_times.py
 ```
 
-In our experiment setup (14-core Intel i7 CPU and 32GB of RAM), the policy generation required anywhere ~10 to ~30 seconds depending on the library. The exact numbers may vary due to noise or different setups, but you should expect to see generation times in a similar range. 
+In our experiment setup (14-core Intel i7 CPU and 32GB of RAM), the policy
+generation required anywhere ~10 to ~30 seconds depending on the library. The
+exact numbers may vary due to noise or different setups, but you should expect
+to see generation times in a similar range.
 
 ### Figure 7 - Policy Enforcement Runtime Overhead
 
@@ -262,4 +282,12 @@ This will produce a table showing the load time overheads of the PickleBall
 loader. To rerun this experiment, delete the file at `results/times.csv` and
 rerun the above scripts.
 
-This experiment can be noisy and load times for the same model may vary between runs. To counteract this, our script first loads each model 3 times without measuring the load times to ensure it has been loaded in memory, then measures the load time for 10 more loads, and finally presents the average load time after removing outliers. This reduces the fluctuation due to noise but does not completely eliminate it, so the overhead of the PickleBall loader may vary across runs and may even have negative overhead (i.e., speedup) for some models. However, you should still see a similar pattern: the overhead of using the PickleBall loader should be relatively small.
+This experiment can be noisy and load times for the same model may vary between
+runs. To counteract this, our script first loads each model 3 times without
+measuring the load times to ensure it has been loaded in memory, then measures
+the load time for 10 more loads, and finally presents the average load time
+after removing outliers. This reduces the fluctuation due to noise but does not
+completely eliminate it, so the overhead of the PickleBall loader may vary
+across runs and may even have negative overhead (i.e., speedup) for some models.
+However, you should still see a similar pattern: the overhead of using the
+PickleBall loader should be relatively small.

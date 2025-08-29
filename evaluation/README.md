@@ -78,6 +78,7 @@ $ docker compose run generate-all
 * `evaluation/policies/<library>.json` file is created for each library in the
   evaluation dataset. These files are the policies that PickleBall generates
   after analyzing the library source code.
+* `results/<timestamp>.timelog` file containing the elapsed time in seconds to generate each policy for each library.
 
 **Explanation:**
 
@@ -239,7 +240,13 @@ The results are already obtained and explained in RQ1 and RQ2.
 
 ### Figure 6 - Policy Generation Runtime
 
-TODO
+The policy generation should have produced a file under `results/<timestamp>.timelog` containing the time to generate the policy for each library, corresponding to Figure 6. The results can be pretty-printed as a table by running 
+
+```
+python3 scripts/analyze_generation_times.py
+```
+
+In our experiment setup (14-core Intel i7 CPU and 32GB of RAM), the policy generation required anywhere ~10 to ~30 seconds depending on the library. The exact numbers may vary due to noise or different setups, but you should expect to see generation times in a similar range. 
 
 ### Figure 7 - Policy Enforcement Runtime Overhead
 

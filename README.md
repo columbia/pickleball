@@ -85,49 +85,9 @@ Primary components:
 
 TODO
 
-## Evaluation
+TODO: discuss the cache
 
-### Evaluation Setup
-
-TODO: Move to `evaluation/README.md`
-
-Create a .env file that defines the following environment variables:
-
-```
-BENIGN_MODELS=<path to benign model dataset>
-MALICIOUS_MODELS=<path to malicious model dataset>
-DATASETS=<path to evaluation datasets>
-```
-
-Build all evaluation containers:
-
-```
-$ docker compose build
-```
-
-Generate policies for evaluation dataset:
-
-```
-$ docker compose run generate-all
-```
-
-Policies will be output in the `evaluation/policies` directory.
-
-Enforce policies:
-
-```
-$ docker compose run enforce-all
-```
-
-Load time performance experiment:
-
-```
-$ mkdir results
-$ scripts/run-load-time.sh
-$ python3 scripts/analyze_load_times.py
-```
-
-This will produce a table showing the load time overheads of the PickleBall loader. To rerun this experiment, delete the file at `results/times.csv` and rerun the above scripts.
+### Loading a Model while Enforcing a Policy
 
 ## Run Joern tests
 

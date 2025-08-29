@@ -1,10 +1,11 @@
 FROM control-load-deb11:latest
 
-RUN pip3 install transformers==4.46.1
 
 RUN apt-get update && apt-get install -y rustc
-RUN pip3 install tweetnlp
+RUN pip3 install tweetnlp==0.4.4
+RUN pip3 install transformers==4.46.1
+RUN pip3 install pyarrow==20.0.0
+RUN pip3 install huggingface_hub==0.25.0
 
 COPY ./enforcement/utils/modeling_utils_deb11.patch /root/modeling_utils.patch
 RUN cd /root && patch -p1 < /root/modeling_utils.patch
-

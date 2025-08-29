@@ -1,22 +1,22 @@
-## Tracing a model
+## 2025-04-03
 
-Given a pickle-based model, to generate a trace of the imported and invoked
-callables in the model:
+`surveys/hf_survey/longitudinal/pickle_only_models_mar2025.txt`:
+MARCH-PICKLE: List of repositories that contain only pickle models, and their
+number of downloads, for March 2025.
 
-1. Extract the pickle program from the model. For PyTorch v1.3 models, this
-   means unzipping the `pytorch_model.bin` file to access `data.pkl`.
+`surveys/paper_survey_1664.csv`:
+PREV-ANALYZED: Outdated CSV containing results of downloading 1664 repositories, tracing the
+pickle models, and tracking the callables used.
 
-2. Use the fickling module and our scripts to generate a JSON trace of all
-   model imports and invocations:
+To sample `n` models from the MARCH-PICKLE, but reuse analysis that we've
+already done, I determined which new repositories are introduced in
+MARCH-PICKLE that are not already in PREV-ANALYZED:
+- use the `scripts/determine_additional_downloads.py` - the output
+  `missing_models` file contains a list of repos that must be downloaded and
+  traced.
+- Use it as input to the `scripts/download_model.py` script to begin download:
+  `python3 scripts/download_model.py --repositories-list missing_models --outdir <path>`
+- Post-process results:
 
-```
-$ fickling --trace data.pkl > data.trace
-$ python3 scripts/parsetrace.py data.trace > data.json
-```
-
-3. (Optional) Given a set of model traces, generate a trace that contains all
-   imports and invocations seen in the model traces.
-```
-$ python3 scripts/modelunion.py `echo <name of model class>` data.json data2.json ... > baseline.json
-```
+- Combine results with previous analysis:
 

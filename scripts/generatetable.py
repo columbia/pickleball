@@ -261,7 +261,7 @@ if __name__ == "__main__":
             success = int(success_str)
             total = int(total_str)
 
-            assert library_name in libraries.keys()
+            assert library_name in libraries.keys(), f"{library_name} not found"
 
             libraries[library_name].models_attempted = total
             libraries[library_name].models_loaded = success

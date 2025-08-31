@@ -34,23 +34,66 @@ PickleBall implementation as described in the top level README.
 
 ## Preparation
 
-Download all models the evaluation dataset from the following locations:
-- Benign models: TODO
-- Malicious models: TODO
+The following steps assume that you will evaluate using the full benign model
+dataset (130GB compressed). We also provide an abridged dataset (10GB
+compressed) if you wish to evaluate but not completely reproduce all results.
+If you choose to use the abridged dataset, follow the steps below but update
+them where noted.
 
-Decompress each at a location outside of this code repository.
-
-1. Create a `.env` file in the repository root (i.e., `../.env`) that sets the
-following environment variables:
+1. Create a directories outside of this repository to host the model datasets.
+For example, if you choose to use your home directory, run the following commands:
 
 ```
-BENIGN_MODELS=<path to benign models>
-MALICIOUS_MODELS=<path to malicious models>
+$ mkdir -p ~/models/benign
+$ mkdir -p ~/models/malicious
+
+# Optional
+$ mkdir -p ~/models/benign-abridged
 ```
 
-2. Build all docker containers.
+2. Download and extract the model dataset archives and place them in their respective directories.
 
-From the repository root:
+Download URLs:
+* benign models: https://zenodo.org/records/16974645/files/benign.tar.gz?download=1
+* malicious models: https://zenodo.org/records/16891393/files/malicious.tar.gz?download=1
+* benign-abridged models: https://zenodo.org/records/16891393/files/benign-abridged.tar.gz?download=1
+
+Note that the archives decompress into the directory that they are placed in;
+they do not create a new subdirectory.
+
+Downloading and decompressing all 140GB of data may take ~1 hour depending on
+network speeds.
+
+```
+$ cd ~/models/benign
+$ wget https://zenodo.org/records/16974645/files/benign.tar.gz?download=1
+$ tar xzvf benign.tar.gz
+$ cd ~/models/malicious
+$ wget https://zenodo.org/records/16891393/files/malicious.tar.gz?download=1
+$ tar xzvf malicious.tar.gz
+
+# Optional
+$ cd ~/models/benign-abridged
+$ wget https://zenodo.org/records/16891393/files/benign-abridged.tar.gz?download=1
+$ tar xzvf benign-abridged.tar.gzz
+$ mv models-list-abdridged.txt models-list.txt
+```
+
+**Note:** if you use the benign-abridged models, please ensure that you rename the
+`models-list-abridged.txt` file to `models-list.txt`.
+
+3. In the PickleBall repository root, create a `.env` file that sets the following 
+environment variables:
+
+```
+BENIGN_MODELS=<path to benign models directory (e.g., ~/models/benign)>
+MALICIOUS_MODELS=<path to malicious models (e.g., ~/models/malicious)>
+```
+
+If you choose to evaluate on the abridged models, change the `BENIGN_MODELS`
+value to point to the `benign-abridged` directory.
+
+4. Build all docker containers.
 
 ```
 $ docker compose build

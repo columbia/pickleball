@@ -1,9 +1,9 @@
 # Evaluation
 
 PickleBall's evaluation (Section 6) addresses four Research Questions with
-the following claims:
+the following claims when evaluated on our model datasets:
 
-* RQ1: PickleBall generates policies that blocks all malicious models from
+* RQ1: PickleBall generates policies that blocks 100% of malicious models from
   loading.
 * RQ2: PickleBall generates policies that loads 79% of benign models.
 * RQ3: PickleBall generates policies in a reasonable amount of time, and it
@@ -11,8 +11,8 @@ the following claims:
 * RQ4: PickleBall compares favorably to other state of the art tools.
 
 This README provides steps to reproduce these claims. These steps assume that
-you have access to this code repository and the malicious and benign models
-distributed in the PickleBall artifact.
+you have access to this code repository and the malicious and benign model
+datasets distributed in the PickleBall artifact.
 
 To validate these claims, the steps below demonstrate how to reproduce the data
 presented in Table 1, Table 2, Figure 6, and Figure 7 of the PickleBall paper.
@@ -32,13 +32,34 @@ These tables and figures support our main claims:
 Prior to reproducing the evaluation, you should familiarize yourself with the
 PickleBall implementation as described in the top level README.
 
+Some steps including loading malicious pickle models. We annotate these
+steps with a **!!WARNING!!** indicator. If following these steps, all malicious
+models will be loaded in containerized environments and not directly executed
+on your host machine, and the payloads will not affect the system state. If
+additional protection is desired, you may optionally prepare this evaluation
+in an isolated virtual machine environment. An Ubuntu 24.04 virtual OS ought to
+be sufficient.
+
+## Note: Benign Models Dataset
+
+The dataset containing benign models (`benign.tar.gz`) is 130GB when compressed
+and 150GB when decompressed. In order to fully reproduce our results, you must
+be able to host this dataset locally.
+However, we also provide an abridged version of the dataset
+(`benign-abridged.tar.gz`) in our artifact that is 9GB when compressed and
+11GB when decompressed. If the full dataset is prohibitively large, you may
+choose to use this smaller dataset to validate that PickleBall works as
+expected.
+
+In the abridged dataset, we provide one model from each library that PickleBall
+is able to load successfully. We also provide one failing model from each
+library when PickleBall fails to load all models for that library.
+
 ## Preparation
 
 The following steps assume that you will evaluate using the full benign model
-dataset (130GB compressed). We also provide an abridged dataset (10GB
-compressed) if you wish to evaluate but not completely reproduce all results.
-If you choose to use the abridged dataset, follow the steps below but update
-them where noted.
+dataset. If you choose to use the abridged dataset, follow the steps below but
+update them where noted.
 
 1. Create a directories outside of this repository to host the model datasets.
 For example, if you choose to use your home directory, run the following commands:
@@ -53,7 +74,7 @@ $ mkdir -p ~/models/benign-abridged
 
 2. Download and extract the model dataset archives and place them in their respective directories.
 
-Download URLs:
+Download URLs (TODO: finalize links once uploaded):
 * benign models: https://zenodo.org/records/16974645/files/benign.tar.gz?download=1
 * malicious models: https://zenodo.org/records/16891393/files/malicious.tar.gz?download=1
 * benign-abridged models: https://zenodo.org/records/16891393/files/benign-abridged.tar.gz?download=1
@@ -82,7 +103,7 @@ $ mv models-list-abdridged.txt models-list.txt
 **Note:** if you use the benign-abridged models, please ensure that you rename the
 `models-list-abridged.txt` file to `models-list.txt`.
 
-3. In the PickleBall repository root, create a `.env` file that sets the following 
+3. In the PickleBall repository root, create a `.env` file that sets the following
 environment variables:
 
 ```
@@ -92,6 +113,9 @@ MALICIOUS_MODELS=<path to malicious models (e.g., ~/models/malicious)>
 
 If you choose to evaluate on the abridged models, change the `BENIGN_MODELS`
 value to point to the `benign-abridged` directory.
+
+Our scripts and docker-compose configuration use these environment variables to
+mount the datasets into the docker containers.
 
 4. Build all docker containers.
 
@@ -156,7 +180,7 @@ than on larger (e.g., server with 128 cores and 256GB RAM).
 
 ### 2. Enforce policies while attempting to load all benign models in the dataset
 
-**Command** (approximately 20 minutes to execute):
+**Command** (~40 min.):
 
 ```
 $ ./enforce-all.sh
@@ -194,22 +218,23 @@ $ python3 ../scripts/generatetable.py manifest.toml enforcement/results
 
 **Expected result**:
 
-This outputs a LaTeX table (that can optionally be compiled with pdflatex, or
-compared directly) and compared to Table 1. The final column ought to match the
-final column of Table 1, indicating the number of models that PickleBall
-successfully loads.
+This outputs a LaTeX table (optionally compiled with pdflatex, or compared
+directly) and compared to Table 1. The final column ought to match the final
+column of Table 1, indicating the number of models that PickleBall successfully
+loads.
 
 The values in the `imports` and `invocations` sections of the table are produced
-by comparing the callables in the generated policies (`evaluation/policies/*.json`)
-to the callables that are observed in the models in the benign dataset, which
-we manually trace and record (`evaluation/policies/baseline/*.json`).
+by comparing the callables in the generated policies
+(`evaluation/policies/*.json`) to the callables that are observed in the models
+in the benign dataset, which we manually trace and record
+(`evaluation/policies/baseline/*.json`).
 
 Note that the generated table does not contain the results from the Weights-Only
 Unpickler (WOUp column in Table 1), which we will collect and analyze next.
 
 ### 4. Enforce Weights Only Unpickler policies while attempting to load all benign models in the dataset
 
-**Command** (approximately 20 minutes to execute):
+**Command** (~40 min.):
 
 ```
 $ docker compose run weightsonly-load-all
@@ -231,19 +256,20 @@ $ python3 ../scripts/generatetable.py manifest.toml weights-only/results-benign
 
 **Expected results**:
 
-This outputs the same LaTeX table as before, but this time the last column should
-match the WOUp column in Table 1, indicating number of models that the
+This outputs the same LaTeX table as before, but this time the last column
+should match the WOUp column in Table 1, indicating number of models that the
 Weights-Only Unpickler successfully loaded.
 
 This concludes the reproduction of Table 1 of our results.
 
 ### 6. Enforce policies while loading malicious models
 
-**Note:** this step will attempt to load malicious models. The `RQ1-blocking.sh`
-script will start a docker container, and all models will be loaded in the
-container. If additional protection is desired, you may create a virtual machine.
+**!!WARNING!!** this step will attempt to load malicious models. The
+`RQ1-blocking.sh` script will start a docker container, and all models will be
+loaded in the container. If additional protection is desired, you may create a
+virtual machine to execute this script.
 
-**Command** (approximately 10 minutes):
+**Command** (~10 min.):
 
 ```sh
 $ ./RQ1-blocking.sh
@@ -287,7 +313,7 @@ to see generation times in a similar range.
 
 ### Figure 7 - Policy Enforcement Runtime Overhead
 
-Load time performance experiment (approximately 5 minutes):
+Load time performance experiment (~5 min.):
 
 ```
 $ mkdir results
@@ -322,7 +348,7 @@ against both malicious and benign models. The following command starts a
 container using the `modelscan:latest` Docker image built earlier and tests each
 model.
 
-**Command** (approximately 20 minutes):
+**Command** (~20 min.):
 
 ```bash
 $ docker compose run modelscan
@@ -352,7 +378,7 @@ alter system state outside of the container, but you may wish to temporarily
 disable network connectivity. The ModelTracer tool that we compare to must
 execute the model in order to trace its behavior.
 
-**Command** (approximately 75 minutes):
+**Command** (~75 min.):
 
 ```bash
 $ ./RQ4-modeltracer.sh
@@ -386,7 +412,7 @@ This step runs the weights-only unpickler against both malicious and benign
 models. The following command starts a container using the `weightsonly:latest`
 Docker image and tests each model.
 
-**Command** (approximately 5 minutes):
+**Command** (~5 min.):
 
 ```sh
 $ docker compose run weightsonly

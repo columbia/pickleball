@@ -9,8 +9,8 @@ Here are the steps to reproduce the results:
 
 TODO: validate download link.
 
-1. Download the 
-   [data.tar.gz](https://zenodo.org/records/16891393/files/data.tar.gz?download=1&preview=1) 
+1. Download the
+   [data.tar.gz](https://zenodo.org/records/16891393/files/data.tar.gz?download=1&preview=1)
    file to the `surveys/` directory and extract it (`tar xzvf data.tar.gz`) to
    create the `surveys/data/` directory.
 
@@ -48,4 +48,26 @@ python figure3.py
 This will generate the proportion of model formats and downloads in March 2025
 (Figure 3 in the paper).
 
-##
+## Pickle Imports Survey
+
+In Section 3.2 we present results showing that many of the pickle models include
+imports that are disallowed by the Weights Only Unpickler.
+
+To reproduce this result, run:
+
+```
+$ ../scripts/process_csv.py traced_models.csv
+```
+
+`traced_models.csv` is a processed file containing imports and metadata of
+models we traced during this survey.
+
+It was created with the `../scripts/download_model.py` script, which downloads
+models from Hugging Face, traces their imports, and deletes the model (to save
+disk space) leaving only the trace file. The output traces were collected into
+a single CSV file using the `analyze_traces.py` script, to output the
+`traced_models.csv` file above.
+
+Reproducing the study in full can take up to a week and may produce different
+results as the model ecosystem changes, so we provide the original processed
+CSV.

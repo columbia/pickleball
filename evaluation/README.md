@@ -3,12 +3,12 @@
 PickleBall's evaluation (Section 6) addresses four Research Questions with
 the following claims when evaluated on our model datasets:
 
-* RQ1: PickleBall generates policies that blocks 100% of malicious models from
+* RQ1: PickleBall generates policies that block 100% of malicious models from
   loading.
-* RQ2: PickleBall generates policies that loads 79% of benign models.
+* RQ2: PickleBall generates policies that load 79% of benign models.
 * RQ3: PickleBall generates policies in a reasonable amount of time, and it
   enforces policies with minimal overhead.
-* RQ4: PickleBall compares favorably to other state of the art tools.
+* RQ4: PickleBall compares favorably to other state-of-the-art tools.
 
 This README provides steps to reproduce these claims. These steps assume that
 you have access to this code repository and the malicious and benign model
@@ -32,7 +32,7 @@ These tables and figures support our main claims:
 Prior to reproducing the evaluation, you should familiarize yourself with the
 PickleBall implementation as described in the top level README.
 
-Some steps including loading malicious pickle models. We annotate these
+Some steps include loading malicious pickle models. We annotate these
 steps with a **!!WARNING!!** indicator. If following these steps, all malicious
 models will be loaded in containerized environments and not directly executed
 on your host machine, and the payloads will not affect the system state. If
@@ -61,7 +61,7 @@ The following steps assume that you will evaluate using the full benign model
 dataset. If you choose to use the abridged dataset, follow the steps below but
 update them where noted.
 
-1. Create a directories outside of this repository to host the model datasets.
+1. Create a directory outside of this repository to host the model datasets.
 For example, if you choose to use your home directory, run the following commands:
 
 ```
@@ -398,12 +398,13 @@ Compared to the second row of Table 2, the above shows 43 TP detections instead 
 
 ```sh
 $ docker run -dit --name modeltracer_container modeltracer:latest
-$ docker cp $MALICIOUS_MODEL/mkiani/gpt2-exec/gpt2-exec/pytorch_model.bin modeltracer_container:/root/modeltracer/pytorch_model.bin
+$ docker cp $MALICIOUS_MODELS/mkiani/gpt2-exec/gpt2-exec/pytorch_model.bin modeltracer_container:/root/modeltracer/pytorch_model.bin
 $ docker exec -it modeltracer_container /bin/sh
 
 # in the container, run:
 $ python3 -m scripts.model_tracer /root/modeltracer/pytorch_model.bin torch
 $ python3 -m scripts.parse_tracer
+# you will see the interactive (Pdb) is shown
 ```
 
 ### Weights-Only Unpickler

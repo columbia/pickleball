@@ -213,23 +213,23 @@ def main():
     print(f'total repositories: {total_repositories(repos)}')
     print(f'failed analyses: {len(failures)} ({(len(failures) / total_repositories(repos)) * 100:.2f}%)')
     print(f'violating repositories: {len(violating_repositories)} ({(len(violating_repositories) / total_repositories(repos)) * 100:.2f}%)')
-    print(violating_repositories)
+    #print(violating_repositories)
 
-    print(f'total models: {total_models(repos)}')
-    print(f'violating models: {len(violations)} ({(len(violations) / total_models(repos)) * 100:.2f}%)')
-    print(violations)
+    #print(f'total models: {total_models(repos)}')
+    #print(f'violating models: {len(violations)} ({(len(violations) / total_models(repos)) * 100:.2f}%)')
+    #print(violations)
 
-    print(f'pytorch_model.bin models: {total_pytorch_bin_models(repos)}')
-    if total_pytorch_bin_models(repos) > 0:
-        print(f'violating models (pytorch_model.bin): {len(pytorch_violations)} ({(len(pytorch_violations) / total_pytorch_bin_models(repos)) * 100:.2f}%)')
-        print(f'violating pytorch_model.bin models: {[model[0] for model in pytorch_violations]}')
+    #print(f'pytorch_model.bin models: {total_pytorch_bin_models(repos)}')
+    #if total_pytorch_bin_models(repos) > 0:
+    #    print(f'violating models (pytorch_model.bin): {len(pytorch_violations)} ({(len(pytorch_violations) / total_pytorch_bin_models(repos)) * 100:.2f}%)')
+    #    print(f'violating pytorch_model.bin models: {[model[0] for model in pytorch_violations]}')
 
-    violating_callables = [get_callable(import_stmt) for import_stmt in VIOLATING_CALLABLES if import_stmt]
+    #violating_callables = [get_callable(import_stmt) for import_stmt in VIOLATING_CALLABLES if import_stmt]
     #print(VIOLATING_CALLABLES)
-    violating_callables_counter = Counter(violating_callables)
-    print(f'number of violating callables: {len(list(violating_callables_counter.keys()))}')
-    print(violating_callables_counter)
-    plot_counter_data(violating_callables_counter)
+    #violating_callables_counter = Counter(violating_callables)
+    #print(f'number of violating callables: {len(list(violating_callables_counter.keys()))}')
+    #print(violating_callables_counter)
+    #plot_counter_data(violating_callables_counter)
 
 
 if __name__ == '__main__':

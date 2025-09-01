@@ -187,7 +187,7 @@ $ ./enforce-all.sh
 ```
 
 **Expected result:**
-* `evaluation/enforce/results/<library>.log` file is created for each library
+* `evaluation/enforcemeng/results/<library>.log` file is created for each library
   in the evaluation dataset. These files record the outcome of attempting to
   load each model in the dataset with its corresponding library API, while
   PickleBall enforces the generate policy for the library.

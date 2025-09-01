@@ -101,20 +101,17 @@ library = model.split("/")[3]
 # yolov5 models assume yolov5 is already loaded
 if library == "yolov5":
     import yolov5
-
     # ensure that we select a yolov5 model that loads with PB policies
     model = "/models/benign/yolov5/keremberke-yolov5m-smoke/best.pt"
 # ensure that we select a yolov11 model that loads with PB policies
 if library == "yolov11":
-    model = "/models/benign/yolov11/Anzhc-Anzhcs_YOLOs/Anzhcs ManFace v02 1024 y8n.pt"
+    model = "/models/benign/yolov11/Bingsu-yolo-world-mirror/yolov8l-worldv2.pt"
 # ensure that we select a pyannote model that loads with PB policies
 if library == "pyannote-audio":
     model = "/models/benign/pyannote-audio/Model/pyannote-wespeaker-voxceleb-resnet34-LM/pytorch_model.bin"
 # ensure that we select a flair model that loads with PB policies
 if library == "flair":
-    model = (
-        "/models/benign/flair/SequenceTagger/flair-upos-english-fast/pytorch_model.bin"
-    )
+    model = "/models/benign/flair/SequenceTagger/flair-chunk-english-fast/pytorch_model.bin"
 
 CURRENT_LIBRARY = library
 

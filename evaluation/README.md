@@ -174,6 +174,16 @@ This builds the following main container images, specified in the
 Other containers are specific for automating evaluation steps and will be used
 below.
 
+### 5. Create virtual environment
+
+Create a Python virtual environment and install dependencies in the `requirements.txt` file:
+
+```
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -r requirements.txt
+```
+
 **Note:** unless otherwise indicated, all following commands should be executed
 from the `evaluation/` directory.
 

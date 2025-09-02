@@ -1,6 +1,6 @@
 # PickleBall
 
-PickleBall protects users from backdoored pickle-based machine learning models.
+PickleBall protects users from dangerous pickle-based machine learning models.
 The pickle format permits **dangerous arbitrary function calls**, which
 attackers abuse by invoking malicious payloads when the model is loaded.
 PickleBall ensures that when a model is loaded, it may only call functions
@@ -24,7 +24,7 @@ To specifically reproduce the results of the PickleBall paper, see:
 * `surveys/README.md`: instructions for reproducing the survey of the Hugging
   Face ecosystem (Section 3.1 and 3.2 of paper)
 
-Our full artifact, including datasets, is hosted on Zenodo at
+Our full artifact, including datasets, is hosted on Zenodo:
 [https://zenodo.org/records/16974645](https://zenodo.org/records/16974645).
 
 ## Overview

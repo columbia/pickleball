@@ -157,7 +157,7 @@ mount the datasets into the docker containers.
 $ evaluation/build-all.sh
 ```
 
-This may take approximately 30 minutes.
+This may take approximately 20 minutes.
 
 This builds the following main container images, specified in the
 `docker-compose.yml` file:

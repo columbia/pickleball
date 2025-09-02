@@ -7,10 +7,8 @@ Pickle Models ($3.1).
 
 Here are the steps to reproduce the results:
 
-TODO: validate download link.
-
 1. Download the
-   [data.tar.gz](https://zenodo.org/records/16891393/files/data.tar.gz?download=1&preview=1)
+   [data.tar.gz](https://zenodo.org/records/16974645/files/data.tar.gz?download=1)
    file to the `surveys/` directory and extract it (`tar xzvf data.tar.gz`) to
    create the `surveys/data/` directory.
 

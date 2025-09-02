@@ -29,16 +29,18 @@ steps with a **!!WARNING!!** indicator. If following these steps, all malicious
 models will be loaded in containerized environments and not directly executed
 on your host machine, and the payloads will not affect the system state. If
 additional protection is desired, you may optionally prepare this evaluation
-in an isolated virtual machine environment. An Ubuntu 24.04 virtual OS ought to
-be sufficient.
+in an isolated virtual machine environment. We recommend an Ubuntu 24.04
+virtual OS.
 
 ## Note: Benign Models Dataset
 
-The full benign model dataset is 132GB when compressed and 150GB when
+The full benign model dataset is 130GB when compressed and 150GB when
 decompressed. It is split into chunks of up to 5GB in order to host in Zenodo
 (`benign.tar.gz.partaa` - `benign.tar.gz.partba`).  In order to fully reproduce
-our results, you must be able to download and decompress the full dataset.  We
-also provide an abridged version of the dataset (`benign-abridged.tar.gz`) in
+our results, you must be able to download, reassemble, and decompress the full
+dataset.
+
+We also provide an abridged version of the dataset (`benign-abridged.tar.gz`) in
 our artifact that is 9GB when compressed and 11GB when decompressed. If the full
 dataset is prohibitively large, you may choose to use this smaller dataset to
 validate that PickleBall works as expected.
@@ -107,7 +109,7 @@ Download URLs:
 Note that the archives decompress into the directory that they are placed in;
 they do not create a new subdirectory.
 
-Downloading and decompressing all 140GB of data may take ~1 hour depending on
+Downloading and decompressing all 150GB of data may take ~1 hour depending on
 network speeds.
 
 Downloading, reassembling, and decompressing benign models:
@@ -140,11 +142,10 @@ $ tar xzvf benign-abridged.tar.gz
 $ mv models-list-abdridged.txt models-list.txt
 ```
 
-**Note:** if you use the benign-abridged models, please ensure that you rename the
+**Note:** if you use the benign-abridged models, ensure that you rename the
 `models-list-abridged.txt` file to `models-list.txt`.
 
-### 3. In the PickleBall repository root, create a `.env` file that sets the following
-environment variables:
+### 3. In the PickleBall repository root, create a `.env` file that sets the following environment variables:
 
 ```
 BENIGN_MODELS=<path to benign models directory (e.g., ~/models/benign)>

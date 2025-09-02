@@ -53,6 +53,12 @@ The following steps assume that you will evaluate using the full benign model
 dataset. If you choose to use the abridged dataset, follow the steps below but
 update them where noted.
 
+### 0. Install Docker and Docker compose dependencies
+
+Install Docker and Docker compose according to the
+[Docker documentation](https://docs.docker.com/compose/install/)
+for your system.
+
 ### 1. Create a directory outside of this repository to host the model datasets.
 For example, if you choose to use your home directory, run the following commands:
 
@@ -424,9 +430,8 @@ and tests it.
 `RQ4-modeltracer.sh` script will start a docker container, and all models will
 be loaded in the container. If additional protection is desired, you may create
 a virtual machine, and the models will execute their payloads. The payloads will
-not alter system state outside of the container, but you may wish to temporarily
-disable network connectivity. The ModelTracer tool that we compare to must
-execute the model in order to trace its behavior.
+not alter system state outside of the container. The ModelTracer tool that we
+compare to must execute the model in order to trace its behavior.
 
 **Command** (~75 min.):
 
@@ -463,7 +468,7 @@ This step runs the weights-only unpickler against both malicious and benign
 models. The following command starts a container using the `weightsonly:latest`
 Docker image and tests each model.
 
-**Command** (~5 min.):
+**Command** (~20 min.):
 
 ```sh
 $ docker compose run weightsonly

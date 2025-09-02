@@ -142,7 +142,7 @@ if __name__ == '__main__':
             '--model-class',
             type=str,
             required=True,
-            help='Model class name')
+            help='Model class name (use Joern fully-qualified name format)')
 
     parser.add_argument(
             '--joern-path',
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     parser.add_argument(
             '--mem',
             type=int,
-            help=('Amount of system RAM (in GB) to use. If not provided, '
+            help=('Maximum amount of system RAM (in GB) to use. If not provided, '
                   'defaults to using all available memory.'))
     parser.add_argument(
             '--only-cpg',

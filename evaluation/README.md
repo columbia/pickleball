@@ -338,6 +338,8 @@ The policy generation should have produced a file under
 each library, corresponding to Figure 6. The results can be pretty-printed as a
 table by running
 
+**Note:** execute this command from the repository root directory.
+
 ```
 python3 scripts/analyze_generation_times.py
 ```

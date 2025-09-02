@@ -4,30 +4,22 @@ PickleBall's evaluation (Section 6) addresses four Research Questions with
 the following claims when evaluated on our model datasets:
 
 * RQ1: PickleBall generates policies that block 100% of malicious models from
-  loading.
-* RQ2: PickleBall generates policies that load 79% of benign models.
+  loading. This isupported by Table 2 showing that PickleBall has 0% false
+  negative rate.
+* RQ2: PickleBall generates policies that load 79% of benign models. This is
+  supported by Table 1 showing that PickleBall successfully loads 79% of benign
+  models.
 * RQ3: PickleBall generates policies in a reasonable amount of time, and it
-  enforces policies with minimal overhead.
-* RQ4: PickleBall compares favorably to other state-of-the-art tools.
+  enforces policies with minimal overhead. This is supported by Figures 6 and 7
+  showing PickleBall's policy generation time and enforcement overhead.
+* RQ4: PickleBall compares favorably to other state-of-the-art tools. This is
+  supported by Table 2 showing how PickleBall performs in comparison to the
+  Weights-Only Unpickle, ModelScanner, and ModelTracer.
 
-This README provides steps to reproduce these claims. These steps assume that
+This README provides steps to reproduce these claims by reproducing the data
+presented in Table 1, Table 2, Figure 6, and Figure 7. These steps assume that
 you have access to this code repository and the malicious and benign model
 datasets distributed in the PickleBall artifact.
-
-To validate these claims, the steps below demonstrate how to reproduce the data
-presented in Table 1, Table 2, Figure 6, and Figure 7 of the PickleBall paper.
-By following the steps, you will be able to validate that the outputs match
-what is presented in these tables.
-
-These tables and figures support our main claims:
-* RQ1 is supported by Table 2 showing that PickleBall has a 0% false negative
-  rate.
-* RQ2 is supported by Table 1 showing that PickleBall successfully loads 79% of
-  benign models.
-* RQ3 is supported by Figure 6 and Figure 7 showing PickleBall's policy
-  generation time and enforcement overhead.
-* RQ4 is supported by Table 2 showing how PickleBall performs in comparison to
-  the Weights Only Unpickler, ModelScanner, and ModelTracer.
 
 Prior to reproducing the evaluation, you should familiarize yourself with the
 PickleBall implementation as described in the top level README.
@@ -42,14 +34,14 @@ be sufficient.
 
 ## Note: Benign Models Dataset
 
-The dataset containing benign models (`benign.tar.gz`) is 130GB when compressed
-and 150GB when decompressed. In order to fully reproduce our results, you must
-be able to host this dataset locally.
-However, we also provide an abridged version of the dataset
-(`benign-abridged.tar.gz`) in our artifact that is 9GB when compressed and
-11GB when decompressed. If the full dataset is prohibitively large, you may
-choose to use this smaller dataset to validate that PickleBall works as
-expected.
+The full benign model dataset is 132GB when compressed and 150GB when
+decompressed. It is split into chunks of up to 5GB in order to host in Zenodo
+(`benign.tar.gz.partaa` - `benign.tar.gz.partba`).  In order to fully reproduce
+our results, you must be able to download and decompress the full dataset.  We
+also provide an abridged version of the dataset (`benign-abridged.tar.gz`) in
+our artifact that is 9GB when compressed and 11GB when decompressed. If the full
+dataset is prohibitively large, you may choose to use this smaller dataset to
+validate that PickleBall works as expected.
 
 In the abridged dataset, we provide one model from each library that PickleBall
 is able to load successfully. We also provide one failing model from each
@@ -61,7 +53,7 @@ The following steps assume that you will evaluate using the full benign model
 dataset. If you choose to use the abridged dataset, follow the steps below but
 update them where noted.
 
-1. Create a directory outside of this repository to host the model datasets.
+### 1. Create a directory outside of this repository to host the model datasets.
 For example, if you choose to use your home directory, run the following commands:
 
 ```
@@ -72,12 +64,39 @@ $ mkdir -p ~/models/malicious
 $ mkdir -p ~/models/benign-abridged
 ```
 
-2. Download and extract the model dataset archives and place them in their respective directories.
+### 2. Download and extract the model dataset archives and place them in their respective directories.
 
-Download URLs (TODO: finalize links once uploaded):
-* benign models: https://zenodo.org/records/16974645/files/benign.tar.gz?download=1
-* malicious models: https://zenodo.org/records/16891393/files/malicious.tar.gz?download=1
-* benign-abridged models: https://zenodo.org/records/16891393/files/benign-abridged.tar.gz?download=1
+Download URLs:
+* benign models:
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partaa?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partab?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partac?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partad?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partae?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partaf?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partag?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partah?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partai?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partaj?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partak?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partal?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partam?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partan?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partao?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partap?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partaq?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partar?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partas?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partat?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partau?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partav?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partaw?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partax?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partay?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partaz?download=1
+  * https://zenodo.org/records/16974645/files/benign.tar.gz.partba?download=1
+* malicious models: https://zenodo.org/records/16974645/files/malicious.tar.gz?download=1
+* benign-abridged models: https://zenodo.org/records/16974645/files/benign-abridged.tar.gz?download=1
 
 Note that the archives decompress into the directory that they are placed in;
 they do not create a new subdirectory.
@@ -85,25 +104,40 @@ they do not create a new subdirectory.
 Downloading and decompressing all 140GB of data may take ~1 hour depending on
 network speeds.
 
+Downloading, reassembling, and decompressing benign models:
+
 ```
 $ cd ~/models/benign
-$ wget https://zenodo.org/records/16974645/files/benign.tar.gz?download=1
-$ tar xzvf benign.tar.gz
-$ cd ~/models/malicious
-$ wget https://zenodo.org/records/16891393/files/malicious.tar.gz?download=1
-$ tar xzvf malicious.tar.gz
 
-# Optional
+# For each chunk of the benign models:
+$ wget https://zenodo.org/records/16974645/files/benign.tar.gz.partaa?download=1
+
+# Once all chunks are downloaded, reassemble into tarball (may take ~10 minutes):
+$ cat benign.tar.gz.part* > benign.tar.gz
+$ tar xzvf benign.tar.gz
+```
+
+Downloading and decompressing malicious models:
+
+```
+$ cd ~/models/malicious
+$ wget https://zenodo.org/records/16974645/files/malicious.tar.gz?download=1
+$ tar xzvf malicious.tar.gz
+```
+
+Optionally, downloading and decompressing abridged version of benign models:
+
+```
 $ cd ~/models/benign-abridged
-$ wget https://zenodo.org/records/16891393/files/benign-abridged.tar.gz?download=1
-$ tar xzvf benign-abridged.tar.gzz
+$ wget https://zenodo.org/records/16974645/files/benign-abridged.tar.gz?download=1
+$ tar xzvf benign-abridged.tar.gz
 $ mv models-list-abdridged.txt models-list.txt
 ```
 
 **Note:** if you use the benign-abridged models, please ensure that you rename the
 `models-list-abridged.txt` file to `models-list.txt`.
 
-3. In the PickleBall repository root, create a `.env` file that sets the following
+### 3. In the PickleBall repository root, create a `.env` file that sets the following
 environment variables:
 
 ```
@@ -117,26 +151,28 @@ value to point to the `benign-abridged` directory.
 Our scripts and docker-compose configuration use these environment variables to
 mount the datasets into the docker containers.
 
-4. Build all docker containers.
+### 4. Build all docker containers.
 
 ```
-$ docker compose build
+$ evaluation/build-all.sh
 ```
 
-This will take approximately TODO minutes.
+This may take approximately 30 minutes.
 
-This builds the following relevant container images (specified in the
-`../docker-compose.yml` file):
+This builds the following main container images, specified in the
+`docker-compose.yml` file:
 * `pickleball-generate`: Container image with the PickleBall policy generator
   installed. Used to analyze library source code and generate policies. Includes
   the Joern program analysis tool and our modifications (`analyze/joern.diff`).
-* `pickleball-enforce`: Container image with the PickleBall loader installed in a
-  Debian 12 environment. Used to load models. We use this container image as the
-  base image when installing library-specific dependencies for each library.
+* `pickleball-enforce`: Container image with the PickleBall loader installed in
+  a Debian 12 environment. Used to load models. We use this container image as the base image when installing library-specific dependencies for each library.
 * `pickleball-enforce-deb11`: Container image with the PickleBall loader
   installed in a Debian 11 environment. Used to load models. We use this
   container image as the base image when installing library-specific
   dependencies for each library, when the Debian 12 environment is incompatible.
+
+Other containers are specific for automating evaluation steps and will be used
+below.
 
 **Note:** unless otherwise indicated, all following commands should be executed
 from the `evaluation/` directory.
@@ -315,6 +351,8 @@ to see generation times in a similar range.
 
 Load time performance experiment (~5 min.):
 
+**Note:** execute these commands from the repository root directory.
+
 ```
 $ mkdir results
 $ scripts/run-load-time.sh
@@ -370,11 +408,11 @@ against both malicious and benign models. The following command starts a
 container per model using the `modeltracer:latest` Docker image built earlier
 and tests it.
 
-**Note:** this step **will load** malicious models. The `RQ4-modeltracer.sh`
-script will start a docker container, and all models will be loaded in the
-container. If additional protection is desired, you may create a virtual
-machine, and the models will execute their payloads. The payloads will not
-alter system state outside of the container, but you may wish to temporarily
+**!!WARNING!!** this step **will load** malicious models. The
+`RQ4-modeltracer.sh` script will start a docker container, and all models will
+be loaded in the container. If additional protection is desired, you may create
+a virtual machine, and the models will execute their payloads. The payloads will
+not alter system state outside of the container, but you may wish to temporarily
 disable network connectivity. The ModelTracer tool that we compare to must
 execute the model in order to trace its behavior.
 
